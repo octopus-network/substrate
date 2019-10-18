@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 client = { package = "substrate-client", path = "../../../core/client" }
-codec = { package = "parity-scale-codec", version = "1.0.0" }
+codec = { package = "parity-scale-codec", version = "1.0.6" }
 jsonrpc-core = "13.2.0"
 jsonrpc-core-client = "13.2.0"
 jsonrpc-derive = "13.2.0"

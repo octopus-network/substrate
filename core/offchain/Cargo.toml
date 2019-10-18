@@ -17,7 +17,7 @@ hyper = "0.12.35"
 hyper-tls = "0.3.2"
 log = "0.4.8"
 offchain-primitives = { package = "substrate-offchain-primitives", path = "./primitives" }
-codec = { package = "parity-scale-codec", version = "1.0.0", features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "1.0.6", features = ["derive"] }
 parking_lot = "0.9.0"
 primitives = { package = "substrate-primitives", path = "../../core/primitives" }
 rand = "0.7.2"

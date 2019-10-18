@@ -23,7 +23,7 @@ sr-version = { path = "../sr-version" }
 primitives = { package = "substrate-primitives",  path = "../primitives" }
 criterion = "0.2.11"
 consensus_common = { package = "substrate-consensus-common", path = "../consensus/common" }
-codec = { package = "parity-scale-codec", version = "1.0.0" }
+codec = { package = "parity-scale-codec", version = "1.0.6" }
 trybuild = "1.0.14"
 rustversion = "0.1.4"
 

@@ -30,7 +30,7 @@ network = { package = "substrate-network", path = "../../core/network" }
 chain-spec = { package = "substrate-chain-spec", path = "../chain-spec" }
 client = { package = "substrate-client", path = "../../core/client" }
 client_db = { package = "substrate-client-db", path = "../../core/client/db", features = ["kvdb-rocksdb"] }
-codec = { package = "parity-scale-codec", version = "1.0.0" }
+codec = { package = "parity-scale-codec", version = "1.0.6" }
 substrate-executor = { path = "../../core/executor" }
 substrate-authority-discovery = { path = "../../core/authority-discovery"}
 transaction_pool = { package = "substrate-transaction-pool", path = "../../core/transaction-pool" }

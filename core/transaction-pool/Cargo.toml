@@ -8,7 +8,7 @@ edition = "2018"
 derive_more = "0.15.0"
 log = "0.4.8"
 futures-preview = "0.3.0-alpha.19"
-codec = { package = "parity-scale-codec", version = "1.0.0" }
+codec = { package = "parity-scale-codec", version = "1.0.6" }
 parking_lot = "0.9.0"
 sr-primitives = { path = "../sr-primitives" }
 client = { package = "substrate-client", path = "../client" }

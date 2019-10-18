@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 client = { package = "substrate-client", path = "../../../../core/client", default-features = false }
-codec = { package = "parity-scale-codec", version = "1.0.0", default-features = false  }
+codec = { package = "parity-scale-codec", version = "1.0.6", default-features = false  }
 
 [features]
 default = ["std"]
