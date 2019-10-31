@@ -520,7 +520,7 @@ construct_runtime!(
 		FinalityTracker: finality_tracker::{Module, Call, Inherent},
 		Grandpa: grandpa::{Module, Call, Storage, Config, Event},
 		Treasury: treasury::{Module, Call, Storage, Config, Event<T>},
-		Contracts: contracts,
+		Contracts: contracts::{Module, Call, Storage, Config, Event<T>},
 		Sudo: sudo,
 		ImOnline: im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
 		Offences: offences::{Module, Call, Storage, Event},

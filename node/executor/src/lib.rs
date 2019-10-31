@@ -713,13 +713,13 @@ mod tests {
 				CheckedExtrinsic {
 					signed: Some((charlie(), signed_extra(0, 0))),
 					function: Call::Contracts(
-						contracts::Call::put_code::<Runtime>(10_000, transfer_code)
+						contracts::Call::put_code::<Runtime>(transfer_code)
 					),
 				},
 				CheckedExtrinsic {
 					signed: Some((charlie(), signed_extra(1, 0))),
 					function: Call::Contracts(
-						contracts::Call::instantiate::<Runtime>(1 * DOLLARS, 10_000, transfer_ch, Vec::new())
+						contracts::Call::instantiate::<Runtime>(1 * DOLLARS, 10_000_000_000_000, transfer_ch, Vec::new())
 					),
 				},
 				CheckedExtrinsic {
@@ -728,7 +728,7 @@ mod tests {
 						contracts::Call::call::<Runtime>(
 							indices::address::Address::Id(addr.clone()),
 							10,
-							10_000,
+							10_000_000_000_000,
 							vec![0x00, 0x01, 0x02, 0x03]
 						)
 					),
@@ -745,6 +745,10 @@ mod tests {
 			false,
 			None,
 		).0.unwrap();
+
+		t.execute_with(|| {
+			assert_eq!(System::all_extrinsics_weight(), 0);
+		});
 
 		t.execute_with(|| {
 			// Verify that the contract constructor worked well and code of TRANSFER contract is actually deployed.
