@@ -114,6 +114,7 @@ members = [
 	"test/utils/client",
 	"test/utils/runtime",
 	"test/utils/runtime/client",
+	"test/client/network",
 ]
 
 [profile.release]
