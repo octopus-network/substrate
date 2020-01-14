@@ -244,7 +244,7 @@ impl<C, B: BlockT, P: Proposer<B>> rhododendron::Context for RhdInstance<C, B, P
 
 
 
-pub struct BabeVerifier<B, E, Block: BlockT, RA, PRA> {
+pub struct RhdVerifier<B, E, Block: BlockT, RA, PRA> {
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
     inherent_data_providers: sp_inherents::InherentDataProviders,
@@ -253,30 +253,30 @@ pub struct BabeVerifier<B, E, Block: BlockT, RA, PRA> {
     time_source: TimeSource,
 }
 
-impl<B, E, Block, RA, PRA> Verifier<Block> for BabeVerifier<B, E, Block, RA, PRA> where
+impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA> where
     Block: BlockT<Hash=H256>,
     B: Backend<Block, Blake2Hasher> + 'static,
     E: CallExecutor<Block, Blake2Hasher> + 'static + Clone + Send + Sync,
     RA: Send + Sync,
     PRA: ProvideRuntimeApi + Send + Sync + AuxStore + ProvideCache<Block>,
-    PRA::Api: BlockBuilderApi<Block, Error = sp_blockchain::Error>
-    + BabeApi<Block, Error = sp_blockchain::Error>,
+    PRA::Api: BlockBuilderApi<Block, Error = sp_blockchain::Error> + BabeApi<Block, Error = sp_blockchain::Error>,
 {
 
 }
 
 
 
-pub struct BabeBlockImport<B, E, Block: BlockT, I, RA, PRA> {
+pub struct RhdBlockImport<B, E, Block: BlockT, I, RA, PRA> {
     inner: I,
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
     epoch_changes: SharedEpochChanges<Block>,
     config: Config,
 }
-impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for BabeBlockImport<B, E, Block, I, RA, PRA> {
+
+impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Block, I, RA, PRA> {
     fn clone(&self) -> Self {
-        BabeBlockImport {
+        RhdBlockImport {
             inner: self.inner.clone(),
             client: self.client.clone(),
             api: self.api.clone(),
@@ -285,7 +285,8 @@ impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for BabeBlockImport<B, E, Blo
         }
     }
 }
-impl<B, E, Block: BlockT, I, RA, PRA> BabeBlockImport<B, E, Block, I, RA, PRA> {
+
+impl<B, E, Block: BlockT, I, RA, PRA> RhdBlockImport<B, E, Block, I, RA, PRA> {
     fn new(
         client: Arc<Client<B, E, Block, RA>>,
         api: Arc<PRA>,
@@ -293,7 +294,7 @@ impl<B, E, Block: BlockT, I, RA, PRA> BabeBlockImport<B, E, Block, I, RA, PRA> {
         block_import: I,
         config: Config,
     ) -> Self {
-        BabeBlockImport {
+        RhdBlockImport {
             client,
             api,
             inner: block_import,
@@ -303,7 +304,7 @@ impl<B, E, Block: BlockT, I, RA, PRA> BabeBlockImport<B, E, Block, I, RA, PRA> {
     }
 }
 
-impl<B, E, Block, I, RA, PRA> BlockImport<Block> for BabeBlockImport<B, E, Block, I, RA, PRA> where
+impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block, I, RA, PRA> where
     Block: BlockT<Hash=H256>,
     I: BlockImport<Block> + Send + Sync,
     I::Error: Into<ConsensusError>,
@@ -324,8 +325,6 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for BabeBlockImport<B, E, Block
 /// The Aura import queue type.
 pub type RhdImportQueue<B> = BasicQueue<B>;
 
-
-
 pub fn import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
     babe_link: BabeLink<Block>,
     block_import: I,
@@ -334,7 +333,7 @@ pub fn import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
     inherent_data_providers: InherentDataProviders,
-) -> ClientResult<BabeImportQueue<Block>> where
+) -> ClientResult<RhdImportQueue<Block>> where
     B: Backend<Block, Blake2Hasher> + 'static,
     I: BlockImport<Block,Error=ConsensusError> + Send + Sync + 'static,
     E: CallExecutor<Block, Blake2Hasher> + Clone + Send + Sync + 'static,
@@ -347,7 +346,7 @@ pub fn import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
 
 }
 
-pub fn start_babe<B, C, SC, E, I, SO, CAW, Error>(BabeParams {
+pub fn start_rhd<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
     keystore,
     client,
     select_chain,
@@ -358,11 +357,10 @@ pub fn start_babe<B, C, SC, E, I, SO, CAW, Error>(BabeParams {
     force_authoring,
     babe_link,
     can_author_with,
-}: BabeParams<B, C, E, I, SO, SC, CAW>)
+}: RhdParams<B, C, E, I, SO, SC, CAW>)
     -> Result<impl futures01::Future<Item=(), Error=()>,sp_consensus::Error,> where
     B: BlockT<Hash=H256>,
-    C: ProvideRuntimeApi + ProvideCache<B> + ProvideUncles<B> + BlockchainEvents<B>
-    + HeaderBackend<B> + HeaderMetadata<B, Error=ClientError> + Send + Sync + 'static,
+    C: ProvideRuntimeApi + ProvideCache<B> + ProvideUncles<B> + BlockchainEvents<B> + HeaderBackend<B> + HeaderMetadata<B, Error=ClientError> + Send + Sync + 'static,
     C::Api: BabeApi<B>,
     SC: SelectChain<B> + 'static,
     E: Environment<B, Error=Error> + Send + Sync,
