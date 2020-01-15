@@ -382,10 +382,18 @@ impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA>
 
 
 
+pub(crate) enum VoterCommand {
+    Start,
+    Pause(String),
+//    ChangeAuthorities(NewAuthoritySet<H, N>),
+}
+
+
 pub struct RhdBlockImport<B, E, Block: BlockT, I, RA, PRA> {
     inner: I,
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
+    voter_commands_tx: mpsc::UnboundedSender<VoterCommand>,
 }
 
 impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Block, I, RA, PRA> {
@@ -394,6 +402,7 @@ impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Bloc
             inner: self.inner.clone(),
             client: self.client.clone(),
             api: self.api.clone(),
+            voter_commands_tx: self.voter_commands_tx.clone()
         }
     }
 }
@@ -403,11 +412,13 @@ impl<B, E, Block: BlockT, I, RA, PRA> RhdBlockImport<B, E, Block, I, RA, PRA> {
         client: Arc<Client<B, E, Block, RA>>,
         api: Arc<PRA>,
         block_import: I,
+        voter_commands_tx: mpsc::UnboundedSender<VoterCommand>
     ) -> Self {
         RhdBlockImport {
             client,
             api,
             inner: block_import,
+            voter_commands_tx
         }
     }
 }
@@ -430,12 +441,45 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block,
 
 
 
+pub struct LinkHalf<B, E, Block: BlockT<Hash=H256>, RA> {
+    client: Arc<Client<B, E, Block, RA>>,
+    voter_commands_rx: mpsc::UnboundedReceiver<VoterCommand>,
+}
+
+pub fn generate_block_import_object<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
+//    config: Config,
+//    wrapped_block_import: I,
+    client: Arc<Client<B, E, Block, RA>>,
+    api: Arc<PRA>,
+) -> ClientResult<(RhdBlockImport<B, E, Block, I, RA, PRA>, LinkHalf<B, E, Block, RA>)> where
+    B: Backend<Block, Blake2Hasher>,
+    E: CallExecutor<Block, Blake2Hasher> + Send + Sync,
+    RA: Send + Sync,
+{
+
+    let default_block_import = client.clone();
+    let (voter_commands_tx, voter_commands_rx) = mpsc::unbounded();
+
+    let import = RhdBlockImport::new(
+        client: client.clone(),
+        api,
+        default_block_import,
+        voter_commands_tx
+    );
+    let link = LinkHalf {
+        client: client.clone(),
+        voter_commands_rx,
+    };
+
+    Ok((import, link))
+}
+
 
 
 /// The Aura import queue type.
 pub type RhdImportQueue<B> = BasicQueue<B>;
 
-pub fn import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
+pub fn generate_import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
 //    babe_link: BabeLink<Block>,
     block_import: I,
     justification_import: Option<BoxJustificationImport<Block>>,
