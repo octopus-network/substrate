@@ -42,9 +42,11 @@ use sp_consensus::{
     ForkChoiceStrategy,
     BlockImportParams,
     BlockOrigin,
+    ImportResult,
     Error as ConsensusError,
     SelectChain,
     SyncOracle,
+    CanAuthorWith,
     import_queue::{
         Verifier,
         BasicQueue,
@@ -203,6 +205,23 @@ pub struct RhdWorker<B, P, I, InStream, OutSink> where
     cancel: oneshot::Receiver<()>,
     import: Arc<I>,
 }
+
+
+impl RhdWorker<B, P, I, InStream, OutSink> where
+    B: BlockT + Clone + Eq,
+    B::Hash: ::std::hash::Hash,
+    P: Proposer<B>,
+    I: BlockImport<B>,
+    InStream: Stream<Item=Communication<B>, Error=Error>,
+    OutSink: Sink<SinkItem=Communication<B>, SinkError=Error> {
+
+    pub fn new() {
+
+
+    }
+
+}
+
 
 impl<B, P, I, InStream, OutSink> Future for RhdWorker<B, P, I, InStream, OutSink> where
     B: BlockT + Clone + Eq,
@@ -435,6 +454,25 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block,
 {
     type Error = ConsensusError;
 
+    fn check_block(
+        &mut self,
+        block: BlockCheckParams<Block>,
+    ) -> Result<ImportResult, Self::Error> {
+        self.inner.check_block(block)
+            //.map_err(Into::into)
+    }
+
+    fn import_block(
+        &mut self,
+        mut block: BlockImportParams<Block>,
+        new_cache: HashMap<CacheKeyId, Vec<u8>>,
+    ) -> Result<ImportResult, Self::Error> {
+
+
+
+
+
+    }
 
 
 }
@@ -509,6 +547,27 @@ pub fn generate_import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
     ))
 }
 
+
+// let proposer = sc_basic_authority::ProposerFactory {
+//     client: service.client(),
+//     transaction_pool: service.transaction_pool(),
+// };
+
+
+pub struct RhdParams<B: BlockT, C, E, I, SO, SC, CAW> {
+    pub keystore: KeyStorePtr,
+    pub client: Arc<C>,
+    pub select_chain: SC,
+    /// The environment we are producing blocks for.
+    pub env: E,
+    pub block_import: I,
+    pub sync_oracle: SO,
+    /// Force authoring of blocks even if we are offline
+    pub force_authoring: bool,
+    /// Checks if the current native implementation can author with a runtime at a given block.
+    pub can_author_with: CAW,
+}
+
 pub fn start_rhd<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
     keystore,
     client,
@@ -533,9 +592,18 @@ pub fn start_rhd<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
     Error: std::error::Error + Send + From<::sp_consensus::Error> + From<I::Error> + 'static,
     SO: SyncOracle + Send + Sync + Clone,
     CAW: CanAuthorWith<B> + Send,
-
 {
+    let rhd_worker = RhdWorker::new(
+        client.clone(),
+        Arc::new(Mutex::new(block_import)),
+        // env here is a proposer
+        env,
+        sync_oracle.clone(),
+        force_authoring,
+        keystore,
+    );
 
+    Ok(rhd_worker)
 }
 
 
