@@ -386,8 +386,6 @@ pub struct RhdBlockImport<B, E, Block: BlockT, I, RA, PRA> {
     inner: I,
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
-    epoch_changes: SharedEpochChanges<Block>,
-    config: Config,
 }
 
 impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Block, I, RA, PRA> {
@@ -396,8 +394,6 @@ impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Bloc
             inner: self.inner.clone(),
             client: self.client.clone(),
             api: self.api.clone(),
-            epoch_changes: self.epoch_changes.clone(),
-            config: self.config.clone(),
         }
     }
 }
@@ -406,16 +402,12 @@ impl<B, E, Block: BlockT, I, RA, PRA> RhdBlockImport<B, E, Block, I, RA, PRA> {
     fn new(
         client: Arc<Client<B, E, Block, RA>>,
         api: Arc<PRA>,
-        epoch_changes: SharedEpochChanges<Block>,
         block_import: I,
-        config: Config,
     ) -> Self {
         RhdBlockImport {
             client,
             api,
             inner: block_import,
-            epoch_changes,
-            config,
         }
     }
 }
@@ -432,6 +424,8 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block,
 {
     type Error = ConsensusError;
 
+
+
 }
 
 
@@ -442,13 +436,13 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block,
 pub type RhdImportQueue<B> = BasicQueue<B>;
 
 pub fn import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
-    babe_link: BabeLink<Block>,
+//    babe_link: BabeLink<Block>,
     block_import: I,
     justification_import: Option<BoxJustificationImport<Block>>,
     finality_proof_import: Option<BoxFinalityProofImport<Block>>,
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
-    inherent_data_providers: InherentDataProviders,
+//    inherent_data_providers: InherentDataProviders,
 ) -> ClientResult<RhdImportQueue<Block>> where
     B: Backend<Block, Blake2Hasher> + 'static,
     I: BlockImport<Block,Error=ConsensusError> + Send + Sync + 'static,
@@ -456,10 +450,19 @@ pub fn import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
     RA: Send + Sync + 'static,
     PRA: ProvideRuntimeApi + ProvideCache<Block> + Send + Sync + AuxStore + 'static,
     PRA::Api: BlockBuilderApi<Block> + BabeApi<Block> + ApiExt<Block, Error = sp_blockchain::Error>,
-
 {
 
+    let verifier = RhdVerifier {
+        client: client.clone(),
+        api,
+    };
 
+    Ok(BasicQueue::new(
+        verifier,
+        Box::new(block_import),
+        justification_import,
+        finality_proof_import,
+    ))
 }
 
 pub fn start_rhd<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
