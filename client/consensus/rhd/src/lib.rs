@@ -9,6 +9,7 @@ use tokio::runtime::TaskExecutor;
 use tokio::timer::Delay;
 use parking_lot::{RwLock, Mutex};
 
+use codec::{Encode, Decode, Codec};
 
 use sp_core::{
     Blake2Hasher,
@@ -50,6 +51,13 @@ use sp_consensus::{
         CacheKeyId
     },
 };
+// TODO: need to supply, if we want to export api
+use sp_consensus_rhd::{
+    RhdApi,
+    RhdPreDigest,
+    CompatibleDigestItem,
+    AuthorityId
+};
 use sc_client_api::{
     backend::{
         AuxStore,
@@ -63,8 +71,15 @@ use sc_keystore::KeyStorePtr;
 use sc_client::Client;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_blockchain::{
-    Result as ClientResult, Error as ClientError,
-    HeaderBackend, ProvideCache, HeaderMetadata
+    Result as ClientResult,
+    Error as ClientError,
+    HeaderBackend,
+    ProvideCache,
+    HeaderMetadata,
+    well_known_cache_keys::{
+        self,
+        Id as CacheKeyId
+    },
 };
 use sp_api::ApiExt;
 
@@ -241,16 +256,75 @@ impl<C, B: BlockT, P: Proposer<B>> rhododendron::Context for RhdInstance<C, B, P
 }
 
 
+#[allow(deprecated)]
+fn authorities<A, B, C>(client: &C, at: &BlockId<B>) -> Result<Vec<A>, ConsensusError> where
+    A: Codec,
+    B: BlockT,
+    C: ProvideRuntimeApi + BlockOf + ProvideCache<B>,
+    C::Api: AuraApi<B, A>,
+{
+    client
+        .cache()
+        .and_then(|cache| cache
+                  .get_at(&well_known_cache_keys::AUTHORITIES, at)
+                  .and_then(|(_, _, v)| Decode::decode(&mut &v[..]).ok())
+        )
+        .or_else(|| AuraApi::authorities(&*client.runtime_api(), at).ok())
+        .ok_or_else(|| sp_consensus::Error::InvalidAuthoritiesSet.into())
+}
+
+
+pub enum CheckedHeader<H, S> {
+    Checked(H, S),
+}
+
+struct VerificationParams<B: BlockT> {
+    pub header: B::Header,
+    pub pre_digest: Option<BabePreDigest>,
+}
+
+struct VerifiedHeaderInfo<B: BlockT> {
+    pub pre_digest: DigestItemFor<B>,
+    pub seal: DigestItemFor<B>,
+    pub author: AuthorityId,
+}
+
+fn check_header<B: BlockT + Sized>(
+    params: VerificationParams<B>,
+) -> Result<CheckedHeader<B::Header, VerifiedHeaderInfo<B>>, Error<B>> where
+    DigestItemFor<B>: CompatibleDigestItem,
+{
+    let VerificationParams {
+        mut header,
+        pre_digest,
+    } = params;
+
+    let authorities = authorities(self.client.as_ref(), &BlockId::Hash(parent_hash))
+        .map_err(|e| format!("Could not fetch authorities at {:?}: {:?}", parent_hash, e))?;
+    let author = match authorities.get(pre_digest.authority_index() as usize) {
+        Some(author) => author.0.clone(),
+        None => return Err(babe_err(Error::SlotAuthorNotFound)),
+    };
+
+    let seal = match header.digest_mut().pop() {
+        Some(x) => x,
+        None => return Err(babe_err(Error::HeaderUnsealed(header.hash()))),
+    };
+
+    let info = VerifiedHeaderInfo {
+        pre_digest: CompatibleDigestItem::babe_pre_digest(pre_digest),
+        seal,
+        author,
+    };
+    Ok(CheckedHeader::Checked(header, info))
+}
+
 
 
 
 pub struct RhdVerifier<B, E, Block: BlockT, RA, PRA> {
     client: Arc<Client<B, E, Block, RA>>,
     api: Arc<PRA>,
-    inherent_data_providers: sp_inherents::InherentDataProviders,
-    config: Config,
-    epoch_changes: SharedEpochChanges<Block>,
-    time_source: TimeSource,
 }
 
 impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA> where
@@ -261,6 +335,48 @@ impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA>
     PRA: ProvideRuntimeApi + Send + Sync + AuxStore + ProvideCache<Block>,
     PRA::Api: BlockBuilderApi<Block, Error = sp_blockchain::Error> + BabeApi<Block, Error = sp_blockchain::Error>,
 {
+    fn verify(
+        &mut self,
+        origin: BlockOrigin,
+        header: Block::Header,
+        justification: Option<Justification>,
+        mut body: Option<Vec<Block::Extrinsic>>,
+    ) -> Result<(BlockImportParams<Block>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
+
+        let pre_digest = find_pre_digest::<Block>(&header)?;
+
+        let v_params = VerificationParams {
+            header: header.clone(),
+            pre_digest: Some(pre_digest.clone()),
+        };
+
+        let checked_result = check_header::<Block>(v_params)?;
+        match checked_result {
+            CheckedHeader::Checked(pre_header, verified_info) => {
+                let block_import_params = BlockImportParams {
+                    origin,
+                    header: pre_header,
+                    post_digests: vec![verified_info.seal],
+                    body,
+                    // TODO: need set true? for instant finalization
+                    finalized: false,
+                    justification,
+                    auxiliary: Vec::new(),
+                    fork_choice: ForkChoiceStrategy::LongestChain,
+                    allow_missing_state: false,
+                    import_existing: false,
+                };
+
+                Ok((block_import_params, Default::default()))
+            },
+            // TODO: we'd better add this branch
+            // CheckedHeader::NotChecked => {}
+
+        }
+
+
+    }
+
 
 }
 
@@ -376,6 +492,28 @@ pub fn start_rhd<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
 }
 
 
+fn find_pre_digest<B: BlockT>(header: &B::Header) -> Result<BabePreDigest, Error<B>>
+{
+    // genesis block doesn't contain a pre digest so let's generate a
+    // dummy one to not break any invariants in the rest of the code
+    if header.number().is_zero() {
+        return Ok(BabePreDigest::Secondary {
+            slot_number: 0,
+            authority_index: 0,
+        });
+    }
+
+    let mut pre_digest: Option<_> = None;
+    for log in header.digest().logs() {
+        trace!(target: "babe", "Checking log {:?}, looking for pre runtime digest", log);
+        match (log.as_babe_pre_digest(), pre_digest.is_some()) {
+            (Some(_), true) => return Err(babe_err(Error::MultiplePreRuntimeDigests)),
+            (None, _) => trace!(target: "babe", "Ignoring digest not meant for us"),
+            (s, false) => pre_digest = s,
+        }
+    }
+    pre_digest.ok_or_else(|| babe_err(Error::NoPreRuntimeDigest))
+}
 
 
 
