@@ -20,15 +20,15 @@ use sp_core::{
 };
 use sp_runtime::{
     generic::{
-        BlockId,
-        OpaqueDigestItemId
+	BlockId,
+	OpaqueDigestItemId
     },
     traits::{
-        Block as BlockT,
-        Header,
-        DigestItemFor,
-        ProvideRuntimeApi,
-        Zero,
+	Block as BlockT,
+	Header,
+	DigestItemFor,
+	ProvideRuntimeApi,
+	Zero,
     },
     Justification,
     ConsensusEngineId,
@@ -48,22 +48,15 @@ use sp_consensus::{
     SyncOracle,
     CanAuthorWith,
     import_queue::{
-        Verifier,
-        BasicQueue,
-        CacheKeyId
+	Verifier,
+	BasicQueue,
+	CacheKeyId
     },
-};
-// TODO: need to supply, if we want to export api
-use sp_consensus_rhd::{
-    RhdApi,
-    RhdPreDigest,
-    CompatibleDigestItem,
-    AuthorityId
 };
 use sc_client_api::{
     backend::{
-        AuxStore,
-        Backend
+	AuxStore,
+	Backend
     },
     call_executor::CallExecutor,
     BlockchainEvents,
@@ -79,27 +72,43 @@ use sp_blockchain::{
     ProvideCache,
     HeaderMetadata,
     well_known_cache_keys::{
-        self,
-        Id as CacheKeyId
+	self,
+	Id as CacheKeyId
     },
 };
 use sp_api::ApiExt;
 
 
+/// Configuration data used by the BABE consensus engine.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug)]
+pub struct BabeConfiguration {
+}
 
-mod app {
+sp_api::decl_runtime_apis! {
+    /// API necessary for block authorship with BABE.
+    pub trait BabeApi {
+	/// Return the configuration for BABE. Currently,
+	/// only the value provided by this type at genesis will be used.
+	///
+	/// Dynamic configuration may be supported in the future.
+	fn configuration() -> BabeConfiguration;
+    }
+}
+
+mod _app {
     use sp_application_crypto::{
-        app_crypto,
-        sr25519
+	app_crypto,
+	sr25519,
+	key_types::RHD,
     };
     app_crypto!(sr25519, RHD);
 }
 
 #[cfg(feature = "std")]
-pub type AuthorityPair = app::Pair;
-pub type AuthoritySignature = app::Signature;
-pub type AuthorityId = app::Public;
-pub const RHD_ENGINE_ID: ConsensusEngineId = *b"RHDE";
+pub type AuthorityPair = _app::Pair;
+pub type AuthoritySignature = _app::Signature;
+pub type AuthorityId = _app::Public;
+pub const RHD_ENGINE_ID: ConsensusEngineId = *b"RHD";
 
 
 pub type Committed<B> = rhododendron::Committed<B, <B as BlockT>::Hash, LocalizedSignature>;
@@ -109,6 +118,30 @@ pub type Communication<B> = rhododendron::Communication<B, <B as BlockT>::Hash, 
 pub type Misbehavior<H> = rhododendron::Misbehavior<H, LocalizedSignature>;
 
 pub type SharedOfflineTracker = Arc<RwLock<OfflineTracker>>;
+
+
+
+
+/// A BABE pre-runtime digest. This contains all data required to validate a
+/// block and for the BABE runtime module. Slots can be assigned to a primary
+/// (VRF based) and to a secondary (slot number based).
+#[cfg(feature = "std")]
+#[derive(Clone, Debug)]
+pub enum BabePreDigest {
+    /// A primary VRF-based slot assignment.
+    Primary,
+    Secondary,
+}
+
+/// A digest item which is usable with BABE consensus.
+#[cfg(feature = "std")]
+pub trait CompatibleDigestItem: Sized {
+}
+
+
+
+
+
 
 
 
@@ -134,15 +167,15 @@ struct AgreementHandle {
 
 impl AgreementHandle {
     fn status(&self) -> usize {
-        self.status.load(Ordering::Acquire)
+	self.status.load(Ordering::Acquire)
     }
 }
 
 impl Drop for AgreementHandle {
     fn drop(&mut self) {
-        if let Some(sender) = self.send_cancel.take() {
-            let _ = sender.send(());
-        }
+	if let Some(sender) = self.send_cancel.take() {
+	    let _ = sender.send(());
+	}
     }
 }
 
@@ -241,13 +274,13 @@ fn authorities<A, B, C>(client: &C, at: &BlockId<B>) -> Result<Vec<A>, Consensus
     C::Api: AuraApi<B, A>,
 {
     client
-        .cache()
-        .and_then(|cache| cache
-                  .get_at(&well_known_cache_keys::AUTHORITIES, at)
-                  .and_then(|(_, _, v)| Decode::decode(&mut &v[..]).ok())
-        )
-        .or_else(|| AuraApi::authorities(&*client.runtime_api(), at).ok())
-        .ok_or_else(|| sp_consensus::Error::InvalidAuthoritiesSet.into())
+	.cache()
+	.and_then(|cache| cache
+		  .get_at(&well_known_cache_keys::AUTHORITIES, at)
+		  .and_then(|(_, _, v)| Decode::decode(&mut &v[..]).ok())
+	)
+	.or_else(|| AuraApi::authorities(&*client.runtime_api(), at).ok())
+	.ok_or_else(|| sp_consensus::Error::InvalidAuthoritiesSet.into())
 }
 
 
@@ -272,26 +305,26 @@ fn check_header<B: BlockT + Sized>(
     DigestItemFor<B>: CompatibleDigestItem,
 {
     let VerificationParams {
-        mut header,
-        pre_digest,
+	mut header,
+	pre_digest,
     } = params;
 
     let authorities = authorities(self.client.as_ref(), &BlockId::Hash(parent_hash))
-        .map_err(|e| format!("Could not fetch authorities at {:?}: {:?}", parent_hash, e))?;
+	.map_err(|e| format!("Could not fetch authorities at {:?}: {:?}", parent_hash, e))?;
     let author = match authorities.get(pre_digest.authority_index() as usize) {
-        Some(author) => author.0.clone(),
-        None => return Err(babe_err(Error::SlotAuthorNotFound)),
+	Some(author) => author.0.clone(),
+	None => return Err(babe_err(Error::SlotAuthorNotFound)),
     };
 
     let seal = match header.digest_mut().pop() {
-        Some(x) => x,
-        None => return Err(babe_err(Error::HeaderUnsealed(header.hash()))),
+	Some(x) => x,
+	None => return Err(babe_err(Error::HeaderUnsealed(header.hash()))),
     };
 
     let info = VerifiedHeaderInfo {
-        pre_digest: CompatibleDigestItem::babe_pre_digest(pre_digest),
-        seal,
-        author,
+	pre_digest: CompatibleDigestItem::babe_pre_digest(pre_digest),
+	seal,
+	author,
     };
     Ok(CheckedHeader::Checked(header, info))
 }
@@ -313,43 +346,43 @@ impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA>
     PRA::Api: BlockBuilderApi<Block, Error = sp_blockchain::Error> + BabeApi<Block, Error = sp_blockchain::Error>,
 {
     fn verify(
-        &mut self,
-        origin: BlockOrigin,
-        header: Block::Header,
-        justification: Option<Justification>,
-        mut body: Option<Vec<Block::Extrinsic>>,
+	&mut self,
+	origin: BlockOrigin,
+	header: Block::Header,
+	justification: Option<Justification>,
+	mut body: Option<Vec<Block::Extrinsic>>,
     ) -> Result<(BlockImportParams<Block>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
 
-        let pre_digest = find_pre_digest::<Block>(&header)?;
+	let pre_digest = find_pre_digest::<Block>(&header)?;
 
-        let v_params = VerificationParams {
-            header: header.clone(),
-            pre_digest: Some(pre_digest.clone()),
-        };
+	let v_params = VerificationParams {
+	    header: header.clone(),
+	    pre_digest: Some(pre_digest.clone()),
+	};
 
-        let checked_result = check_header::<Block>(v_params)?;
-        match checked_result {
-            CheckedHeader::Checked(pre_header, verified_info) => {
-                let block_import_params = BlockImportParams {
-                    origin,
-                    header: pre_header,
-                    post_digests: vec![verified_info.seal],
-                    body,
-                    // TODO: need set true? for instant finalization
-                    finalized: false,
-                    justification,
-                    auxiliary: Vec::new(),
-                    fork_choice: ForkChoiceStrategy::LongestChain,
-                    allow_missing_state: false,
-                    import_existing: false,
-                };
+	let checked_result = check_header::<Block>(v_params)?;
+	match checked_result {
+	    CheckedHeader::Checked(pre_header, verified_info) => {
+		let block_import_params = BlockImportParams {
+		    origin,
+		    header: pre_header,
+		    post_digests: vec![verified_info.seal],
+		    body,
+		    // TODO: need set true? for instant finalization
+		    finalized: false,
+		    justification,
+		    auxiliary: Vec::new(),
+		    fork_choice: ForkChoiceStrategy::LongestChain,
+		    allow_missing_state: false,
+		    import_existing: false,
+		};
 
-                Ok((block_import_params, Default::default()))
-            },
-            // TODO: we'd better add this branch
-            // CheckedHeader::NotChecked => {}
+		Ok((block_import_params, Default::default()))
+	    },
+	    // TODO: we'd better add this branch
+	    // CheckedHeader::NotChecked => {}
 
-        }
+	}
 
 
     }
@@ -375,28 +408,28 @@ pub struct RhdBlockImport<B, E, Block: BlockT, I, RA, PRA> {
 
 impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Block, I, RA, PRA> {
     fn clone(&self) -> Self {
-        RhdBlockImport {
-            inner: self.inner.clone(),
-            client: self.client.clone(),
-            api: self.api.clone(),
-            voter_commands_tx: self.voter_commands_tx.clone()
-        }
+	RhdBlockImport {
+	    inner: self.inner.clone(),
+	    client: self.client.clone(),
+	    api: self.api.clone(),
+	    voter_commands_tx: self.voter_commands_tx.clone()
+	}
     }
 }
 
 impl<B, E, Block: BlockT, I, RA, PRA> RhdBlockImport<B, E, Block, I, RA, PRA> {
     fn new(
-        client: Arc<Client<B, E, Block, RA>>,
-        api: Arc<PRA>,
-        block_import: I,
-        voter_commands_tx: mpsc::UnboundedSender<VoterCommand>
+	client: Arc<Client<B, E, Block, RA>>,
+	api: Arc<PRA>,
+	block_import: I,
+	voter_commands_tx: mpsc::UnboundedSender<VoterCommand>
     ) -> Self {
-        RhdBlockImport {
-            client,
-            api,
-            inner: block_import,
-            voter_commands_tx
-        }
+	RhdBlockImport {
+	    client,
+	    api,
+	    inner: block_import,
+	    voter_commands_tx
+	}
     }
 }
 
@@ -413,17 +446,17 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block,
     type Error = ConsensusError;
 
     fn check_block(
-        &mut self,
-        block: BlockCheckParams<Block>,
+	&mut self,
+	block: BlockCheckParams<Block>,
     ) -> Result<ImportResult, Self::Error> {
-        self.inner.check_block(block)
-            //.map_err(Into::into)
+	self.inner.check_block(block)
+	    //.map_err(Into::into)
     }
 
     fn import_block(
-        &mut self,
-        mut block: BlockImportParams<Block>,
-        new_cache: HashMap<CacheKeyId, Vec<u8>>,
+	&mut self,
+	mut block: BlockImportParams<Block>,
+	new_cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
 
 
@@ -457,14 +490,14 @@ pub fn generate_block_import_object<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
     let (voter_commands_tx, voter_commands_rx) = mpsc::unbounded();
 
     let import = RhdBlockImport::new(
-        client: client.clone(),
-        api,
-        default_block_import,
-        voter_commands_tx
+	client: client.clone(),
+	api,
+	default_block_import,
+	voter_commands_tx
     );
     let link = LinkHalf {
-        client: client.clone(),
-        voter_commands_rx,
+	client: client.clone(),
+	voter_commands_rx,
     };
 
     Ok((import, link))
@@ -493,15 +526,15 @@ pub fn generate_import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
 {
 
     let verifier = RhdVerifier {
-        client: client.clone(),
-        api,
+	client: client.clone(),
+	api,
     };
 
     Ok(BasicQueue::new(
-        verifier,
-        Box::new(block_import),
-        justification_import,
-        finality_proof_import,
+	verifier,
+	Box::new(block_import),
+	justification_import,
+	finality_proof_import,
     ))
 }
 
@@ -552,13 +585,13 @@ pub fn run_rhd_worker<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
     CAW: CanAuthorWith<B> + Send,
 {
     let rhd_worker = RhdWorker::new(
-        client.clone(),
-        Arc::new(Mutex::new(block_import)),
-        // env here is a proposer
-        env,
-        sync_oracle.clone(),
-        force_authoring,
-        keystore,
+	client.clone(),
+	Arc::new(Mutex::new(block_import)),
+	// env here is a proposer
+	env,
+	sync_oracle.clone(),
+	force_authoring,
+	keystore,
     );
 
     Ok(rhd_worker)
@@ -583,25 +616,25 @@ NumberFor<Block>: BlockNumberOps,
     VR: VotingRule<Block, Client<B, E, Block, RA>> + Clone + 'static,
 {
     fn new(
-        client: Arc<Client<B, E, Block, RA>>,
-        config: Config,
-        network: NetworkBridge<Block, N>,
-        select_chain: SC,
-        voting_rule: VR,
-        persistent_data: PersistentData<Block>,
-        voter_commands_rx: mpsc::UnboundedReceiver<VoterCommand<Block::Hash, NumberFor<Block>>>,
+	client: Arc<Client<B, E, Block, RA>>,
+	config: Config,
+	network: NetworkBridge<Block, N>,
+	select_chain: SC,
+	voting_rule: VR,
+	persistent_data: PersistentData<Block>,
+	voter_commands_rx: mpsc::UnboundedReceiver<VoterCommand<Block::Hash, NumberFor<Block>>>,
     ) -> Self {
 
-        // When make new voter instance, generate a channel two ends, and pass tx to voter
-        // voter_commands_rx used to receive cmd directive from substrate: start, pause,...
-        // voter_commitout_tx used to send commit message to substrate, indicate that one round has been finished for this local node
+	// When make new voter instance, generate a channel two ends, and pass tx to voter
+	// voter_commands_rx used to receive cmd directive from substrate: start, pause,...
+	// voter_commitout_tx used to send commit message to substrate, indicate that one round has been finished for this local node
 
 
     }
 
     fn handle_voter_command(
-        &mut self,
-        command: VoterCommand<Block::Hash, NumberFor<Block>>
+	&mut self,
+	command: VoterCommand<Block::Hash, NumberFor<Block>>
     ) -> Result<(), Error> {
 
     }
@@ -686,20 +719,20 @@ fn find_pre_digest<B: BlockT>(header: &B::Header) -> Result<BabePreDigest, Error
     // genesis block doesn't contain a pre digest so let's generate a
     // dummy one to not break any invariants in the rest of the code
     if header.number().is_zero() {
-        return Ok(BabePreDigest::Secondary {
-            slot_number: 0,
-            authority_index: 0,
-        });
+	return Ok(BabePreDigest::Secondary {
+	    slot_number: 0,
+	    authority_index: 0,
+	});
     }
 
     let mut pre_digest: Option<_> = None;
     for log in header.digest().logs() {
-        trace!(target: "babe", "Checking log {:?}, looking for pre runtime digest", log);
-        match (log.as_babe_pre_digest(), pre_digest.is_some()) {
-            (Some(_), true) => return Err(babe_err(Error::MultiplePreRuntimeDigests)),
-            (None, _) => trace!(target: "babe", "Ignoring digest not meant for us"),
-            (s, false) => pre_digest = s,
-        }
+	trace!(target: "babe", "Checking log {:?}, looking for pre runtime digest", log);
+	match (log.as_babe_pre_digest(), pre_digest.is_some()) {
+	    (Some(_), true) => return Err(babe_err(Error::MultiplePreRuntimeDigests)),
+	    (None, _) => trace!(target: "babe", "Ignoring digest not meant for us"),
+	    (s, false) => pre_digest = s,
+	}
     }
     pre_digest.ok_or_else(|| babe_err(Error::NoPreRuntimeDigest))
 }
@@ -713,6 +746,6 @@ fn find_pre_digest<B: BlockT>(header: &B::Header) -> Result<BabePreDigest, Error
 mod tests {
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+	assert_eq!(2 + 2, 4);
     }
 }
