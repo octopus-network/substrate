@@ -221,10 +221,33 @@ impl<B, P, I, InStream, OutSink> Future for RhdWorker<B, P, I, InStream, OutSink
 }
 
 
-// let proposer = sc_basic_authority::ProposerFactory {
-//     client: service.client(),
-//     transaction_pool: service.transaction_pool(),
-// };
+
+pub fn make_a_proposer() -> ProposerFactory {
+    let proposer = sc_basic_authority::ProposerFactory {
+	client: service.client(),
+	transaction_pool: service.transaction_pool(),
+    };
+
+    proposer
+}
+
+
+pub fn make_new_block() {
+    // make a proposal
+    self.proposer.propose();
+
+    // immediately import this block
+    block_import.lock().import_block(block_import_params, Default::default());
+
+}
+
+pub fn on_block_imported() {
+
+    // send this block to channel 2
+    self.coming_block_channel_tx.send( block );
+
+
+}
 
 
 pub struct RhdParams<B: BlockT, C, E, I, SO, SC, CAW> {
