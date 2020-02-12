@@ -111,74 +111,14 @@ pub type AuthorityId = _app::Public;
 pub const RHD_ENGINE_ID: ConsensusEngineId = *b"RHD";
 
 
-pub type Committed<B> = rhododendron::Committed<B, <B as BlockT>::Hash, LocalizedSignature>;
-
-pub type Communication<B> = rhododendron::Communication<B, <B as BlockT>::Hash, AuthorityId, LocalizedSignature>;
-
-pub type Misbehavior<H> = rhododendron::Misbehavior<H, LocalizedSignature>;
-
-pub type SharedOfflineTracker = Arc<RwLock<OfflineTracker>>;
-
-
-
-
-/// A BABE pre-runtime digest. This contains all data required to validate a
-/// block and for the BABE runtime module. Slots can be assigned to a primary
-/// (VRF based) and to a secondary (slot number based).
-#[cfg(feature = "std")]
-#[derive(Clone, Debug)]
-pub enum BabePreDigest {
-    /// A primary VRF-based slot assignment.
-    Primary,
-    Secondary,
-}
-
-/// A digest item which is usable with BABE consensus.
-#[cfg(feature = "std")]
-pub trait CompatibleDigestItem: Sized {
-}
-
-
 
 pub enum Error {
 
 }
 
 
-//
-#[derive(Debug)]
-struct RoundCache<H> {
-    hash: Option<H>,
-    start_round: u32,
-}
-
-
-
-//
-struct AgreementHandle {
-    status: Arc<AtomicUsize>,
-    send_cancel: Option<oneshot::Sender<()>>,
-}
-
-impl AgreementHandle {
-    fn status(&self) -> usize {
-	self.status.load(Ordering::Acquire)
-    }
-}
-
-impl Drop for AgreementHandle {
-    fn drop(&mut self) {
-	if let Some(sender) = self.send_cancel.take() {
-	    let _ = sender.send(());
-	}
-    }
-}
-
-
-
-
 ///
-pub struct RhdWorker<B, P, I, InStream, OutSink> where
+pub struct RhdWorker<B, P, I> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
     P: Proposer<B>,
@@ -202,7 +142,7 @@ impl RhdWorker<B, P, I, InStream, OutSink> where
 }
 
 
-impl<B, P, I, InStream, OutSink> Future for RhdWorker<B, P, I, InStream, OutSink> where
+impl<B, P, I> Future for RhdWorker<B, P, I, InStream, OutSink> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
     P: Proposer<B>,
@@ -248,6 +188,34 @@ pub fn on_block_imported() {
 
 
 }
+
+pub fn gen_consensus_msg_channels() {
+
+    // Consensus engine to substrate consensus msg channel
+    let (ts_tx, ts_rx): (UnboundedSender<ConsensusMsg>, UnboundedReceiver<ConsensusMsg>) = mpsc::unbounded();
+
+    // Substrate to consensus engine consensus msg channel
+    let (tc_tx, tc_rx): (UnboundedSender<ConsensusMsg>, UnboundedReceiver<ConsensusMsg>) = mpsc::unbounded();
+
+}
+
+
+enum BlockMsg {
+    MintBlock,
+    ImportBlock
+}
+
+pub fn gen_mint_block_channel() {
+    let (mb_tx, mb_rx): (UnboundedSender<BlockMsg>, UnboundedReceiver<BlockMsg>) = mpsc::unbounded();
+
+}
+
+pub fn gen_import_block_channel() {
+    let (ib_tx, ib_rx): (UnboundedSender<BlockMsg>, UnboundedReceiver<BlockMsg>) = mpsc::unbounded();
+
+}
+
+
 
 
 pub struct RhdParams<B: BlockT, C, E, I, SO, SC, CAW> {
