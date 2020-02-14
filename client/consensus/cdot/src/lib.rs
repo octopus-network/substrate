@@ -81,17 +81,17 @@ use sp_api::ApiExt;
 
 /// Configuration data used by the BABE consensus engine.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug)]
-pub struct BabeConfiguration {
+pub struct RhdConfiguration {
 }
 
 sp_api::decl_runtime_apis! {
     /// API necessary for block authorship with BABE.
-    pub trait BabeApi {
+    pub trait RhdApi {
 	/// Return the configuration for BABE. Currently,
 	/// only the value provided by this type at genesis will be used.
 	///
 	/// Dynamic configuration may be supported in the future.
-	fn configuration() -> BabeConfiguration;
+	fn configuration() -> RhdConfiguration;
     }
 }
 
@@ -117,12 +117,24 @@ pub enum Error {
 }
 
 
-///
+//
+// Core consensus middle layer worker
+//
 pub struct RhdWorker<B, P, I> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
     P: Proposer<B>,
 {
+
+    gossip_engine: GossipEngine,
+
+    tc_tx: UnboundedSender<>,
+    ts_rx: UnboundedReceiver<>,
+
+    mb_rx: UnboundedReceiver<>,
+
+    ib_tx: UnboundedSender<>
+
 
 }
 
@@ -215,47 +227,32 @@ pub fn gen_import_block_channel() {
 
 }
 
+pub fn gen_receiver_end_of_gossip_network_msg() -> UnboundedReceiver<> {
+    // get the receiver end of the gossip network
+    self.gossip_engine.messages_for(topic)
 
-
-
-pub struct RhdParams<B: BlockT, C, E, I, SO, SC, CAW> {
-    pub keystore: KeyStorePtr,
-    pub client: Arc<C>,
-    pub select_chain: SC,
-    /// The environment we are producing blocks for.
-    pub env: E,
-    pub block_import: I,
-    pub sync_oracle: SO,
-    /// Force authoring of blocks even if we are offline
-    pub force_authoring: bool,
-    /// Checks if the current native implementation can author with a runtime at a given block.
-    pub can_author_with: CAW,
 }
 
-pub fn run_rhd_worker<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
-    keystore,
-    client,
-    select_chain,
-    env,
-    block_import,
-    sync_oracle,
-    inherent_data_providers,
-    force_authoring,
-    babe_link,
-    can_author_with,
-}: RhdParams<B, C, E, I, SO, SC, CAW>)
-    -> Result<impl futures01::Future<Item=(), Error=()>,sp_consensus::Error,> where
-    B: BlockT<Hash=H256>,
+
+
+pub struct RhdParams<B: BlockT, C, E, I> {
+    pub client: Arc<C>,
+    pub proposer: E,
+    pub block_import: I,
+}
+
+pub fn gen_rhd_worker<B: BlockT, C, E, I>(
+    RhdParams {
+	client,
+	proposer,
+	block_import,
+    }: RhdParams<C, E, I>) -> Result<impl futures01::Future<Item=(), Error=()>,sp_consensus::Error,> where
     C: ProvideRuntimeApi + ProvideCache<B> + ProvideUncles<B> + BlockchainEvents<B> + HeaderBackend<B> + HeaderMetadata<B, Error=ClientError> + Send + Sync + 'static,
-    C::Api: BabeApi<B>,
-    SC: SelectChain<B> + 'static,
+    C::Api: RhdApi<B>,
     E: Environment<B, Error=Error> + Send + Sync,
     E::Proposer: Proposer<B, Error=Error>,
     <E::Proposer as Proposer<B>>::Create: Unpin + Send + 'static,
     I: BlockImport<B,Error=ConsensusError> + Send + Sync + 'static,
-    Error: std::error::Error + Send + From<::sp_consensus::Error> + From<I::Error> + 'static,
-    SO: SyncOracle + Send + Sync + Clone,
-    CAW: CanAuthorWith<B> + Send,
 {
     let rhd_worker = RhdWorker::new(
 	client.clone(),
@@ -272,19 +269,18 @@ pub fn run_rhd_worker<B, C, SC, E, I, SO, CAW, Error>(RhdParams {
 
 
 
-
-pub struct RhdVerifier<B, E, Block: BlockT, RA, PRA> {
+//
+// Stuff must be implmented: Verifier, BlockImport, ImportQueue
+//
+pub struct RhdVerifier<B, E, Block: BlockT, RA> {
     client: Arc<Client<B, E, Block, RA>>,
-    api: Arc<PRA>,
 }
 
-impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA> where
-    Block: BlockT<Hash=H256>,
+impl<B, E, Block, RA> Verifier<Block> for RhdVerifier<B, E, Block, RA> where
     B: Backend<Block, Blake2Hasher> + 'static,
     E: CallExecutor<Block, Blake2Hasher> + 'static + Clone + Send + Sync,
+    Block: BlockT<Hash=H256>,
     RA: Send + Sync,
-    PRA: ProvideRuntimeApi + Send + Sync + AuxStore + ProvideCache<Block>,
-    PRA::Api: BlockBuilderApi<Block, Error = sp_blockchain::Error> + BabeApi<Block, Error = sp_blockchain::Error>,
 {
     fn verify(
 	&mut self,
@@ -301,49 +297,39 @@ impl<B, E, Block, RA, PRA> Verifier<Block> for RhdVerifier<B, E, Block, RA, PRA>
 
 
 
-pub struct RhdBlockImport<B, E, Block: BlockT, I, RA, PRA> {
-    inner: I,
+pub struct RhdBlockImport<B, E, Block: BlockT, RA, I> {
     client: Arc<Client<B, E, Block, RA>>,
-    api: Arc<PRA>,
-    voter_commands_tx: mpsc::UnboundedSender<VoterCommand>,
+    inner_block_import: I,
 }
 
-impl<B, E, Block: BlockT, I: Clone, RA, PRA> Clone for RhdBlockImport<B, E, Block, I, RA, PRA> {
+impl<B, E, Block: BlockT, RA, I> Clone for RhdBlockImport<B, E, Block, RA, I> {
     fn clone(&self) -> Self {
 	RhdBlockImport {
-	    inner: self.inner.clone(),
 	    client: self.client.clone(),
-	    api: self.api.clone(),
-	    voter_commands_tx: self.voter_commands_tx.clone()
+	    inner_block_import: self.inner_block_import.clone(),
 	}
     }
 }
 
-impl<B, E, Block: BlockT, I, RA, PRA> RhdBlockImport<B, E, Block, I, RA, PRA> {
+impl<B, E, Block: BlockT, RA, I> RhdBlockImport<B, E, Block, RA, I> {
     fn new(
 	client: Arc<Client<B, E, Block, RA>>,
-	api: Arc<PRA>,
 	block_import: I,
-	voter_commands_tx: mpsc::UnboundedSender<VoterCommand>
     ) -> Self {
 	RhdBlockImport {
 	    client,
-	    api,
-	    inner: block_import,
-	    voter_commands_tx
+	    inner_block_import: block_import,
 	}
     }
 }
 
-impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block, I, RA, PRA> where
-    Block: BlockT<Hash=H256>,
-    I: BlockImport<Block> + Send + Sync,
-    I::Error: Into<ConsensusError>,
+impl<B, E, Block, RA, I> BlockImport<Block> for RhdBlockImport<B, E, Block, RA, I> where
     B: Backend<Block, Blake2Hasher> + 'static,
     E: CallExecutor<Block, Blake2Hasher> + 'static + Clone + Send + Sync,
+    Block: BlockT<Hash=H256>,
     RA: Send + Sync,
-    PRA: ProvideRuntimeApi + ProvideCache<Block>,
-    PRA::Api: BabeApi<Block>,
+    I: BlockImport<Block> + Send + Sync,
+    I::Error: Into<ConsensusError>,
 {
     type Error = ConsensusError;
 
@@ -366,36 +352,26 @@ impl<B, E, Block, I, RA, PRA> BlockImport<Block> for RhdBlockImport<B, E, Block,
 
 
     }
-
-
 }
 
-pub fn generate_block_import_object<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
-//    config: Config,
-//    wrapped_block_import: I,
+pub fn gen_block_import_object<B, E, Block: BlockT<Hash=H256>, RA, I>(
     client: Arc<Client<B, E, Block, RA>>,
-    api: Arc<PRA>,
-) -> ClientResult<(RhdBlockImport<B, E, Block, I, RA, PRA>, LinkHalf<B, E, Block, RA>)> where
+) -> ClientResult<RhdBlockImport<B, E, Block, RA, I>> where
     B: Backend<Block, Blake2Hasher>,
     E: CallExecutor<Block, Blake2Hasher> + Send + Sync,
     RA: Send + Sync,
+    I: BlockImport<Block> + Send + Sync,
+    I::Error: Into<ConsensusError>,
 {
 
     let default_block_import = client.clone();
-    let (voter_commands_tx, voter_commands_rx) = mpsc::unbounded();
 
     let import = RhdBlockImport::new(
 	client: client.clone(),
-	api,
 	default_block_import,
-	voter_commands_tx
     );
-    let link = LinkHalf {
-	client: client.clone(),
-	voter_commands_rx,
-    };
 
-    Ok((import, link))
+    Ok(import)
 }
 
 
@@ -403,27 +379,22 @@ pub fn generate_block_import_object<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
 /// The Rhd import queue type.
 pub type RhdImportQueue<B> = BasicQueue<B>;
 
-pub fn generate_import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
-//    babe_link: BabeLink<Block>,
-    block_import: I,
-    justification_import: Option<BoxJustificationImport<Block>>,
-    finality_proof_import: Option<BoxFinalityProofImport<Block>>,
+pub fn gen_import_queue<B, E, Block: BlockT<Hash=H256>, RA, I>(
     client: Arc<Client<B, E, Block, RA>>,
-    api: Arc<PRA>,
-//    inherent_data_providers: InherentDataProviders,
+    block_import: I,
 ) -> ClientResult<RhdImportQueue<Block>> where
     B: Backend<Block, Blake2Hasher> + 'static,
-    I: BlockImport<Block,Error=ConsensusError> + Send + Sync + 'static,
     E: CallExecutor<Block, Blake2Hasher> + Clone + Send + Sync + 'static,
     RA: Send + Sync + 'static,
-    PRA: ProvideRuntimeApi + ProvideCache<Block> + Send + Sync + AuxStore + 'static,
-    PRA::Api: BlockBuilderApi<Block> + BabeApi<Block> + ApiExt<Block, Error = sp_blockchain::Error>,
+    I: BlockImport<Block,Error=ConsensusError> + Send + Sync + 'static,
 {
 
     let verifier = RhdVerifier {
 	client: client.clone(),
-	api,
     };
+
+    let justification_import = None;
+    let finality_proof_import = None;
 
     Ok(BasicQueue::new(
 	verifier,
@@ -432,3 +403,8 @@ pub fn generate_import_queue<B, E, Block: BlockT<Hash=H256>, I, RA, PRA>(
 	finality_proof_import,
     ))
 }
+
+
+//
+// Helper Function
+//
