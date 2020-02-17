@@ -117,48 +117,79 @@ pub enum Error {
 }
 
 
+// CML: Consensus Middle Layer
+enum CmlChannelMsg {
+    // block msg varaint
+    MintBlock,
+    ImportBlock,
+    // gossip msg varaint
+    GossipMsgIncoming(GossipMsg),
+    GossipMsgOutgoing(GossipMsg),
+}
+
+
 //
 // Core consensus middle layer worker
 //
-pub struct RhdWorker<B, P, I> where
-    B: BlockT + Clone + Eq,
-    B::Hash: ::std::hash::Hash,
-    P: Proposer<B>,
-{
+pub struct RhdWorker<B, I, E> {
+    // hold a ref to substrate client
+    client: Arc<Client>,
+    // hold a ref to substrate block import instance
+    block_import: Arc<Mutex<I>>,
+    // proposer for new block
+    proposer_factory: E,
+    // instance of the gossip network engine
+    gossip_engine: GossipEngine<B>,
 
-    gossip_engine: GossipEngine,
-
-    tc_tx: UnboundedSender<>,
-    ts_rx: UnboundedReceiver<>,
-
-    mb_rx: UnboundedReceiver<>,
-
-    ib_tx: UnboundedSender<>
+    // substrate to consensus engine channel tx
+    tc_tx: UnboundedSender<CmlChannelMsg>,
+    // consensus engine to substrate channel rx
+    ts_rx: UnboundedReceiver<CmlChannelMsg>,
+    // mint block channel rx
+    mb_rx: UnboundedReceiver<CmlChannelMsg>,
+    // import block channel tx
+    ib_tx: UnboundedSender<CmlChannelMsg>
 
 
 }
 
 
-impl RhdWorker<B, P, I, InStream, OutSink> where
+impl<B, I, E> RhdWorker<B, I, E> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
-    P: Proposer<B>,
     I: BlockImport<B>,
+    E: Environment<B> + Send + Sync
 {
-
-    pub fn new() {
-
-
+    pub fn new(
+	client: Arc<Client>,
+	block_import: Arc<Mutex<I>>,
+	proposer_factory: E,
+	gossip_engine: GossipEngine<B>,
+	tc_tx: UnboundedSender<CmlChannelMsg>,
+	ts_rx: UnboundedReceiver<CmlChannelMsg>,
+	mb_rx: UnboundedReceiver<CmlChannelMsg>,
+	ib_tx: UnboundedSender<CmlChannelMsg>
+    ) {
+	RhdWorker {
+	    client,
+	    block_import,
+	    proposer_factory,
+	    gossip_engine,
+	    tc_tx,
+	    ts_rx,
+	    mb_rx,
+	    ib_tx,
+	}
     }
 
 }
 
 
-impl<B, P, I> Future for RhdWorker<B, P, I, InStream, OutSink> where
+impl<B, I, E> Future for RhdWorker<B, I, E> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
-    P: Proposer<B>,
     I: BlockImport<B>,
+    E: Environment<B> + Send + Sync
 {
     // Here, We need to three thing
     // 1. poll the making block directive channel rx to make a new block;
@@ -166,106 +197,124 @@ impl<B, P, I> Future for RhdWorker<B, P, I, InStream, OutSink> where
     // 3. poll the gossip engine consensus message channel rx, send message to gossip network;
     //    and on received a new consensus message from gossip network, send it to another consensus message channel tx;
 
+    fn poll() -> {
 
 
+
+	self.gossip_engine.messages_for(topic)
+
+    }
 
 
 }
 
 
+pub fn gen_rhd_worker_pair<B, E, I>(
+    client,
+    block_import,
+    proposer_factory,
+) -> Result<(impl futures01::Future<Item=(), Error=()>, impl futures01::Future<Item=(), Error=()>), sp_consensus::Error> where
+    B: BlockT,
+    E: Environment<B, Error=Error> + Send + Sync,
+    E::Proposer: Proposer<B, Error=Error>,
+    <E::Proposer as Proposer<B>>::Create: Unpin + Send + 'static,
+    I: BlockImport<B, Error=ConsensusError> + Send + Sync + 'static,
+{
+    // generate channels
+    let (tc_tx, tc_rx, ts_tx, ts_rx) = gen_consensus_msg_channels();
+    let (mb_tx, mb_rx) = gen_mint_block_channel();
+    let (ib_tx, ib_rx) = gen_import_block_channel();
 
-pub fn make_a_proposer() -> ProposerFactory {
-    let proposer = sc_basic_authority::ProposerFactory {
+    // generate gossip_engine
+    let network = client.network.clone();
+    // executor is a future runtime executor
+    let executor = ..;
+    // the type of validator is 'impl Validator<B>', such as GossipValidator;
+    let validator = GossipValidator::new();
+    let gossip_engine = GossipEngine::new(network.clone(), executor, RHD_ENGINE_ID, validator.clone());
+
+
+    let rhd_worker = RhdWorker::new(
+	client.clone(),
+	Arc::new(Mutex::new(block_import)),
+	proposer_factory,
+	gossip_engine,
+	tc_tx,
+	ts_rx,
+	mb_rx,
+	ib_tx,
+    );
+
+    let rhd_consensus_engine_worker = RhdConsensusEngineWorker::new(
+	tc_rx,
+	ts_tx,
+	mb_tx,
+	ib_rx,
+    );
+
+    // should return rhd_worker & rhd consensus engine worker
+    Ok((rhd_worker, rhd_consensus_engine_worker))
+}
+
+
+
+pub fn make_proposer_factory() -> ProposerFactory {
+    let proposer_factory = sc_basic_authority::ProposerFactory {
 	client: service.client(),
 	transaction_pool: service.transaction_pool(),
     };
 
-    proposer
+    proposer_factory
 }
 
 
 pub fn make_new_block() {
+
+    let proposer = self.proposer(&chain_head);
+
     // make a proposal
-    self.proposer.propose();
+    proposer.propose();
 
     // immediately import this block
     block_import.lock().import_block(block_import_params, Default::default());
 
 }
 
-pub fn on_block_imported() {
+// pub fn on_block_imported() {
+//     // send this block to channel 2
+//     self.coming_block_channel_tx.send( block );
+// }
 
-    // send this block to channel 2
-    self.coming_block_channel_tx.send( block );
-
-
-}
-
-pub fn gen_consensus_msg_channels() {
+pub fn gen_consensus_msg_channels() -> (
+    UnboundedSender<CmlChannelMsg>,
+    UnboundedReceiver<CmlChannelMsg>,
+    UnboundedSender<CmlChannelMsg>,
+    UnboundedReceiver<CmlChannelMsg>
+){
 
     // Consensus engine to substrate consensus msg channel
-    let (ts_tx, ts_rx): (UnboundedSender<ConsensusMsg>, UnboundedReceiver<ConsensusMsg>) = mpsc::unbounded();
+    let (ts_tx, ts_rx) = mpsc::unbounded();
 
     // Substrate to consensus engine consensus msg channel
-    let (tc_tx, tc_rx): (UnboundedSender<ConsensusMsg>, UnboundedReceiver<ConsensusMsg>) = mpsc::unbounded();
+    let (tc_tx, tc_rx) = mpsc::unbounded();
 
-}
-
-
-enum BlockMsg {
-    MintBlock,
-    ImportBlock
-}
-
-pub fn gen_mint_block_channel() {
-    let (mb_tx, mb_rx): (UnboundedSender<BlockMsg>, UnboundedReceiver<BlockMsg>) = mpsc::unbounded();
-
-}
-
-pub fn gen_import_block_channel() {
-    let (ib_tx, ib_rx): (UnboundedSender<BlockMsg>, UnboundedReceiver<BlockMsg>) = mpsc::unbounded();
-
-}
-
-pub fn gen_receiver_end_of_gossip_network_msg() -> UnboundedReceiver<> {
-    // get the receiver end of the gossip network
-    self.gossip_engine.messages_for(topic)
-
+    (tc_tx, tc_rx, ts_tx, ts_rx)
 }
 
 
 
-pub struct RhdParams<B: BlockT, C, E, I> {
-    pub client: Arc<C>,
-    pub proposer: E,
-    pub block_import: I,
+pub fn gen_mint_block_channel() -> (UnboundedSender<CmlChannelMsg>, UnboundedReceiver<CmlChannelMsg>) {
+    let (mb_tx, mb_rx) = mpsc::unbounded();
+
+    (mb_tx, mb_rx)
 }
 
-pub fn gen_rhd_worker<B: BlockT, C, E, I>(
-    RhdParams {
-	client,
-	proposer,
-	block_import,
-    }: RhdParams<C, E, I>) -> Result<impl futures01::Future<Item=(), Error=()>,sp_consensus::Error,> where
-    C: ProvideRuntimeApi + ProvideCache<B> + ProvideUncles<B> + BlockchainEvents<B> + HeaderBackend<B> + HeaderMetadata<B, Error=ClientError> + Send + Sync + 'static,
-    C::Api: RhdApi<B>,
-    E: Environment<B, Error=Error> + Send + Sync,
-    E::Proposer: Proposer<B, Error=Error>,
-    <E::Proposer as Proposer<B>>::Create: Unpin + Send + 'static,
-    I: BlockImport<B,Error=ConsensusError> + Send + Sync + 'static,
-{
-    let rhd_worker = RhdWorker::new(
-	client.clone(),
-	Arc::new(Mutex::new(block_import)),
-	// env here is a proposer
-	env,
-	sync_oracle.clone(),
-	force_authoring,
-	keystore,
-    );
+pub fn gen_import_block_channel() -> (UnboundedSender<CmlChannelMsg>, UnboundedReceiver<CmlChannelMsg>) {
+    let (ib_tx, ib_rx) = mpsc::unbounded();
 
-    Ok(rhd_worker)
+    (ib_tx, ib_rx)
 }
+
 
 
 
@@ -289,6 +338,38 @@ impl<B, E, Block, RA> Verifier<Block> for RhdVerifier<B, E, Block, RA> where
 	justification: Option<Justification>,
 	mut body: Option<Vec<Block::Extrinsic>>,
     ) -> Result<(BlockImportParams<Block>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
+
+	let pre_digest = find_pre_digest::<Block>(&header)?;
+
+	let v_params = VerificationParams {
+	    header: header.clone(),
+	    pre_digest: Some(pre_digest.clone()),
+	};
+
+	let checked_result = check_header::<Block>(v_params)?;
+	match checked_result {
+	    CheckedHeader::Checked(pre_header, verified_info) => {
+		let block_import_params = BlockImportParams {
+		    origin,
+		    header: pre_header,
+		    post_digests: vec![verified_info.seal],
+		    body,
+		    // TODO: need set true? for instant finalization
+		    finalized: false,
+		    justification,
+		    auxiliary: Vec::new(),
+		    fork_choice: ForkChoiceStrategy::LongestChain,
+		    allow_missing_state: false,
+		    import_existing: false,
+		};
+
+		Ok((block_import_params, Default::default()))
+	    },
+	    // TODO: we'd better add this branch
+	    // CheckedHeader::NotChecked => {}
+
+	}
+
 
 
     }
@@ -408,3 +489,87 @@ pub fn gen_import_queue<B, E, Block: BlockT<Hash=H256>, RA, I>(
 //
 // Helper Function
 //
+fn authorities<A, B, C>(client: &C, at: &BlockId<B>) -> Result<Vec<A>, ConsensusError> where
+    A: Codec,
+    B: BlockT,
+    C: ProvideRuntimeApi + BlockOf + ProvideCache<B>,
+    C::Api: AuraApi<B, A>,
+{
+    client
+	.cache()
+	.and_then(|cache| cache
+		  .get_at(&well_known_cache_keys::AUTHORITIES, at)
+		  .and_then(|(_, _, v)| Decode::decode(&mut &v[..]).ok())
+	)
+	.or_else(|| AuraApi::authorities(&*client.runtime_api(), at).ok())
+	.ok_or_else(|| sp_consensus::Error::InvalidAuthoritiesSet.into())
+}
+
+
+pub enum CheckedHeader<H, S> {
+    Checked(H, S),
+}
+
+struct VerificationParams<B: BlockT> {
+    pub header: B::Header,
+    pub pre_digest: Option<BabePreDigest>,
+}
+
+struct VerifiedHeaderInfo<B: BlockT> {
+    pub pre_digest: DigestItemFor<B>,
+    pub seal: DigestItemFor<B>,
+    pub author: AuthorityId,
+}
+
+fn check_header<B: BlockT + Sized>(
+    params: VerificationParams<B>,
+) -> Result<CheckedHeader<B::Header, VerifiedHeaderInfo<B>>, Error<B>> where
+    DigestItemFor<B>: CompatibleDigestItem,
+{
+    let VerificationParams {
+	mut header,
+	pre_digest,
+    } = params;
+
+    let authorities = authorities(self.client.as_ref(), &BlockId::Hash(parent_hash))
+	.map_err(|e| format!("Could not fetch authorities at {:?}: {:?}", parent_hash, e))?;
+    let author = match authorities.get(pre_digest.authority_index() as usize) {
+	Some(author) => author.0.clone(),
+	None => return Err(babe_err(Error::SlotAuthorNotFound)),
+    };
+
+    let seal = match header.digest_mut().pop() {
+	Some(x) => x,
+	None => return Err(babe_err(Error::HeaderUnsealed(header.hash()))),
+    };
+
+    let info = VerifiedHeaderInfo {
+	pre_digest: CompatibleDigestItem::babe_pre_digest(pre_digest),
+	seal,
+	author,
+    };
+    Ok(CheckedHeader::Checked(header, info))
+}
+
+fn find_pre_digest<B: BlockT>(header: &B::Header) -> Result<BabePreDigest, Error<B>>
+{
+    // genesis block doesn't contain a pre digest so let's generate a
+    // dummy one to not break any invariants in the rest of the code
+    if header.number().is_zero() {
+	return Ok(BabePreDigest::Secondary {
+	    slot_number: 0,
+	    authority_index: 0,
+	});
+    }
+
+    let mut pre_digest: Option<_> = None;
+    for log in header.digest().logs() {
+	trace!(target: "babe", "Checking log {:?}, looking for pre runtime digest", log);
+	match (log.as_babe_pre_digest(), pre_digest.is_some()) {
+	    (Some(_), true) => return Err(babe_err(Error::MultiplePreRuntimeDigests)),
+	    (None, _) => trace!(target: "babe", "Ignoring digest not meant for us"),
+	    (s, false) => pre_digest = s,
+	}
+    }
+    pre_digest.ok_or_else(|| babe_err(Error::NoPreRuntimeDigest))
+}
