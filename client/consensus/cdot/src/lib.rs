@@ -140,6 +140,8 @@ pub struct RhdWorker<B, I, E> {
     proposer_factory: E,
     // instance of the gossip network engine
     gossip_engine: GossipEngine<B>,
+    // gossip network message incoming channel
+    gossip_incoming_end: UnboundedReceiver<TopicNotification>
 
     // substrate to consensus engine channel tx
     tc_tx: UnboundedSender<CmlChannelMsg>,
@@ -165,6 +167,7 @@ impl<B, I, E> RhdWorker<B, I, E> where
 	block_import: Arc<Mutex<I>>,
 	proposer_factory: E,
 	gossip_engine: GossipEngine<B>,
+	gossip_incoming_end: UnboundedReceiver<TopicNotification>,
 	tc_tx: UnboundedSender<CmlChannelMsg>,
 	ts_rx: UnboundedReceiver<CmlChannelMsg>,
 	mb_rx: UnboundedReceiver<CmlChannelMsg>,
@@ -175,6 +178,7 @@ impl<B, I, E> RhdWorker<B, I, E> where
 	    block_import,
 	    proposer_factory,
 	    gossip_engine,
+	    gossip_incoming_end,
 	    tc_tx,
 	    ts_rx,
 	    mb_rx,
@@ -197,12 +201,54 @@ impl<B, I, E> Future for RhdWorker<B, I, E> where
     // 3. poll the gossip engine consensus message channel rx, send message to gossip network;
     //    and on received a new consensus message from gossip network, send it to another consensus message channel tx;
 
-    fn poll() -> {
+    fn poll() -> Poll<(), io::Error>{
+	loop {
+	    match self.mb_rx.poll()? {
+		Async::Ready(Some(msg)) => {
+		    if let CmlChannelMsg::MintBlock = msg {
+			// mint block
+			mint_block();
+		    }
+		},
+		_ => {}
+	    }
+
+	    // impoted block
 
 
 
-	self.gossip_engine.messages_for(topic)
+	    // gossip communication
+	    {
+		// get msg from gossip network
+		match self.gossip_incoming_end.poll()? {
+		    Async::Ready(Some(msg)) => {
+			// msg reconstructure
 
+			// send it to consensus engine
+			self.tc_tx.unbounded_send(msg);
+		    },
+		    _ => {}
+		}
+
+		// get msg from consensus engine
+		match self.ts_rx.poll()? {
+		    Async::Ready(Some(msg)) => {
+			match msg {
+			    CmlChannelMsg::GossipMsgOutgoing(message) => {
+				// send it to gossip network
+				self.gossip_engine.gossip_message(topic, message.encode(), false);
+
+			    },
+			    _ => {}
+			}
+		    },
+		    _ => {}
+		}
+
+
+	    }
+
+	}
     }
 
 
@@ -233,12 +279,35 @@ pub fn gen_rhd_worker_pair<B, E, I>(
     let validator = GossipValidator::new();
     let gossip_engine = GossipEngine::new(network.clone(), executor, RHD_ENGINE_ID, validator.clone());
 
+    let gossip_incoming_end = self.gossip_engine.messages_for(topic)
+	.map(|item| Ok::<_, ()>(item))
+	.filter_map(|notification| {
+	    let decoded = GossipMessage::<B>::decode(&mut &notification.message[..]);
+	    if let Err(ref e) = decoded {
+		debug!(target: "afg", "Skipping malformed message {:?}: {}", notification, e);
+	    }
+	    decoded.ok()
+	})
+	.and_then(move |msg| {
+	    match msg {
+		GossipMessage::Vote(msg) => {
+		}
+		_ => {
+		    debug!(target: "afg", "Skipping unknown message type");
+		    return Ok(None);
+		}
+	    }
+	})
+	.filter_map(|x| x)
+	.map_err(|()| Error::Network(format!("Failed to receive message on unbounded stream")));
+
 
     let rhd_worker = RhdWorker::new(
 	client.clone(),
 	Arc::new(Mutex::new(block_import)),
 	proposer_factory,
 	gossip_engine,
+	gossip_incoming_end,
 	tc_tx,
 	ts_rx,
 	mb_rx,
@@ -268,8 +337,8 @@ pub fn make_proposer_factory() -> ProposerFactory {
 }
 
 
-pub fn make_new_block() {
-
+pub fn mint_block() {
+    // pseudo code
     let proposer = self.proposer(&chain_head);
 
     // make a proposal
