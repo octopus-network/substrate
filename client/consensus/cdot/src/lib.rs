@@ -141,8 +141,9 @@ pub struct RhdWorker<B, I, E> {
     // instance of the gossip network engine
     gossip_engine: GossipEngine<B>,
     // gossip network message incoming channel
-    gossip_incoming_end: UnboundedReceiver<TopicNotification>
-
+    gossip_incoming_end: UnboundedReceiver<TopicNotification>,
+    // imported block channel rx, from block import handle
+    imported_block_rx: UnboundedReceiver<BlockImportParams>,
     // substrate to consensus engine channel tx
     tc_tx: UnboundedSender<CmlChannelMsg>,
     // consensus engine to substrate channel rx
@@ -151,7 +152,6 @@ pub struct RhdWorker<B, I, E> {
     mb_rx: UnboundedReceiver<CmlChannelMsg>,
     // import block channel tx
     ib_tx: UnboundedSender<CmlChannelMsg>
-
 
 }
 
@@ -203,20 +203,29 @@ impl<B, I, E> Future for RhdWorker<B, I, E> where
 
     fn poll() -> Poll<(), io::Error>{
 	loop {
-	    match self.mb_rx.poll()? {
-		Async::Ready(Some(msg)) => {
-		    if let CmlChannelMsg::MintBlock = msg {
-			// mint block
-			mint_block();
-		    }
-		},
-		_ => {}
+	    {
+		match self.mb_rx.poll()? {
+		    Async::Ready(Some(msg)) => {
+			if let CmlChannelMsg::MintBlock = msg {
+			    // mint block
+			    mint_block();
+			}
+		    },
+		    _ => {}
+		}
 	    }
-
 	    // impoted block
+	    {
+		match self.imported_block_rx.poll()? {
+		    Async::Ready(Some(msg)) => {
+			// stuff to do
 
-
-
+			// send this block to consensus engine
+			self.ib_tx.unbounded_send(msg);
+		    },
+		    _ => {}
+		}
+	    }
 	    // gossip communication
 	    {
 		// get msg from gossip network
@@ -450,6 +459,7 @@ impl<B, E, Block, RA> Verifier<Block> for RhdVerifier<B, E, Block, RA> where
 pub struct RhdBlockImport<B, E, Block: BlockT, RA, I> {
     client: Arc<Client<B, E, Block, RA>>,
     inner_block_import: I,
+    imported_block_tx: UnboundedSender<BlockImportParams>
 }
 
 impl<B, E, Block: BlockT, RA, I> Clone for RhdBlockImport<B, E, Block, RA, I> {
@@ -504,7 +514,7 @@ impl<B, E, Block, RA, I> BlockImport<Block> for RhdBlockImport<B, E, Block, RA, 
     }
 }
 
-pub fn gen_block_import_object<B, E, Block: BlockT<Hash=H256>, RA, I>(
+pub fn gen_block_import_handle<B, E, Block: BlockT<Hash=H256>, RA, I>(
     client: Arc<Client<B, E, Block, RA>>,
 ) -> ClientResult<RhdBlockImport<B, E, Block, RA, I>> where
     B: Backend<Block, Blake2Hasher>,
