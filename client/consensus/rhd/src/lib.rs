@@ -133,7 +133,62 @@ impl<B> Future for RhdWorker<B> where
     type Item = ();
     type Error = ();
 
-    fn poll(&mut self) -> ::futures::Poll<(), ()> {
+    fn poll(&mut self) -> Poll<(), ()> {
+	loop {
+	    {
+		// receive protocol msg from scml, forward it to rhd engine
+		match self.tc_rx.poll()? {
+		    Async::Ready(Some(msg)) => {
+			// msg reform
+
+			self.te_tx.unbounded_send(msg);
+
+		    },
+		    _ => {}
+		}
+		// receive rhd engine protocol msg, forward it to scml
+		match self.fe_rx.poll()? {
+		    Async::Ready(Some(msg)) => {
+			// msg reform
+
+			self.ts_tx.unbounded_send(msg);
+
+		    },
+		    _ => {}
+		}
+	    }
+
+	    // impoted block
+	    {
+		match self.ib_rx.poll()? {
+		    Async::Ready(Some(msg)) => {
+			// stuff to do
+			// something after imported block, make a future to Self::CreateProposal and Self::EvaluateProposal
+
+
+		    },
+		    _ => {}
+		}
+	    }
+
+	    // poll agreement and send to mb_tx channel
+	    // XXX: check agreement poll ability
+	    {
+		match self.agreement.poll()? {
+		    Async::Ready(Some(msg)) => {
+			// stuff to do
+			//
+			self.mb_tx.unbounded_send(msg);
+
+		    },
+		    _ => {}
+		}
+
+
+	    }
+
+	}
+
 
 
     }
