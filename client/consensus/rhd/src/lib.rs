@@ -177,7 +177,7 @@ impl<B> Future for RhdWorker<B> where
 		match self.agreement.poll()? {
 		    Async::Ready(Some(msg)) => {
 			// stuff to do
-			//
+			// the result of poll of agreement is Committed<>, deal with it
 			self.mb_tx.unbounded_send(msg);
 
 		    },
