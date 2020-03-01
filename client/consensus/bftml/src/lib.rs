@@ -118,7 +118,7 @@ pub enum Error {
 
 
 // CML: Consensus Middle Layer
-enum ScmlChannelMsg {
+enum BftmlChannelMsg {
     // block msg varaint
     MintBlock,
     ImportBlock,
@@ -131,7 +131,7 @@ enum ScmlChannelMsg {
 //
 // Core consensus middle layer worker
 //
-pub struct ScmlWorker<B, I, E> {
+pub struct BftmlWorker<B, I, E> {
     // hold a ref to substrate client
     client: Arc<Client>,
     // hold a ref to substrate block import instance
@@ -145,18 +145,18 @@ pub struct ScmlWorker<B, I, E> {
     // imported block channel rx, from block import handle
     imported_block_rx: UnboundedReceiver<BlockImportParams>,
     // substrate to consensus engine channel tx
-    tc_tx: UnboundedSender<ScmlChannelMsg>,
+    tc_tx: UnboundedSender<BftmlChannelMsg>,
     // consensus engine to substrate channel rx
-    ts_rx: UnboundedReceiver<ScmlChannelMsg>,
+    ts_rx: UnboundedReceiver<BftmlChannelMsg>,
     // mint block channel rx
-    mb_rx: UnboundedReceiver<ScmlChannelMsg>,
+    mb_rx: UnboundedReceiver<BftmlChannelMsg>,
     // import block channel tx
-    ib_tx: UnboundedSender<ScmlChannelMsg>
+    ib_tx: UnboundedSender<BftmlChannelMsg>
 
 }
 
 
-impl<B, I, E> ScmlWorker<B, I, E> where
+impl<B, I, E> BftmlWorker<B, I, E> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
     I: BlockImport<B>,
@@ -168,12 +168,12 @@ impl<B, I, E> ScmlWorker<B, I, E> where
 	proposer_factory: E,
 	gossip_engine: GossipEngine<B>,
 	gossip_incoming_end: UnboundedReceiver<TopicNotification>,
-	tc_tx: UnboundedSender<ScmlChannelMsg>,
-	ts_rx: UnboundedReceiver<ScmlChannelMsg>,
-	mb_rx: UnboundedReceiver<ScmlChannelMsg>,
-	ib_tx: UnboundedSender<ScmlChannelMsg>
+	tc_tx: UnboundedSender<BftmlChannelMsg>,
+	ts_rx: UnboundedReceiver<BftmlChannelMsg>,
+	mb_rx: UnboundedReceiver<BftmlChannelMsg>,
+	ib_tx: UnboundedSender<BftmlChannelMsg>
     ) {
-	ScmlWorker {
+	BftmlWorker {
 	    client,
 	    block_import,
 	    proposer_factory,
@@ -189,7 +189,7 @@ impl<B, I, E> ScmlWorker<B, I, E> where
 }
 
 
-impl<B, I, E> Future for ScmlWorker<B, I, E> where
+impl<B, I, E> Future for BftmlWorker<B, I, E> where
     B: BlockT + Clone + Eq,
     B::Hash: ::std::hash::Hash,
     I: BlockImport<B>,
@@ -206,7 +206,7 @@ impl<B, I, E> Future for ScmlWorker<B, I, E> where
 	    {
 		match self.mb_rx.poll()? {
 		    Async::Ready(Some(msg)) => {
-			if let ScmlChannelMsg::MintBlock = msg {
+			if let BftmlChannelMsg::MintBlock = msg {
 			    // mint block
 			    mint_block();
 			}
@@ -243,7 +243,7 @@ impl<B, I, E> Future for ScmlWorker<B, I, E> where
 		match self.ts_rx.poll()? {
 		    Async::Ready(Some(msg)) => {
 			match msg {
-			    ScmlChannelMsg::GossipMsgOutgoing(message) => {
+			    BftmlChannelMsg::GossipMsgOutgoing(message) => {
 				// send it to gossip network
 				self.gossip_engine.gossip_message(topic, message.encode(), false);
 
@@ -311,7 +311,7 @@ pub fn gen_rhd_worker_pair<B, E, I>(
 	.map_err(|()| Error::Network(format!("Failed to receive message on unbounded stream")));
 
 
-    let scml_worker = ScmlWorker::new(
+    let scml_worker = BftmlWorker::new(
 	client.clone(),
 	Arc::new(Mutex::new(block_import)),
 	proposer_factory,
@@ -364,10 +364,10 @@ pub fn mint_block() {
 // }
 
 pub fn gen_consensus_msg_channels() -> (
-    UnboundedSender<ScmlChannelMsg>,
-    UnboundedReceiver<ScmlChannelMsg>,
-    UnboundedSender<ScmlChannelMsg>,
-    UnboundedReceiver<ScmlChannelMsg>
+    UnboundedSender<BftmlChannelMsg>,
+    UnboundedReceiver<BftmlChannelMsg>,
+    UnboundedSender<BftmlChannelMsg>,
+    UnboundedReceiver<BftmlChannelMsg>
 ){
 
     // Consensus engine to substrate consensus msg channel
@@ -381,13 +381,13 @@ pub fn gen_consensus_msg_channels() -> (
 
 
 
-pub fn gen_mint_block_channel() -> (UnboundedSender<ScmlChannelMsg>, UnboundedReceiver<ScmlChannelMsg>) {
+pub fn gen_mint_block_channel() -> (UnboundedSender<BftmlChannelMsg>, UnboundedReceiver<BftmlChannelMsg>) {
     let (mb_tx, mb_rx) = mpsc::unbounded();
 
     (mb_tx, mb_rx)
 }
 
-pub fn gen_import_block_channel() -> (UnboundedSender<ScmlChannelMsg>, UnboundedReceiver<ScmlChannelMsg>) {
+pub fn gen_import_block_channel() -> (UnboundedSender<BftmlChannelMsg>, UnboundedReceiver<BftmlChannelMsg>) {
     let (ib_tx, ib_rx) = mpsc::unbounded();
 
     (ib_tx, ib_rx)
@@ -399,11 +399,11 @@ pub fn gen_import_block_channel() -> (UnboundedSender<ScmlChannelMsg>, Unbounded
 //
 // Stuff must be implmented: Verifier, BlockImport, ImportQueue
 //
-pub struct ScmlVerifier<B, E, Block: BlockT, RA> {
+pub struct BftmlVerifier<B, E, Block: BlockT, RA> {
     client: Arc<Client<B, E, Block, RA>>,
 }
 
-impl<B, E, Block, RA> Verifier<Block> for ScmlVerifier<B, E, Block, RA> where
+impl<B, E, Block, RA> Verifier<Block> for BftmlVerifier<B, E, Block, RA> where
     B: Backend<Block, Blake2Hasher> + 'static,
     E: CallExecutor<Block, Blake2Hasher> + 'static + Clone + Send + Sync,
     Block: BlockT<Hash=H256>,
@@ -456,13 +456,13 @@ impl<B, E, Block, RA> Verifier<Block> for ScmlVerifier<B, E, Block, RA> where
 
 
 
-pub struct ScmlBlockImport<B, E, Block: BlockT, RA, I> {
+pub struct BftmlBlockImport<B, E, Block: BlockT, RA, I> {
     client: Arc<Client<B, E, Block, RA>>,
     inner_block_import: I,
     imported_block_tx: UnboundedSender<BlockImportParams>
 }
 
-impl<B, E, Block: BlockT, RA, I> Clone for ScmlBlockImport<B, E, Block, RA, I> {
+impl<B, E, Block: BlockT, RA, I> Clone for BftmlBlockImport<B, E, Block, RA, I> {
     fn clone(&self) -> Self {
 	RhdBlockImport {
 	    client: self.client.clone(),
@@ -471,7 +471,7 @@ impl<B, E, Block: BlockT, RA, I> Clone for ScmlBlockImport<B, E, Block, RA, I> {
     }
 }
 
-impl<B, E, Block: BlockT, RA, I> ScmlBlockImport<B, E, Block, RA, I> {
+impl<B, E, Block: BlockT, RA, I> BftmlBlockImport<B, E, Block, RA, I> {
     fn new(
 	client: Arc<Client<B, E, Block, RA>>,
 	block_import: I,
@@ -483,7 +483,7 @@ impl<B, E, Block: BlockT, RA, I> ScmlBlockImport<B, E, Block, RA, I> {
     }
 }
 
-impl<B, E, Block, RA, I> BlockImport<Block> for ScmlBlockImport<B, E, Block, RA, I> where
+impl<B, E, Block, RA, I> BlockImport<Block> for BftmlBlockImport<B, E, Block, RA, I> where
     B: Backend<Block, Blake2Hasher> + 'static,
     E: CallExecutor<Block, Blake2Hasher> + 'static + Clone + Send + Sync,
     Block: BlockT<Hash=H256>,
@@ -526,7 +526,7 @@ pub fn gen_block_import_handle<B, E, Block: BlockT<Hash=H256>, RA, I>(
 
     let default_block_import = client.clone();
 
-    let import = ScmlBlockImport::new(
+    let import = BftmlBlockImport::new(
 	client: client.clone(),
 	default_block_import,
     );
@@ -537,19 +537,19 @@ pub fn gen_block_import_handle<B, E, Block: BlockT<Hash=H256>, RA, I>(
 
 
 /// The Rhd import queue type.
-pub type ScmlImportQueue<B> = BasicQueue<B>;
+pub type BftmlImportQueue<B> = BasicQueue<B>;
 
 pub fn gen_import_queue<B, E, Block: BlockT<Hash=H256>, RA, I>(
     client: Arc<Client<B, E, Block, RA>>,
     block_import: I,
-) -> ClientResult<ScmlImportQueue<Block>> where
+) -> ClientResult<BftmlImportQueue<Block>> where
     B: Backend<Block, Blake2Hasher> + 'static,
     E: CallExecutor<Block, Blake2Hasher> + Clone + Send + Sync + 'static,
     RA: Send + Sync + 'static,
     I: BlockImport<Block,Error=ConsensusError> + Send + Sync + 'static,
 {
 
-    let verifier = ScmlVerifier {
+    let verifier = BftmlVerifier {
 	client: client.clone(),
     };
 
