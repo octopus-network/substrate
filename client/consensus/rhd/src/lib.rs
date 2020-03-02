@@ -11,89 +11,6 @@ use parking_lot::{RwLock, Mutex};
 
 use codec::{Encode, Decode, Codec};
 
-use sp_core::{
-    Blake2Hasher,
-    H256,
-    Pair,
-    // TODO: need add RHD to key_types
-    crypto::key_types::RHD;
-};
-use sp_runtime::{
-    generic::{
-	BlockId,
-	OpaqueDigestItemId
-    },
-    traits::{
-	Block as BlockT,
-	Header,
-	DigestItemFor,
-	ProvideRuntimeApi,
-	Zero,
-    },
-    Justification,
-    ConsensusEngineId,
-};
-use sp_consensus::{
-    self,
-    BlockImport,
-    Environment,
-    Proposer,
-    BlockCheckParams,
-    ForkChoiceStrategy,
-    BlockImportParams,
-    BlockOrigin,
-    ImportResult,
-    Error as ConsensusError,
-    SelectChain,
-    SyncOracle,
-    CanAuthorWith,
-    import_queue::{
-	Verifier,
-	BasicQueue,
-	CacheKeyId
-    },
-};
-use sc_client_api::{
-    backend::{
-	AuxStore,
-	Backend
-    },
-    call_executor::CallExecutor,
-    BlockchainEvents,
-    ProvideUncles,
-};
-use sc_keystore::KeyStorePtr;
-use sc_client::Client;
-use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_blockchain::{
-    Result as ClientResult,
-    Error as ClientError,
-    HeaderBackend,
-    ProvideCache,
-    HeaderMetadata,
-    well_known_cache_keys::{
-	self,
-	Id as CacheKeyId
-    },
-};
-use sp_api::ApiExt;
-
-
-
-mod _app {
-    use sp_application_crypto::{
-	app_crypto,
-	sr25519,
-	key_types::RHD,
-    };
-    app_crypto!(sr25519, RHD);
-}
-
-#[cfg(feature = "std")]
-pub type AuthorityPair = _app::Pair;
-pub type AuthoritySignature = _app::Signature;
-pub type AuthorityId = _app::Public;
-pub const RHD_ENGINE_ID: ConsensusEngineId = *b"RHD";
 
 
 // LocalizedSignature ?
@@ -327,4 +244,48 @@ impl<B: BlockT> rhododendron::Context for RhdContext<B> where
 	    self.proposer.on_round_end(round, accumulator.proposal().is_some());
 	}
     }
+}
+
+
+
+use sc_bftml::gen;
+
+//
+// We must use some basic types defined in Substrate, imported and use here
+// We can specify and wrap all these types in bftml, and import them from bftml module
+// to reduce noise on your eye
+pub fn gen_rhd_worker_pair<B, E, I>(
+    client: E,
+    block_import: I,
+    proposer_factory: E:Proposer,
+) -> Result<(impl futures01::Future<Item=(), Error=()>, impl futures01::Future<Item=(), Error=()>), sp_consensus::Error> where
+    B: BlockT,
+    E: Environment<B, Error=Error> + Send + Sync,
+    E::Proposer: Proposer<B, Error=Error>,
+    <E::Proposer as Proposer<B>>::Create: Unpin + Send + 'static,
+    I: BlockImport<B, Error=ConsensusError> + Send + Sync + 'static,
+{
+    // generate channels
+    let (tc_tx, tc_rx, ts_tx, ts_rx) = gen::gen_consensus_msg_channels();
+    let (mb_tx, mb_rx) = gen::gen_mint_block_channel();
+    let (ib_tx, ib_rx) = gen::gen_import_block_channel();
+
+    let bftml_worker = BftmlWorker::new(
+	client.clone(),
+	Arc::new(Mutex::new(block_import)),
+	proposer_factory,
+	tc_tx,
+	ts_rx,
+	mb_rx,
+	ib_tx,
+    );
+
+    let rhd_worker = RhdWorker::new(
+	tc_rx,
+	ts_tx,
+	mb_tx,
+	ib_rx,
+    );
+
+    Ok((bftml_worker, rhd_worker))
 }

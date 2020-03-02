@@ -79,21 +79,6 @@ use sp_blockchain::{
 use sp_api::ApiExt;
 
 
-/// Configuration data used by the BABE consensus engine.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug)]
-pub struct RhdConfiguration {
-}
-
-sp_api::decl_runtime_apis! {
-    /// API necessary for block authorship with BABE.
-    pub trait RhdApi {
-	/// Return the configuration for BABE. Currently,
-	/// only the value provided by this type at genesis will be used.
-	///
-	/// Dynamic configuration may be supported in the future.
-	fn configuration() -> RhdConfiguration;
-    }
-}
 
 mod _app {
     use sp_application_crypto::{
@@ -118,7 +103,7 @@ pub enum Error {
 
 
 // CML: Consensus Middle Layer
-enum BftmlChannelMsg {
+pub enum BftmlChannelMsg {
     // block msg varaint
     MintBlock,
     ImportBlock,
@@ -166,13 +151,14 @@ impl<B, I, E> BftmlWorker<B, I, E> where
 	client: Arc<Client>,
 	block_import: Arc<Mutex<I>>,
 	proposer_factory: E,
-	gossip_engine: GossipEngine<B>,
-	gossip_incoming_end: UnboundedReceiver<TopicNotification>,
 	tc_tx: UnboundedSender<BftmlChannelMsg>,
 	ts_rx: UnboundedReceiver<BftmlChannelMsg>,
 	mb_rx: UnboundedReceiver<BftmlChannelMsg>,
 	ib_tx: UnboundedSender<BftmlChannelMsg>
     ) {
+	let gossip_engine = crate::gen::gen_gossip_engine();
+	let gossip_incoming_end = crate::gen::gen_gossip_incoming_end(&gossip_engine);
+
 	BftmlWorker {
 	    client,
 	    block_import,
@@ -264,89 +250,7 @@ impl<B, I, E> Future for BftmlWorker<B, I, E> where
 }
 
 
-pub fn gen_rhd_worker_pair<B, E, I>(
-    client,
-    block_import,
-    proposer_factory,
-) -> Result<(impl futures01::Future<Item=(), Error=()>, impl futures01::Future<Item=(), Error=()>), sp_consensus::Error> where
-    B: BlockT,
-    E: Environment<B, Error=Error> + Send + Sync,
-    E::Proposer: Proposer<B, Error=Error>,
-    <E::Proposer as Proposer<B>>::Create: Unpin + Send + 'static,
-    I: BlockImport<B, Error=ConsensusError> + Send + Sync + 'static,
-{
-    // generate channels
-    let (tc_tx, tc_rx, ts_tx, ts_rx) = gen_consensus_msg_channels();
-    let (mb_tx, mb_rx) = gen_mint_block_channel();
-    let (ib_tx, ib_rx) = gen_import_block_channel();
-
-    // generate gossip_engine
-    let network = client.network.clone();
-    // executor is a future runtime executor
-    let executor = ..;
-    // the type of validator is 'impl Validator<B>', such as GossipValidator;
-    let validator = GossipValidator::new();
-    let gossip_engine = GossipEngine::new(network.clone(), executor, RHD_ENGINE_ID, validator.clone());
-
-    let gossip_incoming_end = self.gossip_engine.messages_for(topic)
-	.map(|item| Ok::<_, ()>(item))
-	.filter_map(|notification| {
-	    let decoded = GossipMessage::<B>::decode(&mut &notification.message[..]);
-	    if let Err(ref e) = decoded {
-		debug!(target: "afg", "Skipping malformed message {:?}: {}", notification, e);
-	    }
-	    decoded.ok()
-	})
-	.and_then(move |msg| {
-	    match msg {
-		GossipMessage::Vote(msg) => {
-		}
-		_ => {
-		    debug!(target: "afg", "Skipping unknown message type");
-		    return Ok(None);
-		}
-	    }
-	})
-	.filter_map(|x| x)
-	.map_err(|()| Error::Network(format!("Failed to receive message on unbounded stream")));
-
-
-    let scml_worker = BftmlWorker::new(
-	client.clone(),
-	Arc::new(Mutex::new(block_import)),
-	proposer_factory,
-	gossip_engine,
-	gossip_incoming_end,
-	tc_tx,
-	ts_rx,
-	mb_rx,
-	ib_tx,
-    );
-
-    let rhd_worker = RhdWorker::new(
-	tc_rx,
-	ts_tx,
-	mb_tx,
-	ib_rx,
-    );
-
-    // should return rhd_worker & rhd consensus engine worker
-    Ok((scml_worker, rhd_worker))
-}
-
-
-
-pub fn make_proposer_factory() -> ProposerFactory {
-    let proposer_factory = sc_basic_authority::ProposerFactory {
-	client: service.client(),
-	transaction_pool: service.transaction_pool(),
-    };
-
-    proposer_factory
-}
-
-
-pub fn mint_block() {
+fn mint_block() {
     // pseudo code
     let proposer = self.proposer(&chain_head);
 
@@ -356,41 +260,6 @@ pub fn mint_block() {
     // immediately import this block
     block_import.lock().import_block(block_import_params, Default::default());
 
-}
-
-// pub fn on_block_imported() {
-//     // send this block to channel 2
-//     self.coming_block_channel_tx.send( block );
-// }
-
-pub fn gen_consensus_msg_channels() -> (
-    UnboundedSender<BftmlChannelMsg>,
-    UnboundedReceiver<BftmlChannelMsg>,
-    UnboundedSender<BftmlChannelMsg>,
-    UnboundedReceiver<BftmlChannelMsg>
-){
-
-    // Consensus engine to substrate consensus msg channel
-    let (ts_tx, ts_rx) = mpsc::unbounded();
-
-    // Substrate to consensus engine consensus msg channel
-    let (tc_tx, tc_rx) = mpsc::unbounded();
-
-    (tc_tx, tc_rx, ts_tx, ts_rx)
-}
-
-
-
-pub fn gen_mint_block_channel() -> (UnboundedSender<BftmlChannelMsg>, UnboundedReceiver<BftmlChannelMsg>) {
-    let (mb_tx, mb_rx) = mpsc::unbounded();
-
-    (mb_tx, mb_rx)
-}
-
-pub fn gen_import_block_channel() -> (UnboundedSender<BftmlChannelMsg>, UnboundedReceiver<BftmlChannelMsg>) {
-    let (ib_tx, ib_rx) = mpsc::unbounded();
-
-    (ib_tx, ib_rx)
 }
 
 
@@ -651,4 +520,95 @@ fn find_pre_digest<B: BlockT>(header: &B::Header) -> Result<BabePreDigest, Error
 	}
     }
     pre_digest.ok_or_else(|| babe_err(Error::NoPreRuntimeDigest))
+}
+
+
+//
+// gen module, including all generating methods about
+//
+pub mod gen {
+
+    pub fn gen_consensus_msg_channels() -> (
+	UnboundedSender<BftmlChannelMsg>,
+	UnboundedReceiver<BftmlChannelMsg>,
+	UnboundedSender<BftmlChannelMsg>,
+	UnboundedReceiver<BftmlChannelMsg>
+    ){
+
+	// Consensus engine to substrate consensus msg channel
+	let (ts_tx, ts_rx) = mpsc::unbounded();
+
+	// Substrate to consensus engine consensus msg channel
+	let (tc_tx, tc_rx) = mpsc::unbounded();
+
+	(tc_tx, tc_rx, ts_tx, ts_rx)
+    }
+
+    pub fn gen_mint_block_channel() -> (UnboundedSender<BftmlChannelMsg>, UnboundedReceiver<BftmlChannelMsg>) {
+	let (mb_tx, mb_rx) = mpsc::unbounded();
+
+	(mb_tx, mb_rx)
+    }
+
+    pub fn gen_import_block_channel() -> (UnboundedSender<BftmlChannelMsg>, UnboundedReceiver<BftmlChannelMsg>) {
+	let (ib_tx, ib_rx) = mpsc::unbounded();
+
+	(ib_tx, ib_rx)
+    }
+
+    pub fn gen_proposer_factory() -> ProposerFactory {
+	let proposer_factory = sc_basic_authority::ProposerFactory {
+	    client: service.client(),
+	    transaction_pool: service.transaction_pool(),
+	};
+
+	proposer_factory
+    }
+
+    pub fn gen_network(client: &Client) {
+	// generate gossip_engine
+	let network = client.network.clone();
+	network
+    }
+
+    pub fn gen_consensus_validator() {
+	// the type of validator is 'impl Validator<B>', such as GossipValidator;
+	let validator = GossipValidator::new();
+	validator
+    }
+
+    pub fn gen_gossip_engine() {
+	// executor is a future runtime executor
+	let executor = ..;
+	let gossip_engine = GossipEngine::new(network.clone(), executor, RHD_ENGINE_ID, validator.clone());
+	gossip_engine
+    }
+
+    pub fn gen_gossip_incoming_end() {
+	let gossip_incoming_end = gossip_engine.messages_for(topic)
+	    .map(|item| Ok::<_, ()>(item))
+	    .filter_map(|notification| {
+		let decoded = GossipMessage::<B>::decode(&mut &notification.message[..]);
+		if let Err(ref e) = decoded {
+		    debug!(target: "afg", "Skipping malformed message {:?}: {}", notification, e);
+		}
+		decoded.ok()
+	    })
+	    .and_then(move |msg| {
+		match msg {
+		    GossipMessage::Vote(msg) => {
+		    }
+		    _ => {
+			debug!(target: "afg", "Skipping unknown message type");
+			return Ok(None);
+		    }
+		}
+	    })
+	    .filter_map(|x| x)
+	    .map_err(|()| Error::Network(format!("Failed to receive message on unbounded stream")));
+
+	gossip_incoming_end
+    }
+
+
 }
