@@ -616,7 +616,6 @@ pub trait CompatibleDigestItem: Sized {
 	fn as_bftml_pre_digest(&self) -> Option<BftmlPreDigest>;
 	// fn bftml_seal(signature: AuthoritySignature) -> Self;
 	// fn as_bftml_seal(&self) -> Option<AuthoritySignature>;
-	// fn as_next_epoch_descriptor(&self) -> Option<NextEpochDescriptor>;
 }
 
 #[cfg(feature = "std")]
@@ -631,21 +630,14 @@ impl<Hash> CompatibleDigestItem for DigestItem<Hash> where
 	self.try_to(OpaqueDigestItemId::PreRuntime(&BFTML_ENGINE_ID))
     }
 
-    // fn babe_seal(signature: AuthoritySignature) -> Self {
-    //	DigestItem::Seal(BABE_ENGINE_ID, signature.encode())
+    // fn bftml_seal(signature: AuthoritySignature) -> Self {
+    //	DigestItem::Seal(BFTML_ENGINE_ID, signature.encode())
     // }
 
-    // fn as_babe_seal(&self) -> Option<AuthoritySignature> {
-    //	self.try_to(OpaqueDigestItemId::Seal(&BABE_ENGINE_ID))
+    // fn as_bftml_seal(&self) -> Option<AuthoritySignature> {
+    //	self.try_to(OpaqueDigestItemId::Seal(&BFTML_ENGINE_ID))
     // }
 
-    // fn as_next_epoch_descriptor(&self) -> Option<NextEpochDescriptor> {
-    //	self.try_to(OpaqueDigestItemId::Consensus(&BABE_ENGINE_ID))
-    //	    .and_then(|x: super::ConsensusLog| match x {
-    //		super::ConsensusLog::NextEpochData(n) => Some(n),
-    //		_ => None,
-    //	    })
-    // }
 }
 
 
