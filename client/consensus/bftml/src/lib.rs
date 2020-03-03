@@ -207,6 +207,7 @@ impl<B, I, E> BftmlWorker<B, I, E> where
 	client: Arc<Client>,
 	block_import: Arc<Mutex<I>>,
 	proposer_factory: E,
+	imported_block_rx: UnboundedReceiver<BlockImportParams>,
 	tc_tx: UnboundedSender<BftmlChannelMsg>,
 	ts_rx: UnboundedReceiver<BftmlChannelMsg>,
 	mb_rx: UnboundedReceiver<BftmlChannelMsg>,
@@ -221,6 +222,7 @@ impl<B, I, E> BftmlWorker<B, I, E> where
 	    proposer_factory,
 	    gossip_engine,
 	    gossip_incoming_end,
+	    imported_block_rx,
 	    tc_tx,
 	    ts_rx,
 	    mb_rx,
@@ -388,6 +390,7 @@ impl<B, E, Block: BlockT, RA, I> Clone for BftmlBlockImport<B, E, Block, RA, I> 
 	RhdBlockImport {
 	    client: self.client.clone(),
 	    inner_block_import: self.inner_block_import.clone(),
+	    imported_block_tx: self.imported_block_tx.clone()
 	}
     }
 }
@@ -396,10 +399,12 @@ impl<B, E, Block: BlockT, RA, I> BftmlBlockImport<B, E, Block, RA, I> {
     fn new(
 	client: Arc<Client<B, E, Block, RA>>,
 	block_import: I,
+	imported_block_tx: UnboundedSender<BlockImportParams>
     ) -> Self {
-	RhdBlockImport {
+	BftmlBlockImport {
 	    client,
 	    inner_block_import: block_import,
+	    imported_block_tx
 	}
     }
 }
@@ -428,16 +433,42 @@ impl<B, E, Block, RA, I> BlockImport<Block> for BftmlBlockImport<B, E, Block, RA
 	new_cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
 
+	let hash = block.post_header().hash();
+	let number = block.header.number().clone();
+
+	// early exit if block already in chain, otherwise the check for
+	// epoch changes will error when trying to re-import an epoch change
+	match self.client.status(BlockId::Hash(hash)) {
+	    Ok(sp_blockchain::BlockStatus::InChain) => return Ok(ImportResult::AlreadyInChain),
+	    Ok(sp_blockchain::BlockStatus::Unknown) => {},
+	    Err(e) => return Err(ConsensusError::ClientImport(e.to_string())),
+	}
+
+	let pre_digest = find_pre_digest::<Block>(&block.header)
+	    .expect("valid bftml headers must contain a predigest; \
+		     header has been already verified; qed");
+	let parent_hash = *block.header.parent_hash();
+	let parent_header = self.client.header(&BlockId::Hash(parent_hash))
+	    .map_err(|e| ConsensusError::ChainLookup(e.to_string()))?
+	    .ok_or_else(|| ConsensusError::ChainLookup(babe_err(
+		Error::<Block>::ParentUnavailable(parent_hash, hash)
+	    ).into()))?;
 
 
+	let import_result = self.inner_block_import.import_block(block.clone(), new_cache);
 
+	// send block to channel
+	self.imported_block_tx.unbounded_send(block);
 
+	import_result.map_err(Into::into)
     }
 }
 
+pub type ImportedBlockLink = mpsc::UnboundedReceiver<BlockImportParams>;
+
 pub fn gen_block_import_handle<B, E, Block: BlockT<Hash=H256>, RA, I>(
     client: Arc<Client<B, E, Block, RA>>,
-) -> ClientResult<RhdBlockImport<B, E, Block, RA, I>> where
+) -> ClientResult<(RhdBlockImport<B, E, Block, RA, I>, ImportedBlockLink)> where
     B: Backend<Block, Blake2Hasher>,
     E: CallExecutor<Block, Blake2Hasher> + Send + Sync,
     RA: Send + Sync,
@@ -447,17 +478,20 @@ pub fn gen_block_import_handle<B, E, Block: BlockT<Hash=H256>, RA, I>(
 
     let default_block_import = client.clone();
 
-    let import = BftmlBlockImport::new(
+    let (imported_block_tx, imported_block_rx) = crate::gen::gen_imported_block_link();
+
+    let import_handle = BftmlBlockImport::new(
 	client: client.clone(),
-	default_block_import,
+	inner_block_import: default_block_import,
+	imported_block_tx
     );
 
-    Ok(import)
+    Ok((import_handle, imported_block_rx))
 }
 
 
 
-/// The Rhd import queue type.
+/// The Bftml import queue type.
 pub type BftmlImportQueue<B> = BasicQueue<B>;
 
 pub fn gen_import_queue<B, E, Block: BlockT<Hash=H256>, RA, I>(
@@ -649,6 +683,13 @@ pub mod gen {
 
 	(ib_tx, ib_rx)
     }
+
+    pub fn gen_imported_block_link() -> (UnboundedSender<BlockImportParams>, UnboundedReceiver<BlockImportParams>) {
+	let (imported_block_tx, imported_block_rx) = mpsc::unbounded();
+
+	(imported_block_tx, imported_block_rx)
+    }
+
 
     pub fn gen_proposer_factory() -> ProposerFactory {
 	let proposer_factory = sc_basic_authority::ProposerFactory {

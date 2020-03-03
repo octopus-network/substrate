@@ -258,6 +258,7 @@ pub fn gen_rhd_worker_pair<B, E, I>(
     client: E,
     block_import: I,
     proposer_factory: E:Proposer,
+    imported_block_rx: UnboundedReceiver<BlockImportParams>
 ) -> Result<(impl futures01::Future<Item=(), Error=()>, impl futures01::Future<Item=(), Error=()>), sp_consensus::Error> where
     B: BlockT,
     E: Environment<B, Error=Error> + Send + Sync,
@@ -274,6 +275,7 @@ pub fn gen_rhd_worker_pair<B, E, I>(
 	client.clone(),
 	Arc::new(Mutex::new(block_import)),
 	proposer_factory,
+	imported_block_rx,
 	tc_tx,
 	ts_rx,
 	mb_rx,
