@@ -338,7 +338,7 @@ impl<B, E, Block, RA> Verifier<Block> for BftmlVerifier<B, E, Block, RA> where
 	&mut self,
 	origin: BlockOrigin,
 	header: Block::Header,
-	justification: Option<Juxostification>,
+	justification: Option<Justification>,
 	mut body: Option<Vec<Block::Extrinsic>>,
     ) -> Result<(BlockImportParams<Block>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
 
@@ -368,15 +368,11 @@ impl<B, E, Block, RA> Verifier<Block> for BftmlVerifier<B, E, Block, RA> where
 
 		Ok((block_import_params, Default::default()))
 	    },
-	    // TODO: we'd better add this branch
-	    // CheckedHeader::NotChecked => {}
-
+	    CheckedHeader::NotChecked => {
+		Err("Verify failed!")
+	    }
 	}
-
-
-
     }
-
 }
 
 
@@ -493,11 +489,10 @@ pub fn gen_import_queue<B, E, Block: BlockT<Hash=H256>, RA, I>(
 //
 // Helper Function
 //
-fn authorities<A, B, C>(client: &C, at: &BlockId<B>) -> Result<Vec<A>, ConsensusError> where
+fn get_authorities<A, B, C>(client: &C, at: &BlockId<B>) -> Result<Vec<A>, ConsensusError> where
     A: Codec,
     B: BlockT,
     C: ProvideRuntimeApi + BlockOf + ProvideCache<B>,
-    C::Api: AuraApi<B, A>,
 {
     client
 	.cache()
@@ -505,18 +500,18 @@ fn authorities<A, B, C>(client: &C, at: &BlockId<B>) -> Result<Vec<A>, Consensus
 		  .get_at(&well_known_cache_keys::AUTHORITIES, at)
 		  .and_then(|(_, _, v)| Decode::decode(&mut &v[..]).ok())
 	)
-	.or_else(|| AuraApi::authorities(&*client.runtime_api(), at).ok())
 	.ok_or_else(|| sp_consensus::Error::InvalidAuthoritiesSet.into())
 }
 
 
 pub enum CheckedHeader<H, S> {
     Checked(H, S),
+    NotChecked
 }
 
 struct VerificationParams<B: BlockT> {
     pub header: B::Header,
-    pub pre_digest: Option<BabePreDigest>,
+    pub pre_digest: Option<BftmlPreDigest>,
 }
 
 struct VerifiedHeaderInfo<B: BlockT> {
@@ -535,20 +530,23 @@ fn check_header<B: BlockT + Sized>(
 	pre_digest,
     } = params;
 
-    let authorities = authorities(self.client.as_ref(), &BlockId::Hash(parent_hash))
+    //let hash = header.hash();
+    let parent_hash = *header.parent_hash();
+    let authorities = get_authorities(self.client.as_ref(), &BlockId::Hash(parent_hash))
 	.map_err(|e| format!("Could not fetch authorities at {:?}: {:?}", parent_hash, e))?;
+
     let author = match authorities.get(pre_digest.authority_index() as usize) {
 	Some(author) => author.0.clone(),
-	None => return Err(babe_err(Error::SlotAuthorNotFound)),
+	None => return Err(Error::SlotAuthorNotFound),
     };
 
     let seal = match header.digest_mut().pop() {
 	Some(x) => x,
-	None => return Err(babe_err(Error::HeaderUnsealed(header.hash()))),
+	None => return Err(Error::HeaderUnsealed(header.hash())),
     };
 
     let info = VerifiedHeaderInfo {
-	pre_digest: CompatibleDigestItem::babe_pre_digest(pre_digest),
+	pre_digest: CompatibleDigestItem::bftml_pre_digest(pre_digest),
 	seal,
 	author,
     };
