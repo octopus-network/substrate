@@ -15,8 +15,6 @@ use sp_core::{
     Blake2Hasher,
     H256,
     Pair,
-    // TODO: need add RHD to key_types
-    crypto::key_types::RHD;
 };
 use sp_runtime::{
     generic::{
@@ -84,9 +82,9 @@ mod _app {
     use sp_application_crypto::{
 	app_crypto,
 	sr25519,
-	key_types::RHD,
+	key_types::BFTML,
     };
-    app_crypto!(sr25519, RHD);
+    app_crypto!(sr25519, BFTML);
 }
 
 #[cfg(feature = "std")]
@@ -109,68 +107,46 @@ enum Error<B: BlockT> {
 	NoPreRuntimeDigest,
 	#[display(fmt = "Multiple BABE epoch change digests, rejecting!")]
 	MultipleEpochChangeDigests,
-	#[display(fmt = "Could not extract timestamp and slot: {:?}", _0)]
-	Extraction(sp_consensus::Error),
-	#[display(fmt = "Could not fetch epoch at {:?}", _0)]
-	FetchEpoch(B::Hash),
-	#[display(fmt = "Header {:?} rejected: too far in the future", _0)]
-	TooFarInFuture(B::Hash),
 	#[display(fmt = "Parent ({}) of {} unavailable. Cannot import", _0, _1)]
 	ParentUnavailable(B::Hash, B::Hash),
-	#[display(fmt = "Slot number must increase: parent slot: {}, this slot: {}", _0, _1)]
-	SlotNumberMustIncrease(u64, u64),
 	#[display(fmt = "Header {:?} has a bad seal", _0)]
 	HeaderBadSeal(B::Hash),
 	#[display(fmt = "Header {:?} is unsealed", _0)]
 	HeaderUnsealed(B::Hash),
-	#[display(fmt = "Slot author not found")]
-	SlotAuthorNotFound,
-	#[display(fmt = "Secondary slot assignments are disabled for the current epoch.")]
-	SecondarySlotAssignmentsDisabled,
 	#[display(fmt = "Bad signature on {:?}", _0)]
 	BadSignature(B::Hash),
 	#[display(fmt = "Invalid author: Expected secondary author: {:?}, got: {:?}.", _0, _1)]
 	InvalidAuthor(AuthorityId, AuthorityId),
-	#[display(fmt = "No secondary author expected.")]
-	NoSecondaryAuthorExpected,
-	#[display(fmt = "VRF verification of block by author {:?} failed: threshold {} exceeded", _0, _1)]
-	VRFVerificationOfBlockFailed(AuthorityId, u128),
-	#[display(fmt = "VRF verification failed: {:?}", _0)]
-	VRFVerificationFailed(SignatureError),
 	#[display(fmt = "Could not fetch parent header: {:?}", _0)]
 	FetchParentHeader(sp_blockchain::Error),
-	#[display(fmt = "Expected epoch change to happen at {:?}, s{}", _0, _1)]
-	ExpectedEpochChange(B::Hash, u64),
-	#[display(fmt = "Could not look up epoch: {:?}", _0)]
-	CouldNotLookUpEpoch(Box<fork_tree::Error<sp_blockchain::Error>>),
 	#[display(fmt = "Block {} is not valid under any epoch.", _0)]
 	BlockNotValid(B::Hash),
-	#[display(fmt = "Unexpected epoch change")]
-	UnexpectedEpochChange,
 	#[display(fmt = "Parent block of {} has no associated weight", _0)]
 	ParentBlockNoAssociatedWeight(B::Hash),
 	#[display(fmt = "Checking inherents failed: {}", _0)]
 	CheckInherents(String),
 	Client(sp_blockchain::Error),
 	Runtime(sp_inherents::Error),
-	ForkTree(Box<fork_tree::Error<sp_blockchain::Error>>),
 }
 
 
 
-// CML: Consensus Middle Layer
+// Bft consensus middle layer channel messages
 pub enum BftmlChannelMsg {
-    // block msg varaint
-    MintBlock,
-    ImportBlock,
-    // gossip msg varaint
-    GossipMsgIncoming(GossipMsg),
-    GossipMsgOutgoing(GossipMsg),
+    // block msg varaints
+    // u32, authority_index
+    MintBlock(u32),
+    // contains the block passed through
+    ImportBlock(BlockImportParams),
+    // gossip msg varaints
+    // the inner data is raw opaque u8 vector, parsed by high level consensus engine
+    GossipMsgIncoming(Vec<u8>),
+    GossipMsgOutgoing(Vec<u8>),
 }
 
 
 //
-// Core consensus middle layer worker
+// Core bft consensus middle layer worker
 //
 pub struct BftmlWorker<B, I, E> {
     // hold a ref to substrate client
