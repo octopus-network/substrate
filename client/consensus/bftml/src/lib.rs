@@ -76,7 +76,11 @@ use sp_blockchain::{
     },
 };
 use sp_api::ApiExt;
-
+use sc_network_gossip::{
+    Validator,
+    ValidationResult
+    TopicNotification,
+}
 
 
 mod _app {
@@ -192,7 +196,8 @@ impl<B, I, E> BftmlWorker<B, I, E> where
     ) {
 
 	let gossip_engine = crate::gen::gen_gossip_engine();
-	let gossip_incoming_end = crate::gen::gen_gossip_incoming_end(&gossip_engine);
+	let topic = make_topic();
+	let gossip_incoming_end = crate::gen::gen_gossip_incoming_end(&gossip_engine, topic);
 
 	BftmlWorker {
 	    client,
@@ -737,18 +742,6 @@ pub mod gen {
 	proposer_factory
     }
 
-    pub fn gen_network(client: &Client) {
-	// generate gossip_engine
-	let network = client.network.clone();
-	network
-    }
-
-    pub fn gen_consensus_validator() {
-	// the type of validator is 'impl Validator<B>', such as GossipValidator;
-	let validator = GossipValidator::new();
-	validator
-    }
-
     pub fn<B, S, H> gen_gossip_engine(
 	network: Arc<NetworkService<B, S, H>>,
 	executor: &impl futures03::task::Spawn,)
@@ -776,28 +769,30 @@ pub mod gen {
 	gossip_engine
     }
 
-    pub fn gen_gossip_incoming_end() {
-	let gossip_incoming_end = gossip_engine.messages_for(topic)
-	    .map(|item| Ok::<_, ()>(item))
-	    .filter_map(|notification| {
-		let decoded = GossipMessage::<B>::decode(&mut &notification.message[..]);
-		if let Err(ref e) = decoded {
-		    debug!(target: "afg", "Skipping malformed message {:?}: {}", notification, e);
-		}
-		decoded.ok()
-	    })
-	    .and_then(move |msg| {
-		match msg {
-		    GossipMessage::Vote(msg) => {
-		    }
-		    _ => {
-			debug!(target: "afg", "Skipping unknown message type");
-			return Ok(None);
-		    }
-		}
-	    })
-	    .filter_map(|x| x)
-	    .map_err(|()| Error::Network(format!("Failed to receive message on unbounded stream")));
+    pub fn<B> gen_gossip_incoming_end(&gossip_engine: GossipEngine<B>, topic: B::Hash) -> mpsc::UnboundedReceiver<TopicNotification> {
+	let gossip_incoming_end = gossip_engine.messages_for(topic);
+
+	// We shall put these biz to upper level consensus engine implementation
+	// .map(|item| Ok::<_, ()>(item))
+	    // .filter_map(|notification| {
+	    //	let decoded = GossipMessage::<B>::decode(&mut &notification.message[..]);
+	    //	if let Err(ref e) = decoded {
+	    //	    debug!(target: "afg", "Skipping malformed message {:?}: {}", notification, e);
+	    //	}
+	    //	decoded.ok()
+	    // })
+	    // .and_then(move |msg| {
+	    //	match msg {
+	    //	    GossipMessage::Vote(msg) => {
+	    //	    }
+	    //	    _ => {
+	    //		debug!(target: "afg", "Skipping unknown message type");
+	    //		return Ok(None);
+	    //	    }
+	    //	}
+	    // })
+	    // .filter_map(|x| x)
+	    // .map_err(|()| Error::Network(format!("Failed to receive message on unbounded stream")));
 
 	gossip_incoming_end
     }
