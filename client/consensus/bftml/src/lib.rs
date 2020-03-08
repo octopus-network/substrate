@@ -227,66 +227,62 @@ impl<B, I, E> Future for BftmlWorker<B, I, E> where
     // 2. on imported a full block, send this new block to new block channel tx;
     // 3. poll the gossip engine consensus message channel rx, send message to gossip network;
     //    and on received a new consensus message from gossip network, send it to another consensus message channel tx;
+    type Item = ();
+    type Error = io::Error;
 
-    fn poll() -> Poll<(), io::Error>{
-	loop {
-	    {
-		match self.mb_rx.poll()? {
-		    Async::Ready(Some(msg)) => {
-			if let BftmlChannelMsg::MintBlock = msg {
-			    // mint block
-			    mint_block();
-			}
-		    },
-		    _ => {}
+    fn poll() -> Poll<(), Self::Error> {
+	// receive mint block directive
+	match self.mb_rx.poll()? {
+	    Async::Ready(Some(msg)) => {
+		if let BftmlChannelMsg::MintBlock(authority_index) = msg {
+		    // mint block
+		    mint_block(authority_index);
 		}
-	    }
-	    // impoted block
-	    {
-		match self.imported_block_rx.poll()? {
-		    Async::Ready(Some(msg)) => {
-			// stuff to do
-
-			// send this block to consensus engine
-			self.ib_tx.unbounded_send(msg);
-		    },
-		    _ => {}
-		}
-	    }
-	    // gossip communication
-	    {
-		// get msg from gossip network
-		match self.gossip_incoming_end.poll()? {
-		    Async::Ready(Some(msg)) => {
-			// msg reconstructure
-
-			// send it to consensus engine
-			self.tc_tx.unbounded_send(msg);
-		    },
-		    _ => {}
-		}
-
-		// get msg from consensus engine
-		match self.ts_rx.poll()? {
-		    Async::Ready(Some(msg)) => {
-			match msg {
-			    BftmlChannelMsg::GossipMsgOutgoing(message) => {
-				// send it to gossip network
-				self.gossip_engine.gossip_message(topic, message.encode(), false);
-
-			    },
-			    _ => {}
-			}
-		    },
-		    _ => {}
-		}
-
-
-	    }
-
+	    },
+	    _ => {}
 	}
-    }
 
+	// impoted block
+	match self.imported_block_rx.poll()? {
+	    Async::Ready(Some(block)) => {
+		// stuff to do, do we need to wrap this struct BlockImportParams to a new type?
+		// send this block to consensus engine
+		self.ib_tx.unbounded_send(BftmlChannelMsg::ImportBlock(block));
+	    },
+	    _ => {}
+	}
+
+	// gossip communication
+	// get msg from gossip network
+	match self.gossip_incoming_end.poll()? {
+	    Async::Ready(Some(msg)) => {
+		// here, msg type is TopicNotification
+		let message = msg.message.clone();
+		let msg_to_send = BftmlChannelMsg::GossipMsgIncoming(message);
+
+		// send it to consensus engine
+		self.tc_tx.unbounded_send(msg_to_send);
+	    },
+	    _ => {}
+	}
+
+	// get msg from consensus engine
+	match self.ts_rx.poll()? {
+	    Async::Ready(Some(msg)) => {
+		match msg {
+		    BftmlChannelMsg::GossipMsgOutgoing(message) => {
+			// send it to gossip network
+			let topic = make_topic();
+			self.gossip_engine.gossip_message(topic, message, false);
+		    },
+		    _ => {}
+		}
+	    },
+	    _ => {}
+	}
+
+	Ok(Async::NotReady)
+    }
 
 }
 
