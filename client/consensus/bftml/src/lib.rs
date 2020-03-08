@@ -213,6 +213,89 @@ impl<B, I, E> BftmlWorker<B, I, E> where
 	}
     }
 
+    fn proposer(&mut self, block: &B::Header) -> Result<E::Proposer, sp_consensus::Error> {
+	self.proposer_factory.init(block).map_err(|e| {
+	    sp_consensus::Error::ClientImport(format!("{:?}", e))
+	})
+    }
+
+    fn mint_block(&mut self, authority_index: u32) {
+	let chain_head = match self.client.best_chain() {
+	    Ok(x) => x,
+	    Err(e) => {
+		// TODO:
+		return;
+	    }
+	};
+
+	// TODO: error handling
+	let proposer = self.proposer(&chain_head).unwrap();
+
+	// assign emplty values now
+	let inherent_data = InherentData::new();
+	// TODO: could emply value be ok?
+	let digests = sp_runtime::generic::Digest {
+	    logs: Vec::new()
+	};
+	let duration = time::Duration::seconds(12);
+
+	// make a proposal
+	let proposing = proposer.propose(inherent_data, digests, duration)
+	    .map_err(|e| sp_consensus::Error::ClientImport(format!("{:?}", e)));;
+
+
+	proposing.map_ok(move |block| {
+	    let (header, body) = block.deconstruct();
+	    let header_num = *header.number();
+	    let header_hash = header.hash();
+	    let parent_hash = *header.parent_hash();
+
+	    // pub authorities: Vec<(AuthorityId, BabeAuthorityWeight)>,
+	    // how to get myself authority_id
+	    let authority_id: AuthorityId = ...;
+
+	    // sign the pre-sealed hash of the block and then
+	    // add it to a digest item.
+	    let signature = authority_id.sign(header_hash.as_ref());
+	    let signature_digest_item = <DigestItemFor<B> as CompatibleDigestItem>::bftml_seal(signature);
+
+	    let block_import_params = BlockImportParams {
+		origin: BlockOrigin::Own,
+		header,
+		justification: None,
+		post_digests: vec![signature_digest_item],
+		body: Some(body),
+		finalized: false,
+		auxiliary: Vec::new(), // block-weight is written in block import.
+		// TODO: block-import handles fork choice and this shouldn't even have the
+		// option to specify one.
+		// https://github.com/paritytech/substrate/issues/3623
+		fork_choice: ForkChoiceStrategy::LongestChain,
+		allow_missing_state: false,
+		import_existing: false,
+	    };
+
+	    info!("Pre-sealed block for proposal at {}. Hash now {:?}, previously {:?}.",
+		  header_num,
+		  block_import_params.post_header().hash(),
+		  header_hash,
+	    );
+
+	    // immediately import this block
+	    if let Err(err) = block_import.lock().import_block(block_import_params, Default::default()) {
+		// warn!(target: "bftml",
+		//	  "Error with block built on {:?}: {:?}",
+		//	  parent_hash,
+		//	  err,
+		// );
+	    }
+	})
+	// TODO: need to check, for futures01
+	    .map(|_| future::ready(Ok()));
+
+	// Here, we'd better use block mode to finish this block minting.
+	proposing.wait();
+    }
 }
 
 
@@ -230,13 +313,13 @@ impl<B, I, E> Future for BftmlWorker<B, I, E> where
     type Item = ();
     type Error = io::Error;
 
-    fn poll() -> Poll<(), Self::Error> {
+    fn poll(&mut self) -> Poll<(), Self::Error> {
 	// receive mint block directive
 	match self.mb_rx.poll()? {
 	    Async::Ready(Some(msg)) => {
 		if let BftmlChannelMsg::MintBlock(authority_index) = msg {
 		    // mint block
-		    mint_block(authority_index);
+		    self.mint_block(authority_index);
 		}
 	    },
 	    _ => {}
@@ -348,24 +431,6 @@ impl<Block: BlockT> sc_network_gossip::Validator<Block> for GossipValidator<Bloc
     }
 
 }
-
-
-
-
-
-
-fn mint_block() {
-    // pseudo code
-    let proposer = self.proposer(&chain_head);
-
-    // make a proposal
-    proposer.propose();
-
-    // immediately import this block
-    block_import.lock().import_block(block_import_params, Default::default());
-
-}
-
 
 
 
@@ -660,7 +725,7 @@ fn find_pre_digest<B: BlockT>(header: &B::Header) -> Result<BftmlPreDigest, Erro
 pub trait CompatibleDigestItem: Sized {
 	fn bftml_pre_digest(seal: BftmlPreDigest) -> Self;
 	fn as_bftml_pre_digest(&self) -> Option<BftmlPreDigest>;
-	// fn bftml_seal(signature: AuthoritySignature) -> Self;
+	fn bftml_seal(signature: AuthoritySignature) -> Self;
 	// fn as_bftml_seal(&self) -> Option<AuthoritySignature>;
 }
 
@@ -676,9 +741,9 @@ impl<Hash> CompatibleDigestItem for DigestItem<Hash> where
 	self.try_to(OpaqueDigestItemId::PreRuntime(&BFTML_ENGINE_ID))
     }
 
-    // fn bftml_seal(signature: AuthoritySignature) -> Self {
-    //	DigestItem::Seal(BFTML_ENGINE_ID, signature.encode())
-    // }
+    fn bftml_seal(signature: AuthoritySignature) -> Self {
+	DigestItem::Seal(BFTML_ENGINE_ID, signature.encode())
+    }
 
     // fn as_bftml_seal(&self) -> Option<AuthoritySignature> {
     //	self.try_to(OpaqueDigestItemId::Seal(&BFTML_ENGINE_ID))
