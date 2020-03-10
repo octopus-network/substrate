@@ -70,40 +70,34 @@ macro_rules! new_full_start {
 				Ok(maintainable_pool)
 			})?
 			.with_import_queue(|_config, client, mut select_chain, _transaction_pool| {
-			    // let select_chain = select_chain.take()
-			    //	.ok_or_else(|| sc_service::Error::SelectChainRequired)?;
-			    // let (grandpa_block_import, grandpa_link) = grandpa::block_import(
-			    //	client.clone(),
-			    //	&*client,
-			    //	select_chain,
-			    // )?;
-			    // let justification_import = grandpa_block_import.clone();
+				let select_chain = select_chain.take()
+					.ok_or_else(|| sc_service::Error::SelectChainRequired)?;
+				let (grandpa_block_import, grandpa_link) = grandpa::block_import(
+					client.clone(),
+					&*client,
+					select_chain,
+				)?;
+				let justification_import = grandpa_block_import.clone();
 
-			    // let (block_import, babe_link) = sc_consensus_babe::block_import(
-			    //	sc_consensus_babe::Config::get_or_compute(&*client)?,
-			    //	grandpa_block_import,
-			    //	client.clone(),
-			    //	client.clone(),
-			    // )?;
+				let (block_import, babe_link) = sc_consensus_babe::block_import(
+					sc_consensus_babe::Config::get_or_compute(&*client)?,
+					grandpa_block_import,
+					client.clone(),
+					client.clone(),
+				)?;
 
-			    // let import_queue = sc_consensus_babe::import_queue(
-			    //	babe_link.clone(),
-			    //	block_import.clone(),
-			    //	Some(Box::new(justification_import)),
-			    //	None,
-			    //	client.clone(),
-			    //	client,
-			    //	inherent_data_providers.clone(),
-			    // )?;
+				let import_queue = sc_consensus_babe::import_queue(
+					babe_link.clone(),
+					block_import.clone(),
+					Some(Box::new(justification_import)),
+					None,
+					client.clone(),
+					client,
+					inherent_data_providers.clone(),
+				)?;
 
-			    // import_setup = Some((block_import, grandpa_link, babe_link));
-			    // Ok(import_queue)
-
-			    let (import_handle, imported_block_link) = sc_consensus_bftml::gen_block_import_handle(client.clone());
-			    let import_queue = sc_consensus_bftml::gen_import_queue(client.clone(), import_handle);
-			    import_setup = Some((import_handle, imported_block_link));
-			    Ok(import_queue)
-
+				import_setup = Some((block_import, grandpa_link, babe_link));
+				Ok(import_queue)
 			})?
 			.with_rpc_extensions(|client, pool, _backend, fetcher, _remote_blockchain| -> Result<RpcExtension, _> {
 				Ok(node_rpc::create(client, pool, node_rpc::LightDeps::none(fetcher)))
@@ -149,25 +143,21 @@ macro_rules! new_full {
 		let (builder, mut import_setup, inherent_data_providers) = new_full_start!($config);
 
 		let service = builder.with_network_protocol(|_| Ok(crate::service::NodeProtocol::new()))?
-		// TODO: impl this
-	    // .with_finality_proof_provider(|client, backend|
-	    //	Ok(Arc::new(grandpa::FinalityProofProvider::new(backend, client)) as _)
-	    // )?
+			.with_finality_proof_provider(|client, backend|
+				Ok(Arc::new(grandpa::FinalityProofProvider::new(backend, client)) as _)
+			)?
 			.build()?;
 
-		// let (block_import, grandpa_link, babe_link) = import_setup.take()
-		//		.expect("Link Half and Block Import are present for Full Services or setup failed before. qed");
-	    let (import_handle, imported_block_link) = import_setup.take()
-		.expect("~000~. qed");
+		let (block_import, grandpa_link, babe_link) = import_setup.take()
+				.expect("Link Half and Block Import are present for Full Services or setup failed before. qed");
 
-	    // TODO: what's this?
-		($with_startup_data)(&import_handle, &imported_block_link);
+		($with_startup_data)(&block_import, &babe_link);
 
 		if participates_in_consensus {
-		    let proposer_factory = sc_basic_authority::ProposerFactory {
-			client: service.client(),
-			transaction_pool: service.transaction_pool(),
-		    };
+			let proposer = sc_basic_authority::ProposerFactory {
+				client: service.client(),
+				transaction_pool: service.transaction_pool(),
+			};
 
 			let client = service.client();
 			let select_chain = service.select_chain()
@@ -176,25 +166,21 @@ macro_rules! new_full {
 			let can_author_with =
 				sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-			// let babe_config = sc_consensus_babe::BabeParams {
-			//	keystore: service.keystore(),
-			//	client,
-			//	select_chain,
-			//	env: proposer,
-			//	block_import,
-			//	sync_oracle: service.network(),
-			//	inherent_data_providers: inherent_data_providers.clone(),
-			//	force_authoring,
-			//	babe_link,
-			//	can_author_with,
-			// };
+			let babe_config = sc_consensus_babe::BabeParams {
+				keystore: service.keystore(),
+				client,
+				select_chain,
+				env: proposer,
+				block_import,
+				sync_oracle: service.network(),
+				inherent_data_providers: inherent_data_providers.clone(),
+				force_authoring,
+				babe_link,
+				can_author_with,
+			};
 
-			// let babe = sc_consensus_babe::start_babe(babe_config)?;
-			// service.spawn_essential_task(babe);
-
-		    let (bftml_worker, rhd_worker) = sc_consensus_rhd::gen_rhd_worker_pair(client, import_handle, proposer_factory, imported_block_link)?;
-		    service.spawn_essential_task(bftml_worker);
-		    service.spawn_essential_task(rhd_worker);
+			let babe = sc_consensus_babe::start_babe(babe_config)?;
+			service.spawn_essential_task(babe);
 
 			let network = service.network();
 			let dht_event_stream = network.event_stream().filter_map(|e| async move { match e {
@@ -221,51 +207,51 @@ macro_rules! new_full {
 			None
 		};
 
-		// let config = grandpa::Config {
-		//	// FIXME #1578 make this available through chainspec
-		//	gossip_duration: std::time::Duration::from_millis(333),
-		//	justification_period: 512,
-		//	name: Some(name),
-		//	observer_enabled: true,
-		//	keystore,
-		//	is_authority,
-		// };
+		let config = grandpa::Config {
+			// FIXME #1578 make this available through chainspec
+			gossip_duration: std::time::Duration::from_millis(333),
+			justification_period: 512,
+			name: Some(name),
+			observer_enabled: true,
+			keystore,
+			is_authority,
+		};
 
-		// match (is_authority, disable_grandpa) {
-		//	(false, false) => {
-		//		// start the lightweight GRANDPA observer
-		//		service.spawn_task(grandpa::run_grandpa_observer(
-		//			config,
-		//			grandpa_link,
-		//			service.network(),
-		//			service.on_exit(),
-		//			service.spawn_task_handle(),
-		//		)?);
-		//	},
-		//	(true, false) => {
-		//		// start the full GRANDPA voter
-		//		let grandpa_config = grandpa::GrandpaParams {
-		//			config: config,
-		//			link: grandpa_link,
-		//			network: service.network(),
-		//			inherent_data_providers: inherent_data_providers.clone(),
-		//			on_exit: service.on_exit(),
-		//			telemetry_on_connect: Some(service.telemetry_on_connect_stream()),
-		//			voting_rule: grandpa::VotingRulesBuilder::default().build(),
-		//			executor: service.spawn_task_handle(),
-		//		};
-		//		// the GRANDPA voter task is considered infallible, i.e.
-		//		// if it fails we take down the service with it.
-		//		service.spawn_essential_task(grandpa::run_grandpa_voter(grandpa_config)?);
-		//	},
-		//	(_, true) => {
-		//		grandpa::setup_disabled_grandpa(
-		//			service.client(),
-		//			&inherent_data_providers,
-		//			service.network(),
-		//		)?;
-		//	},
-		// }
+		match (is_authority, disable_grandpa) {
+			(false, false) => {
+				// start the lightweight GRANDPA observer
+				service.spawn_task(grandpa::run_grandpa_observer(
+					config,
+					grandpa_link,
+					service.network(),
+					service.on_exit(),
+					service.spawn_task_handle(),
+				)?);
+			},
+			(true, false) => {
+				// start the full GRANDPA voter
+				let grandpa_config = grandpa::GrandpaParams {
+					config: config,
+					link: grandpa_link,
+					network: service.network(),
+					inherent_data_providers: inherent_data_providers.clone(),
+					on_exit: service.on_exit(),
+					telemetry_on_connect: Some(service.telemetry_on_connect_stream()),
+					voting_rule: grandpa::VotingRulesBuilder::default().build(),
+					executor: service.spawn_task_handle(),
+				};
+				// the GRANDPA voter task is considered infallible, i.e.
+				// if it fails we take down the service with it.
+				service.spawn_essential_task(grandpa::run_grandpa_voter(grandpa_config)?);
+			},
+			(_, true) => {
+				grandpa::setup_disabled_grandpa(
+					service.client(),
+					&inherent_data_providers,
+					service.network(),
+				)?;
+			},
+		}
 
 		Ok((service, inherent_data_providers))
 	}};

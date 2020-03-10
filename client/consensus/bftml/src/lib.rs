@@ -794,14 +794,14 @@ pub mod gen {
     }
 
 
-    pub fn gen_proposer_factory() -> ProposerFactory {
-	let proposer_factory = sc_basic_authority::ProposerFactory {
-	    client: service.client(),
-	    transaction_pool: service.transaction_pool(),
-	};
+    // pub fn gen_proposer_factory(client: Arc<Client>, ) -> ProposerFactory {
+    //	let proposer_factory = sc_basic_authority::ProposerFactory {
+    //	    client: service.client(),
+    //	    transaction_pool: service.transaction_pool(),
+    //	};
 
-	proposer_factory
-    }
+    //	proposer_factory
+    // }
 
     pub fn<B, S, H> gen_gossip_engine(
 	network: Arc<NetworkService<B, S, H>>,
