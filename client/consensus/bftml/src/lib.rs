@@ -11,83 +11,40 @@ use parking_lot::{RwLock, Mutex};
 
 use codec::{Encode, Decode, Codec};
 
-use sp_core::{
-    Blake2Hasher,
-    H256,
-    Pair,
-};
+use sp_core::{Blake2Hasher, H256, Pair};
 use sp_runtime::{
-    generic::{
-	BlockId,
-	OpaqueDigestItemId
-    },
+    generic::{BlockId, OpaqueDigestItemId},
     traits::{
-	Block as BlockT,
-	Header as HeaderT,
-	Hash as HashT,
-	DigestItemFor,
-	ProvideRuntimeApi,
-	Zero,
+		Block as BlockT, Header as HeaderT, Hash as HashT,
+		DigestItemFor, ProvideRuntimeApi, Zero,
     },
-    Justification,
-    ConsensusEngineId,
+    Justification, ConsensusEngineId,
 };
 use sp_consensus::{
-    self,
-    BlockImport,
-    Environment,
-    Proposer,
-    BlockCheckParams,
-    ForkChoiceStrategy,
-    BlockImportParams,
-    BlockOrigin,
-    ImportResult,
-    Error as ConsensusError,
-    SelectChain,
-    SyncOracle,
-    CanAuthorWith,
-    import_queue::{
-	Verifier,
-	BasicQueue,
-	CacheKeyId
-    },
+    self, BlockImport, Environment, Proposer, BlockCheckParams, ForkChoiceStrategy,
+    BlockImportParams, BlockOrigin, ImportResult, Error as ConsensusError,
+    SelectChain, SyncOracle, CanAuthorWith,
+    import_queue::{Verifier, BasicQueue, CacheKeyId},
 };
 use sc_client_api::{
-    backend::{
-	AuxStore,
-	Backend
-    },
+    backend::{AuxStore, Backend},
     call_executor::CallExecutor,
-    BlockchainEvents,
-    ProvideUncles,
+    BlockchainEvents, ProvideUncles,
 };
 use sc_keystore::KeyStorePtr;
 use sc_client::Client;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_blockchain::{
-    Result as ClientResult,
-    Error as ClientError,
-    HeaderBackend,
-    ProvideCache,
-    HeaderMetadata,
-    well_known_cache_keys::{
-	self,
-	Id as CacheKeyId
-    },
+    Result as ClientResult, Error as ClientError, HeaderBackend,
+    ProvideCache, HeaderMetadata,
+    well_known_cache_keys::{self, Id as CacheKeyId},
 };
 use sp_api::ApiExt;
-use sc_network_gossip::{
-    Validator,
-    ValidationResult
-    TopicNotification,
-}
-
+use sc_network_gossip::{Validator, ValidationResult, TopicNotification};
 
 mod _app {
     use sp_application_crypto::{
-	app_crypto,
-	sr25519,
-	key_types::BFTML,
+		app_crypto, sr25519, key_types::BFTML,
     };
     app_crypto!(sr25519, BFTML);
 }
