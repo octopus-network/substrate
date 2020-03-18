@@ -31,10 +31,11 @@ pub struct RhdWorker<B> where
     // Agreement<context_instance, te_rx, fe_tx>
     // te_rx: to engine rx, used in engine
     // fe_tx: from engine tx, used in engine
-    agreement: rhododendron::Agreement<RhdContext<B>, UnboundedReceiver<>, UnboundedSender<>>,
+    //agreement: Option<rhododendron::Agreement<RhdContext<B>, UnboundedReceiver<>, UnboundedSender<>>>,
 
-    te_tx: UnboundedSender<>,    // to engine tx, used in this caller layer
-    fe_rx: UnboundedReceiver<>,  // from engine rx, used in this caller layer
+    te_tx: Option<UnboundedSender<>>,    // to engine tx, used in this caller layer
+    fe_rx: Option<UnboundedReceiver<>>,  // from engine rx, used in this caller layer
+    cm_rx: Option<UnboundedReceiver<>>,
 
     tc_rx: UnboundedReceiver<>,
     ts_tx: UnboundedSender<>,
@@ -62,41 +63,94 @@ impl<B> Future for RhdWorker<B> where
 	    },
 	    _ => {}
 	}
-	// receive rhd engine protocol msg, forward it to scml
-	match self.fe_rx.poll()? {
-	    Async::Ready(Some(msg)) => {
-		// msg reform
-
-		self.ts_tx.unbounded_send(msg);
-
-	    },
-	    _ => {}
-	}
-
 
 	// impoted block
 	match self.ib_rx.poll()? {
 	    Async::Ready(Some(msg)) => {
 		// stuff to do
 		// something after imported block, make a future to Self::CreateProposal and Self::EvaluateProposal
+		// make a new agreement
 
+		let rhd_context = RhdContext {
+		    authorities: authorities,
+		};
 
+		let (te_tx, te_rx) = mpsc::unbounded();
+		let (fe_tx, fe_rx) = mpsc::unbounded();
+		let (cm_tx, cm_rx) = mpsc::unbounded();
+
+		let mut agreement = rhododendron::agree(
+		    rhd_context,
+		    n,
+		    max_faulty,
+		    te_rx,  // input
+		    fe_tx,  // output
+		);
+
+		self.te_tx = Some(te_tx);
+		self.fe_rx = Some(fe_rx);
+		self.cm_rx = Some(cm_rx)
+		//self.agreement = Some(agreement);
+
+		tokio::spawn(futures::future::poll_fn(move || {
+		    match agreement.poll()? {
+			Async::Ready(Some(commit_msg)) => {
+			    // stuff to do
+			    // the result of poll of agreement is Committed<>, deal with it
+			    cm_tx.unbounded_send(commit_msg);
+
+			    Ok(Async::Ready)
+			},
+			_ => {
+			    Ok(Async::NotReady)
+			}
+		    }
+
+		    Ok(Async::NotReady)
+		}))
 	    },
 	    _ => {}
+	}
+
+
+	// receive rhd engine protocol msg, forward it to scml
+	if self.fe_rx.is_some() {
+	    match self.fe_rx.unwrap().poll()? {
+		Async::Ready(Some(msg)) => {
+		    // msg reform
+
+		    self.ts_tx.unbounded_send(msg);
+
+		},
+		_ => {}
+	    }
+	}
+
+	// receive rhd engine protocol msg, forward it to scml
+	if self.cm_rx.is_some() {
+	    match self.cm_rx.unwrap().poll()? {
+		Async::Ready(Some(commit_msg)) => {
+
+		    // stuff to do
+		    self.mb_tx.unbounded_send(msg);
+
+		},
+		_ => {}
+	    }
 	}
 
 
 	// poll agreement and send to mb_tx channel
 	// XXX: check agreement poll ability
-	match self.agreement.poll()? {
-	    Async::Ready(Some(msg)) => {
-		// stuff to do
-		// the result of poll of agreement is Committed<>, deal with it
-		self.mb_tx.unbounded_send(msg);
+	// match self.agreement.poll()? {
+	//     Async::Ready(Some(msg)) => {
+	//	// stuff to do
+	//	// the result of poll of agreement is Committed<>, deal with it
+	//	self.mb_tx.unbounded_send(msg);
 
-	    },
-	    _ => {}
-	}
+	//     },
+	//     _ => {}
+	// }
 
 
     }
@@ -117,35 +171,31 @@ impl<B> RhdWorker<B> where
 	mb_tx,
 	ib_rx,
     ) -> RhdWorker {
+	// let rhd_context = RhdContext {
+	//     // parent_hash: hash.clone(),
+	//     // cache: self.round_cache.clone(),
+	//     // round_timeout_multiplier: self.round_timeout_multiplier,
+	//     // key: self.key.clone(),
+	//     authorities: authorities,
+	// };
 
 
+	// let (te_tx, te_rx) = mpsc::unbounded();
+	// let (fe_tx, fe_rx) = mpsc::unbounded();
 
-
-	let rhd_context = RhdContext {
-	    // parent_hash: hash.clone(),
-	    // cache: self.round_cache.clone(),
-	    // round_timeout_multiplier: self.round_timeout_multiplier,
-	    // key: self.key.clone(),
-	    authorities: authorities,
-	};
-
-
-	let (te_tx, te_rx) = mpsc::unbounded();
-	let (fe_tx, fe_rx) = mpsc::unbounded();
-
-	let mut agreement = rhododendron::agree(
-	    rhd_context,
-	    n,
-	    max_faulty,
-	    te_rx,  // input
-	    fe_tx,  // output
-	);
+	// let mut agreement = rhododendron::agree(
+	//     rhd_context,
+	//     n,
+	//     max_faulty,
+	//     te_rx,  // input
+	//     fe_tx,  // output
+	// );
 
 
 	RhdWorker {
-	    agreement,
-	    te_tx,
-	    fe_rx,
+	    te_tx: None,
+	    fe_rx: None,
+	    cm_rx: None
 	    tc_rx,
 	    ts_tx,
 	    mb_tx,
