@@ -51,64 +51,58 @@ impl<B> Future for RhdWorker<B> where
     type Error = ();
 
     fn poll(&mut self) -> Poll<(), ()> {
-	loop {
-	    {
-		// receive protocol msg from scml, forward it to rhd engine
-		match self.tc_rx.poll()? {
-		    Async::Ready(Some(msg)) => {
-			// msg reform
 
-			self.te_tx.unbounded_send(msg);
+	// receive protocol msg from scml, forward it to rhd engine
+	match self.tc_rx.poll()? {
+	    Async::Ready(Some(msg)) => {
+		// msg reform
 
-		    },
-		    _ => {}
-		}
-		// receive rhd engine protocol msg, forward it to scml
-		match self.fe_rx.poll()? {
-		    Async::Ready(Some(msg)) => {
-			// msg reform
+		self.te_tx.unbounded_send(msg);
 
-			self.ts_tx.unbounded_send(msg);
+	    },
+	    _ => {}
+	}
+	// receive rhd engine protocol msg, forward it to scml
+	match self.fe_rx.poll()? {
+	    Async::Ready(Some(msg)) => {
+		// msg reform
 
-		    },
-		    _ => {}
-		}
-	    }
+		self.ts_tx.unbounded_send(msg);
 
-	    // impoted block
-	    {
-		match self.ib_rx.poll()? {
-		    Async::Ready(Some(msg)) => {
-			// stuff to do
-			// something after imported block, make a future to Self::CreateProposal and Self::EvaluateProposal
-
-
-		    },
-		    _ => {}
-		}
-	    }
-
-	    // poll agreement and send to mb_tx channel
-	    // XXX: check agreement poll ability
-	    {
-		match self.agreement.poll()? {
-		    Async::Ready(Some(msg)) => {
-			// stuff to do
-			// the result of poll of agreement is Committed<>, deal with it
-			self.mb_tx.unbounded_send(msg);
-
-		    },
-		    _ => {}
-		}
-
-
-	    }
-
+	    },
+	    _ => {}
 	}
 
 
+	// impoted block
+	match self.ib_rx.poll()? {
+	    Async::Ready(Some(msg)) => {
+		// stuff to do
+		// something after imported block, make a future to Self::CreateProposal and Self::EvaluateProposal
+
+
+	    },
+	    _ => {}
+	}
+
+
+	// poll agreement and send to mb_tx channel
+	// XXX: check agreement poll ability
+	match self.agreement.poll()? {
+	    Async::Ready(Some(msg)) => {
+		// stuff to do
+		// the result of poll of agreement is Committed<>, deal with it
+		self.mb_tx.unbounded_send(msg);
+
+	    },
+	    _ => {}
+	}
+
 
     }
+
+    Ok(Async::NotReady)
+
 }
 
 
