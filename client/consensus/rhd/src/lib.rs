@@ -71,8 +71,10 @@ impl<B> Future for RhdWorker<B> where
 		// something after imported block, make a future to Self::CreateProposal and Self::EvaluateProposal
 		// make a new agreement
 
+		let block = ...;  // extract from msg
 		let rhd_context = RhdContext {
 		    authorities: authorities,
+		    current_round_block: Some(block),
 		};
 
 		let (te_tx, te_rx) = mpsc::unbounded();
@@ -210,6 +212,7 @@ impl<B> RhdWorker<B> where
 struct RhdContext<B: BlockT> {
 //    key: Arc<ed25519::Pair>,
     authorities: Vec<AuthorityId>,
+    current_round_block: Option<BlockImportParams>,
 //    parent_hash: B::Hash,
 //    round_timeout_multiplier: u64,
 //    cache: Arc<Mutex<RoundCache<B::Hash>>>,
@@ -233,7 +236,16 @@ impl<B: BlockT> rhododendron::Context for RhdContext<B> where
     }
 
     fn proposal(&self) -> Self::CreateProposal {
-	self.proposer.propose().into_future()
+	poll_fn(move || {
+	    match self.current_round_block {
+		Some(b) => {
+		    Async::Ready(b)
+		}
+		None => {
+		    Async::NotReady
+		}
+	    }
+	})
     }
 
     fn candidate_digest(&self, proposal: &B) -> B::Hash {
@@ -245,11 +257,14 @@ impl<B: BlockT> rhododendron::Context for RhdContext<B> where
     }
 
     fn round_proposer(&self, round: u32) -> AuthorityId {
-	self.proposer.round_proposer(round, &self.authorities[..])
+	//self.proposer.round_proposer(round, &self.authorities[..])
     }
 
     fn proposal_valid(&self, proposal: &B) -> Self::EvaluateProposal {
-	self.proposer.evaluate(proposal).into_future()
+	//self.proposer.evaluate(proposal).into_future()
+	poll_fn(move || {
+	    Async::Ready(true)
+	})
     }
 
     fn begin_round_timeout(&self, round: u32) -> Self::RoundTimeout {
