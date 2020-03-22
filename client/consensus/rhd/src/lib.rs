@@ -1,6 +1,9 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{self, Instant, Duration};
+use tokio::timer::Interval;
+
+use std::time::{Duration, Instant};
 
 use futures::prelude::*;
 use futures::future;
@@ -36,12 +39,16 @@ pub struct RhdWorker<B> where
     te_tx: Option<UnboundedSender<>>,    // to engine tx, used in this caller layer
     fe_rx: Option<UnboundedReceiver<>>,  // from engine rx, used in this caller layer
     cm_rx: Option<UnboundedReceiver<>>,
+    bn_tx: Option<UnboundedReceiver<>>,
 
     tc_rx: UnboundedReceiver<>,
     ts_tx: UnboundedSender<>,
     mb_tx: UnboundedSender<>,
     ib_rx: UnboundedReceiver<>,
-//    status: Arc<AtomicUsize>,
+
+    current_round_block: Option<BlockImportParams>,
+    bft_task_running: bool,
+
 }
 
 impl<B> Future for RhdWorker<B> where
@@ -72,48 +79,17 @@ impl<B> Future for RhdWorker<B> where
 		// make a new agreement
 
 		let block = ...;  // extract from msg
-		let rhd_context = RhdContext {
-		    authorities: authorities,
-		    current_round_block: Some(block),
-		};
-
-		let (te_tx, te_rx) = mpsc::unbounded();
-		let (fe_tx, fe_rx) = mpsc::unbounded();
-		let (cm_tx, cm_rx) = mpsc::unbounded();
-
-		let mut agreement = rhododendron::agree(
-		    rhd_context,
-		    n,
-		    max_faulty,
-		    te_rx,  // input
-		    fe_tx,  // output
-		);
-
-		self.te_tx = Some(te_tx);
-		self.fe_rx = Some(fe_rx);
-		self.cm_rx = Some(cm_rx)
-		//self.agreement = Some(agreement);
-
-		tokio::spawn(futures::future::poll_fn(move || {
-		    match agreement.poll()? {
-			Async::Ready(Some(commit_msg)) => {
-			    // stuff to do
-			    // the result of poll of agreement is Committed<>, deal with it
-			    cm_tx.unbounded_send(commit_msg);
-
-			    Ok(Async::Ready)
-			},
-			_ => {
-			    Ok(Async::NotReady)
-			}
-		    }
-
-		    Ok(Async::NotReady)
-		}))
+		// start one bft instance, if none exist
+		if !self.bft_task_running {
+		    self.start_once_bft();
+		}
+		// send this new block to bft task
+		if self.bn_tx.is_some() {
+		    self.bn_tx.unbounded_send(block);
+		}
 	    },
 	    _ => {}
 	}
-
 
 	// receive rhd engine protocol msg, forward it to scml
 	if self.fe_rx.is_some() {
@@ -197,14 +173,95 @@ impl<B> RhdWorker<B> where
 	RhdWorker {
 	    te_tx: None,
 	    fe_rx: None,
-	    cm_rx: None
+	    cm_rx: None,
+	    bn_tx: None,
 	    tc_rx,
 	    ts_tx,
 	    mb_tx,
-	    ib_rx
+	    ib_rx,
+	    current_round_block: None,
+	    bft_task_running: false
 	}
 
     }
+
+    fn start_once_bft(&mut self) {
+
+	let arc_rhd_worker = Arc::new(self.clone());
+
+	let rhd_context = RhdContext {
+	    authorities: authorities,
+	    rhd_worker: arc_rhd_worker
+	};
+
+	let (te_tx, te_rx) = mpsc::unbounded();
+	let (fe_tx, fe_rx) = mpsc::unbounded();
+	let (cm_tx, cm_rx) = mpsc::unbounded();
+	let (bn_tx, bn_rx) = mpsc::unbounded();  // block notify
+
+	let mut agreement = rhododendron::agree(
+	    rhd_context,
+	    n,
+	    max_faulty,
+	    te_rx,  // input
+	    fe_tx,  // output
+	);
+
+	self.te_tx = Some(te_tx);
+	self.fe_rx = Some(fe_rx);
+	self.cm_rx = Some(cm_rx);
+	self.bn_tx = Some(bn_tx);
+	//self.agreement = Some(agreement);
+
+	tokio::spawn(futures::future::poll_fn(move || {
+
+	    arc_rhd_worker.bft_task_running = true;
+
+	    match agreement.poll()? {
+		Async::Ready(Some(commit_msg)) => {
+		    // stuff to do
+		    // the result of poll of agreement is Committed<>, deal with it
+		    cm_tx.unbounded_send(commit_msg);
+
+		    Ok(Async::Ready)
+		},
+		_ => {
+		    Ok(Async::NotReady)
+		}
+	    }
+
+	    match bn_rx.poll()? {
+		Async::Ready(Some(block)) => {
+		    arc_rhd_worker.current_round_block = Some(block);
+		    //Ok(Async::Ready)
+		},
+		_ => {
+		    Ok(Async::NotReady)
+		}
+	    }
+
+
+	    Ok(Async::NotReady)
+	}));
+
+
+    }
+
+    fn start_timer(&mut self) {
+	let task = Interval::new(Instant::now(), Duration::from_millis(6000))
+	    .for_each(|instant| {
+		// when no bft task exist, run one
+		if !self.bft_task_running {
+		    self.start_once_bft();
+		}
+		println!("fire; instant={:?}", instant);
+		Ok(())
+	    })
+	    .map_err(|e| panic!("interval errored; err={:?}", e));
+
+	tokio::spawn(task);
+    }
+
 }
 
 
@@ -212,7 +269,7 @@ impl<B> RhdWorker<B> where
 struct RhdContext<B: BlockT> {
 //    key: Arc<ed25519::Pair>,
     authorities: Vec<AuthorityId>,
-    current_round_block: Option<BlockImportParams>,
+    rhd_worker: Arc<RhdWorker>,
 //    parent_hash: B::Hash,
 //    round_timeout_multiplier: u64,
 //    cache: Arc<Mutex<RoundCache<B::Hash>>>,
@@ -222,14 +279,14 @@ impl<B: BlockT> rhododendron::Context for RhdContext<B> where
     B: Clone + Eq,
     B::Hash: ::std::hash::Hash,
 {
-	type Error = P::Error;
-	type AuthorityId = AuthorityId;
-	type Digest = B::Hash;
-	type Signature = LocalizedSignature;
-	type Candidate = B;
-	type RoundTimeout = Box<Future<Item=(),Error=Self::Error>>;
-	type CreateProposal = <P::Create as IntoFuture>::Future;
-	type EvaluateProposal = <P::Evaluate as IntoFuture>::Future;
+    type Error = P::Error;
+    type AuthorityId = AuthorityId;
+    type Digest = B::Hash;
+    type Signature = LocalizedSignature;
+    type Candidate = B;
+    type RoundTimeout = Box<Future<Item=(),Error=Self::Error>>;
+    type CreateProposal = <P::Create as IntoFuture>::Future;
+    type EvaluateProposal = <P::Evaluate as IntoFuture>::Future;
 
     fn local_id(&self) -> AuthorityId {
 	self.key.public().into()
@@ -237,8 +294,10 @@ impl<B: BlockT> rhododendron::Context for RhdContext<B> where
 
     fn proposal(&self) -> Self::CreateProposal {
 	poll_fn(move || {
-	    match self.current_round_block {
+	    match self.rhd_worker.current_round_block {
 		Some(b) => {
+		    // take it and leave none, must
+		    let b = self.rhd_worker.current_round_block.take();
 		    Async::Ready(b)
 		}
 		None => {
