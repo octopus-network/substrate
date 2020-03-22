@@ -223,7 +223,14 @@ impl<B> RhdWorker<B> where
 		    // the result of poll of agreement is Committed<>, deal with it
 		    cm_tx.unbounded_send(commit_msg);
 
-		    Ok(Async::Ready)
+		    // set back
+		    arc_rhd_worker.bft_task_running = false;
+		    arc_rhd_worker.te_tx = None;
+		    arc_rhd_worker.fe_rx = None;
+		    arc_rhd_worker.cm_rx = None;
+		    arc_rhd_worker.bn_tx = None;
+
+		    return Ok(Async::Ready);
 		},
 		_ => {
 		    Ok(Async::NotReady)
@@ -239,7 +246,6 @@ impl<B> RhdWorker<B> where
 		    Ok(Async::NotReady)
 		}
 	    }
-
 
 	    Ok(Async::NotReady)
 	}));
