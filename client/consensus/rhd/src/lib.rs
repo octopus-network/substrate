@@ -48,6 +48,7 @@ pub struct RhdWorker<B> where
 
     current_round_block: Option<BlockImportParams>,
     bft_task_running: bool,
+    timer_running: bool
 
 }
 
@@ -59,6 +60,10 @@ impl<B> Future for RhdWorker<B> where
     type Error = ();
 
     fn poll(&mut self) -> Poll<(), ()> {
+
+	if !self.timer_running {
+	    self.start_timer();
+	}
 
 	// receive protocol msg from scml, forward it to rhd engine
 	match self.tc_rx.poll()? {
@@ -180,7 +185,8 @@ impl<B> RhdWorker<B> where
 	    mb_tx,
 	    ib_rx,
 	    current_round_block: None,
-	    bft_task_running: false
+	    bft_task_running: false,
+	    timer_running: false
 	}
 
     }
@@ -266,6 +272,7 @@ impl<B> RhdWorker<B> where
 	    .map_err(|e| panic!("interval errored; err={:?}", e));
 
 	tokio::spawn(task);
+	self.timer_running = true;
     }
 
 }
