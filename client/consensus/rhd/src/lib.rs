@@ -40,7 +40,6 @@ where
     ap_tx: UnboundedSender,
     gp_rx: UnboundedReceiver,
 
-    current_round_block: Option<BlockImportParams>,
     bft_task_running: bool,
     timer_running: bool,
 }
@@ -172,7 +171,6 @@ where
 	    ap_tx,
 	    gp_rx,
 
-	    current_round_block: None,
 	    bft_task_running: false,
 	    timer_running: false,
 	}
