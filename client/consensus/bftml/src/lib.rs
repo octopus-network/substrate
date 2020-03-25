@@ -42,7 +42,6 @@ use sp_blockchain::{
 use sp_api::ApiExt;
 use sc_network_gossip::{Validator, ValidationResult, TopicNotification};
 
-
 mod _app {
     use sp_application_crypto::{
 		app_crypto, sr25519, key_types::BFTML,
