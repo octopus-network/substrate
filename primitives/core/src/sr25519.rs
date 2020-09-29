@@ -304,7 +304,8 @@ impl sp_std::hash::Hash for Signature {
 /// A localized signature also contains sender information.
 /// NOTE: Encode and Decode traits are supported in ed25519 but not possible for now here.
 #[cfg(feature = "std")]
-#[derive(PartialEq, Eq, Clone, Debug)]
+//#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Encode, Decode)]
 pub struct LocalizedSignature {
 	/// The signer of the signature.
 	pub signer: Public,
