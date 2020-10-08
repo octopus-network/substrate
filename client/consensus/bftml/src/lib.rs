@@ -4,11 +4,13 @@ use std::time::{self, Instant, Duration};
 use std::pin::Pin;
 use std::marker::PhantomData;
 use futures::{
-    Future, Stream,
+    future, Future, Stream,
+    FutureExt, TryFutureExt,
     task::{Context, Poll},
     channel::mpsc::{self, UnboundedSender, UnboundedReceiver, Sender, Receiver},
 };
 use log::*;
+use parking_lot::Mutex;
 
 use codec::{Encode, Decode, Codec};
 use sp_core::{Blake2Hasher, H256, Pair};
@@ -183,7 +185,7 @@ pub struct BftmlWorker<B: BlockT, C: ProvideRuntimeApi<B>, E, SO, S, CAW, H: ExH
     client: Arc<C>,
     // hold a ref to substrate block import instance
     //block_import: Arc<I>,
-    block_import: BoxBlockImport<B, sp_api::TransactionFor<C, B>>,
+    block_import: Arc<Mutex<BoxBlockImport<B, sp_api::TransactionFor<C, B>>>>,
     // proposer for new block
     proposer_factory: E,
     network: Arc<NetworkService<B, H>>,
@@ -216,6 +218,8 @@ pub struct BftmlWorker<B: BlockT, C: ProvideRuntimeApi<B>, E, SO, S, CAW, H: ExH
     // XXX: keep current block hash in this structure, because we can't convert Vec<u8> to 
     // B::Hash 
     current_block_hash: Option<B::Hash>,
+    // to store proposing Future
+    proposing: Option<Pin<Box<dyn Future<Output=Result<(), Error<B>>> + Send>>>,
 }
 
 
@@ -256,7 +260,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
 
         BftmlWorker {
             client,
-            block_import,
+            block_import: Arc::new(Mutex::new(block_import)),
             proposer_factory,
             network,
             gossip_engine,
@@ -273,11 +277,11 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
             can_author_with,
             _backend: PhantomData,
             current_block_hash: None,
+            proposing: None,
         }
     }
 
     fn make_proposal(&mut self, authority_index: u32) -> Result<(), Error<B>> {
-
         'outer: loop {
             if self.sync_oracle.is_major_syncing() {
                 debug!(target: "bftml", "Skipping proposal due to sync.");
@@ -301,7 +305,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
                 },
             };
 		
-            if let Err(err) = self.can_author_with.can_author_with(&BlockId::Hash(best_hash)) {
+            if let Err(err) = self.can_author_with.can_author_with(&BlockId::Hash(best_hash.clone())) {
                 warn!(
                     target: "bftml",
                     "Skipping proposal `can_author_with` returned: {} \
@@ -312,9 +316,10 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
                 continue 'outer
             }
 
-            // Note: use `futures` v0.3.5
-            let proposer = futures::executor::block_on(self.proposer_factory.init(&best_header))
-                .map_err(|e| Error::Environment(format!("{:?}", e)))?;
+            // Note: should NOT use `futures::future::block_on` here, for it introduce another
+            // runtime in this system
+            let proposer_fu = self.proposer_factory.init(&best_header)
+                .map_err(|e| Error::Environment(format!("{:?}", e)));
 
             let inherent_data = self.inherent_data_providers
                 .create_inherent_data().map_err(Error::CreateInherents)?;
@@ -322,48 +327,57 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
 //            if let Some(preruntime) = &preruntime {
 //                inherent_digest.push(DigestItem::PreRuntime(POW_ENGINE_ID, preruntime.to_vec()));
 //            }
+
             // Give max 10 seconds to build block
             let build_time = std::time::Duration::new(10, 0);
-            let proposal = futures::executor::block_on(proposer.propose(
+            let proposing_fu = proposer_fu.and_then(move |proposer| {
+                proposer.propose(
                     inherent_data,
                     inherent_digest,
                     build_time,
                     RecordProof::No,
-                    )).map_err(|e| Error::BlockProposingError(format!("{:?}", e)))?;
+                    ).map_err(|e| Error::BlockProposingError(format!("{:?}", e)))
+            });
 
-		    let (header, body) = proposal.block.deconstruct();
-            
-            // [TODO]: calc seal, how to calculate it in our case?
-            // seal is just a Vec<u8>
-            let seal = b"this_is_a_fake_seal".to_vec();
-            
-            // post seal
-            let (hash, seal) = {
-                let seal = DigestItem::Seal(BFTML_ENGINE_ID, seal);
-                let mut header = header.clone();
-                header.digest_mut().push(seal);
-                let hash = header.hash();
-                let seal = header.digest_mut().pop()
-                    .expect("Pushed one seal above; length greater than zero; qed");
-                (hash, seal)
-            };
+            let block_import_handle = self.block_import.clone();
+            let propose_work_fu = proposing_fu.and_then(move |proposal| {
+                let (header, body) = proposal.block.deconstruct();
 
-            let mut import_block = BlockImportParams::new(BlockOrigin::Own, header);
-            import_block.post_digests.push(seal);
-            import_block.body = Some(body);
-            import_block.storage_changes = Some(proposal.storage_changes);
-//            import_block.intermediates.insert(
-//                Cow::from(INTERMEDIATE_KEY),
-//                Box::new(intermediate) as Box<dyn Any>
-//                );
-            import_block.post_hash = Some(hash);
+                // [TODO]: calc seal, how to calculate it in our case?
+                // seal is just a Vec<u8>
+                let seal = b"this_is_a_fake_seal".to_vec();
 
-            self.block_import.import_block(import_block, HashMap::default())
-                .map_err(|e| Error::BlockBuiltError(best_hash, e))?;
+                // post seal
+                let (hash, seal) = {
+                    let seal = DigestItem::Seal(BFTML_ENGINE_ID, seal);
+                    let mut header = header.clone();
+                    header.digest_mut().push(seal);
+                    let hash = header.hash();
+                    let seal = header.digest_mut().pop()
+                        .expect("Pushed one seal above; length greater than zero; qed");
+                    (hash, seal)
+                };
+                let mut import_block = BlockImportParams::new(BlockOrigin::Own, header);
+                import_block.post_digests.push(seal);
+                import_block.body = Some(body);
+                import_block.storage_changes = Some(proposal.storage_changes);
+                import_block.post_hash = Some(hash);
+//              import_block.intermediates.insert(
+//                  Cow::from(INTERMEDIATE_KEY),
+//                  Box::new(intermediate) as Box<dyn Any>
+//              );
+                
+                block_import_handle.lock().import_block(import_block, HashMap::default())
+                    .map_err::<Error<B>, _>(|e| Error::BlockBuiltError(best_hash, e));
+
+                future::ready(Ok(()))
+            });
+
+            self.proposing = Some(propose_work_fu.boxed());
+            //self.proposing = Some(proposing_fu.and_then(|_| future::ready(Ok(()))).boxed());
 
             // jump out of loop
             break Ok(());
-
         }
     }
 }
@@ -393,10 +407,26 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         // receive ask proposal directive from upper layer
         let worker = self.get_mut();
+
+        if worker.proposing.is_some() {
+            let mut proposing_future = worker.proposing.take().unwrap();
+
+            // drive proposing process
+            match Future::poll(Pin::new(&mut proposing_future), cx) {
+                Poll::Ready(_) => {
+                    // do nothing, just drive it and use it's side effect
+                },
+                _ => {
+                    // if not resolved, restore it
+                    worker.proposing = Some(proposing_future);
+                }
+            }
+        }
+
         match Stream::poll_next(Pin::new(&mut worker.ap_rx), cx) {
             Poll::Ready(Some(msg)) => {
                 if let BftmlChannelMsg::AskProposal(authority_index) = msg {
-                    // mint block
+                    // fill create proposal future
                     worker.make_proposal(authority_index);
                 }
             },
