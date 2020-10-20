@@ -59,7 +59,7 @@ pub type AuthoritySignature = _app::Signature;
 pub type AuthorityId = _app::Public;
 // ConsensusEngineId type is: [u8; 4];
 pub const BFTML_ENGINE_ID: ConsensusEngineId = *b"BFTM";
-
+pub const BFTML_PROTOCOL_NAME: &'static str = "/cdot/bftml/1";
 
 
 #[derive(derive_more::Display, Debug)]
@@ -163,6 +163,7 @@ pub enum BftmlInnerMsg<B: BlockT> {
 }
 
 // Bft consensus middle layer channel messages
+#[derive(Clone, Debug)]
 pub enum BftmlChannelMsg {
     // gossip msg varaints
     // the inner data is raw opaque u8 vector, parsed by high level consensus engine
@@ -282,6 +283,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
     }
 
     fn make_proposal(&mut self, authority_index: u32) -> Result<(), Error<B>> {
+        info!("Bftml BftmlWorker: enter make_proposal");
         'outer: loop {
             if self.sync_oracle.is_major_syncing() {
                 debug!(target: "bftml", "Skipping proposal due to sync.");
@@ -331,6 +333,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
             // Give max 10 seconds to build block
             let build_time = std::time::Duration::new(10, 0);
             let proposing_fu = proposer_fu.and_then(move |proposer| {
+                info!("Bftml BftmlWorker: in future: proposer.propose()");
                 proposer.propose(
                     inherent_data,
                     inherent_digest,
@@ -341,6 +344,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
 
             let block_import_handle = self.block_import.clone();
             let propose_work_fu = proposing_fu.and_then(move |proposal| {
+                info!("Bftml BftmlWorker: enter proposing future");
                 let (header, body) = proposal.block.deconstruct();
 
                 // [TODO]: calc seal, how to calculate it in our case?
@@ -370,12 +374,14 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
                 block_import_handle.lock().import_block(import_block, HashMap::default())
                     .map_err::<Error<B>, _>(|e| Error::BlockBuiltError(best_hash, e));
 
+                info!("Bftml BftmlWorker: leaving proposing future");
                 future::ready(Ok(()))
             });
 
             self.proposing = Some(propose_work_fu.boxed());
             //self.proposing = Some(proposing_fu.and_then(|_| future::ready(Ok(()))).boxed());
 
+            info!("Bftml BftmlWorker: leaving make_proposal()");
             // jump out of loop
             break Ok(());
         }
@@ -409,11 +415,13 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         let worker = self.get_mut();
 
         if worker.proposing.is_some() {
+	        info!("===>>> Bftml BftmlWorker: proposing_future is some");
             let mut proposing_future = worker.proposing.take().unwrap();
 
             // drive proposing process
             match Future::poll(Pin::new(&mut proposing_future), cx) {
                 Poll::Ready(_) => {
+	                info!("===>>> Bftml BftmlWorker: poll ready: proposing_future");
                     // do nothing, just drive it and use it's side effect
                 },
                 _ => {
@@ -425,6 +433,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
 
         match Stream::poll_next(Pin::new(&mut worker.ap_rx), cx) {
             Poll::Ready(Some(msg)) => {
+	            info!("===>>> Bftml BftmlWorker: poll ready: worker.ap_rx");
                 if let BftmlChannelMsg::AskProposal(authority_index) = msg {
                     // fill create proposal future
                     worker.make_proposal(authority_index);
@@ -436,6 +445,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // when proposal is ready, give this proposal to upper layer
         match Stream::poll_next(Pin::new(&mut worker.imported_block_rx), cx) {
             Poll::Ready(Some(bft_inner_msg)) => {
+	            info!("===>>> Bftml BftmlWorker: poll ready: worker.imported_block_rx");
                 match bft_inner_msg {
                     BftmlInnerMsg::BftProposal(bft_proposal) => {
                         // forward it with gp_tx
@@ -453,6 +463,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // get msg from gossip network
         match Stream::poll_next(Pin::new(&mut worker.gossip_incoming_end), cx) {
             Poll::Ready(Some(gossip_msg_arrived)) => {
+	            info!("===>>> Bftml BftmlWorker: poll ready: worker.gossip_incoming_end");
                 // message is Vec<u8>
                 let message = gossip_msg_arrived.message.clone();
                 let msg_to_send = BftmlChannelMsg::GossipMsgIncoming(message);
@@ -465,6 +476,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // get msg from upper layer
         match Stream::poll_next(Pin::new(&mut worker.ts_rx), cx) {
             Poll::Ready(Some(msg)) => {
+	            info!("===>>> Bftml BftmlWorker: poll ready: worker.ts_rx");
                 match msg {
                     BftmlChannelMsg::GossipMsgOutgoing(msg) => {
                         // send it to gossip network
@@ -481,6 +493,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // receive ask proposal directive from upper layer
         match Stream::poll_next(Pin::new(&mut worker.cb_rx), cx) {
             Poll::Ready(Some(msg)) => {
+	            info!("===>>> Bftml BftmlWorker: poll ready: worker.cb_rx");
                 if let BftmlChannelMsg::CommitBlock(_block_hash) = msg {
                     // here, block_hash is Vec<u8>, convert it to local Hash type
                     // let local_hash = <B as BlockT>::Hash::from_slice(&block_hash[..]);
@@ -742,7 +755,7 @@ where
         mut block: BlockImportParams<B, Self::Transaction>,
         new_cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
-
+        info!("Bftml BftmlBlockImport: enter import_block()");
 		let best_hash = match self.select_chain.as_ref() {
 			Some(select_chain) => select_chain.best_chain()
 				.map_err(|e| format!("Fetch best chain failed via select chain: {:?}", e))?
@@ -813,9 +826,12 @@ where
             calculated_block_hash
         };
 
+        info!("Bftml BftmlBlockImport: imported_block_tx.unbounded_send()");
         // Send imported block to imported_block_rx, which was polled in the BftmlWorker.
         self.imported_block_tx.unbounded_send(BftmlInnerMsg::BftProposal(bft_proposal));
         self.imported_block_tx.unbounded_send(BftmlInnerMsg::BlockHash(block_hash));
+
+        info!("Bftml BftmlBlockImport: leaving import_block()");
 
 		self.inner.import_block(block, new_cache).map_err(Into::into)
     }
@@ -933,7 +949,7 @@ pub mod gen {
         let validator = GossipValidator::new();
         let validator = Arc::new(validator);
 
-        let gossip_engine = GossipEngine::new(network.clone(), BFTML_ENGINE_ID, "BFTML_GOSSIP", validator.clone());
+        let gossip_engine = GossipEngine::new(network.clone(), BFTML_ENGINE_ID, BFTML_PROTOCOL_NAME, validator.clone());
 
         gossip_engine
     }
