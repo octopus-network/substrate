@@ -35,7 +35,7 @@ use std::{
 /// Wraps around an implementation of the `Network` crate and provides gossiping capabilities on
 /// top of it.
 pub struct GossipEngine<B: BlockT> {
-	state_machine: ConsensusGossip<B>,
+	pub state_machine: ConsensusGossip<B>,
 	network: Box<dyn Network<B> + Send>,
 	periodic_maintenance_interval: futures_timer::Delay,
 	engine_id: ConsensusEngineId,
@@ -88,6 +88,11 @@ impl<B: BlockT> GossipEngine<B> {
 			forwarding_state: ForwardingState::Idle,
 		}
 	}
+
+    /// For debug
+    pub fn state_machine(&self) -> &ConsensusGossip<B> {
+        &self.state_machine
+    }
 
 	pub fn report(&self, who: PeerId, reputation: ReputationChange) {
 		self.network.report_peer(who, reputation);

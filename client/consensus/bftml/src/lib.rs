@@ -219,8 +219,9 @@ pub struct BftmlWorker<B: BlockT, C: ProvideRuntimeApi<B>, E, SO, S, CAW, H: ExH
     // XXX: keep current block hash in this structure, because we can't convert Vec<u8> to 
     // B::Hash 
     current_block_hash: Option<B::Hash>,
-    // to store proposing Future
-    proposing: Option<Pin<Box<dyn Future<Output=Result<(), Error<B>>> + Send>>>,
+    // to store proposal Future
+    proposal_future: Option<Pin<Box<dyn Future<Output=Result<(), Error<B>>> + Send>>>,
+    proposing: bool,
 }
 
 
@@ -259,7 +260,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
         let topic = make_topic::<B>();
         let gossip_incoming_end = crate::gen::gossip_incoming_end(&mut gossip_engine, topic);
 
-        BftmlWorker {
+        let mut worker = BftmlWorker {
             client,
             block_import: Arc::new(Mutex::new(block_import)),
             proposer_factory,
@@ -278,12 +279,18 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
             can_author_with,
             _backend: PhantomData,
             current_block_hash: None,
-            proposing: None,
-        }
+            proposal_future: None,
+            proposing: false,
+        };
+
+        // prepare a first proposal future for first block mint
+        worker.make_proposal_future(0);
+
+        worker
     }
 
-    fn make_proposal(&mut self, authority_index: u32) -> Result<(), Error<B>> {
-        info!("Bftml BftmlWorker: enter make_proposal");
+    fn make_proposal_future(&mut self, authority_index: u32) -> Result<(), Error<B>> {
+        info!("=> Bftml BftmlWorker: enter make_proposal_future");
         'outer: loop {
             if self.sync_oracle.is_major_syncing() {
                 debug!(target: "bftml", "Skipping proposal due to sync.");
@@ -332,8 +339,8 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
 
             // Give max 10 seconds to build block
             let build_time = std::time::Duration::new(10, 0);
-            let proposing_fu = proposer_fu.and_then(move |proposer| {
-                info!("Bftml BftmlWorker: in future: proposer.propose()");
+            let proposal_fu = proposer_fu.and_then(move |proposer| {
+                info!("=> Bftml BftmlWorker: in future: proposer.propose()");
                 proposer.propose(
                     inherent_data,
                     inherent_digest,
@@ -343,8 +350,8 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
             });
 
             let block_import_handle = self.block_import.clone();
-            let propose_work_fu = proposing_fu.and_then(move |proposal| {
-                info!("Bftml BftmlWorker: enter proposing future");
+            let propose_work_fu = proposal_fu.and_then(move |proposal| {
+                info!("=> Bftml BftmlWorker: enter proposal future");
                 let (header, body) = proposal.block.deconstruct();
 
                 // [TODO]: calc seal, how to calculate it in our case?
@@ -374,14 +381,14 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
                 block_import_handle.lock().import_block(import_block, HashMap::default())
                     .map_err::<Error<B>, _>(|e| Error::BlockBuiltError(best_hash, e));
 
-                info!("Bftml BftmlWorker: leaving proposing future");
+                info!("=> Bftml BftmlWorker: leaving proposal future");
                 future::ready(Ok(()))
             });
 
-            self.proposing = Some(propose_work_fu.boxed());
-            //self.proposing = Some(proposing_fu.and_then(|_| future::ready(Ok(()))).boxed());
+            self.proposal_future = Some(propose_work_fu.boxed());
 
-            info!("Bftml BftmlWorker: leaving make_proposal()");
+            info!("=> Bftml BftmlWorker: leaving make_proposal_future()");
+
             // jump out of loop
             break Ok(());
         }
@@ -414,29 +421,14 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // receive ask proposal directive from upper layer
         let worker = self.get_mut();
 
-        if worker.proposing.is_some() {
-	        info!("===>>> Bftml BftmlWorker: proposing_future is some");
-            let mut proposing_future = worker.proposing.take().unwrap();
-
-            // drive proposing process
-            match Future::poll(Pin::new(&mut proposing_future), cx) {
-                Poll::Ready(_) => {
-	                info!("===>>> Bftml BftmlWorker: poll ready: proposing_future");
-                    // do nothing, just drive it and use it's side effect
-                },
-                _ => {
-                    // if not resolved, restore it
-                    worker.proposing = Some(proposing_future);
-                }
-            }
-        }
-
         match Stream::poll_next(Pin::new(&mut worker.ap_rx), cx) {
             Poll::Ready(Some(msg)) => {
-	            info!("===>>> Bftml BftmlWorker: poll ready: worker.ap_rx");
+	            info!("=> Bftml BftmlWorker: poll ready: worker.ap_rx");
                 if let BftmlChannelMsg::AskProposal(authority_index) = msg {
                     // fill create proposal future
-                    worker.make_proposal(authority_index);
+                    // worker.make_proposal_future(authority_index);
+                    // first bootstrap
+                    worker.proposing = true;
                 }
             },
             _ => {}
@@ -445,7 +437,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // when proposal is ready, give this proposal to upper layer
         match Stream::poll_next(Pin::new(&mut worker.imported_block_rx), cx) {
             Poll::Ready(Some(bft_inner_msg)) => {
-	            info!("===>>> Bftml BftmlWorker: poll ready: worker.imported_block_rx");
+	            info!("=> Bftml BftmlWorker: poll ready: worker.imported_block_rx: {:?}", bft_inner_msg);
                 match bft_inner_msg {
                     BftmlInnerMsg::BftProposal(bft_proposal) => {
                         // forward it with gp_tx
@@ -463,10 +455,11 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // get msg from gossip network
         match Stream::poll_next(Pin::new(&mut worker.gossip_incoming_end), cx) {
             Poll::Ready(Some(gossip_msg_arrived)) => {
-	            info!("===>>> Bftml BftmlWorker: poll ready: worker.gossip_incoming_end");
+	            info!("=> Bftml BftmlWorker: poll ready: worker.gossip_incoming_end: msg: {:?}", gossip_msg_arrived);
                 // message is Vec<u8>
                 let message = gossip_msg_arrived.message.clone();
                 let msg_to_send = BftmlChannelMsg::GossipMsgIncoming(message);
+	            info!("=> Bftml BftmlWorker: send msg into tc_tx");
                 // forward it with tc_tx
                 worker.tc_tx.unbounded_send(msg_to_send);
             },
@@ -476,11 +469,14 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // get msg from upper layer
         match Stream::poll_next(Pin::new(&mut worker.ts_rx), cx) {
             Poll::Ready(Some(msg)) => {
-	            info!("===>>> Bftml BftmlWorker: poll ready: worker.ts_rx");
+	            info!("=> Bftml BftmlWorker: poll ready: worker.ts_rx: msg: {:?}", msg);
                 match msg {
                     BftmlChannelMsg::GossipMsgOutgoing(msg) => {
                         // send it to gossip network
                         let topic = make_topic::<B>();
+	                    
+                        info!("=> Bftml BftmlWorker: worker.gossip_engine.gossip_message(): topic: {}", topic);
+                        info!("=> Bftml BftmlWorker: GossipEngine: peers: {:?}", worker.gossip_engine.state_machine().peers());
                         // multicast to network
                         worker.gossip_engine.gossip_message(topic, msg, false);
                     },
@@ -493,7 +489,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // receive ask proposal directive from upper layer
         match Stream::poll_next(Pin::new(&mut worker.cb_rx), cx) {
             Poll::Ready(Some(msg)) => {
-	            info!("===>>> Bftml BftmlWorker: poll ready: worker.cb_rx");
+	            info!("=> Bftml BftmlWorker: poll ready: worker.cb_rx");
                 if let BftmlChannelMsg::CommitBlock(_block_hash) = msg {
                     // here, block_hash is Vec<u8>, convert it to local Hash type
                     // let local_hash = <B as BlockT>::Hash::from_slice(&block_hash[..]);
@@ -514,6 +510,27 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
             _ => {}
         }
 
+        if worker.proposing && worker.proposal_future.is_some() {
+	        info!("=> Bftml BftmlWorker: proposal_future is some");
+            let mut proposal_future = worker.proposal_future.take().unwrap();
+
+            // drive proposing process
+            match Future::poll(Pin::new(&mut proposal_future), cx) {
+                Poll::Ready(_) => {
+	                info!("=> Bftml BftmlWorker: poll ready: proposal_future");
+                    // do nothing, just drive it and use it's side effect
+                    // create new proposal_future for next block minting
+                    worker.make_proposal_future(0);
+                    worker.proposing = false;
+                },
+                _ => {
+                    // if not resolved, restore it
+                    worker.proposal_future = Some(proposal_future);
+                }
+            }
+
+        }
+
         Poll::Pending
     }
 
@@ -522,7 +539,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
 
 
 pub fn make_topic<B: BlockT>() -> B::Hash {
-    <<B::Header as HeaderT>::Hashing as HashT>::hash(format!("topic-{}", "bftml-gossip").as_bytes())
+    <<B::Header as HeaderT>::Hashing as HashT>::hash(format!("{}-{}", "bftml", "gossip").as_bytes())
 }
 
 
@@ -546,10 +563,14 @@ impl<B: BlockT> GossipValidator<B> {
 impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
     /// New peer is connected.
     fn new_peer(&self, _context: &mut dyn ValidatorContext<B>, _who: &PeerId, _roles: ObservedRole) {
+        info!("=> bftml GossipValidator: enter new_peer");
+        info!("=> bftml GossipValidator: leave new_peer");
     }
 
     /// New connection is dropped.
     fn peer_disconnected(&self, _context: &mut dyn ValidatorContext<B>, _who: &PeerId) {
+        info!("=> bftml GossipValidator: enter peer_disconnected");
+        info!("=> bftml GossipValidator: leave peer_disconnected");
     }
 
     /// Validate consensus message.
@@ -559,10 +580,17 @@ impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
         _sender: &PeerId,
         _data: &[u8]
     ) -> ValidationResult<B::Hash> {
+        
+        info!("=> bftml GossipValidator: enter validate");
+
         // now, we should create a topic for message
         // XXX: we'd better to create unique topic for each round
         // but now, we can create a fixed topic to test.
         let topic = make_topic::<B>();
+	    
+        info!("=> Bftml GossipValidator: validate: topic: {:?}", topic);
+
+        info!("=> bftml GossipValidator: leave validate");
 
         // And we return ProcessAndKeep variant to test
 	    // Message should be stored and propagated under given topic.
@@ -571,11 +599,15 @@ impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
 
     /// Produce a closure for validating messages on a given topic.
     fn message_expired<'a>(&'a self) -> Box<dyn FnMut(B::Hash, &[u8]) -> bool + 'a> {
+        info!("=> bftml GossipValidator: enter message_expired");
+        info!("=> bftml GossipValidator: leave message_expired");
         Box::new(move |_topic, _data| false)
     }
 
     /// Produce a closure for filtering egress messages.
     fn message_allowed<'a>(&'a self) -> Box<dyn FnMut(&PeerId, MessageIntent, &B::Hash, &[u8]) -> bool + 'a> {
+        info!("=> bftml GossipValidator: enter message_allowed");
+        info!("=> bftml GossipValidator: leave message_allowed");
         Box::new(move |_who, _intent, _topic, _data| true)
     }
 
@@ -755,7 +787,7 @@ where
         mut block: BlockImportParams<B, Self::Transaction>,
         new_cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
-        info!("Bftml BftmlBlockImport: enter import_block()");
+        info!("=> Bftml BftmlBlockImport: enter import_block()");
 		let best_hash = match self.select_chain.as_ref() {
 			Some(select_chain) => select_chain.best_chain()
 				.map_err(|e| format!("Fetch best chain failed via select chain: {:?}", e))?
@@ -826,12 +858,13 @@ where
             calculated_block_hash
         };
 
-        info!("Bftml BftmlBlockImport: imported_block_tx.unbounded_send()");
         // Send imported block to imported_block_rx, which was polled in the BftmlWorker.
+        info!("=> Bftml BftmlBlockImport: imported_block_tx send bft_proposal");
         self.imported_block_tx.unbounded_send(BftmlInnerMsg::BftProposal(bft_proposal));
+        info!("=> Bftml BftmlBlockImport: imported_block_tx send block_hash");
         self.imported_block_tx.unbounded_send(BftmlInnerMsg::BlockHash(block_hash));
 
-        info!("Bftml BftmlBlockImport: leaving import_block()");
+        info!("=> Bftml BftmlBlockImport: leaving import_block()");
 
 		self.inner.import_block(block, new_cache).map_err(Into::into)
     }

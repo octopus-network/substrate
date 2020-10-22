@@ -45,7 +45,8 @@ mod rep {
 	pub const DUPLICATE_GOSSIP: Rep = Rep::new(-(1 << 2), "Duplicate gossip");
 }
 
-struct PeerConsensus<H> {
+#[derive(Clone, Debug)]
+pub struct PeerConsensus<H> {
 	known_messages: HashSet<H>,
 }
 
@@ -145,7 +146,7 @@ fn propagate<'a, B: BlockT, I>(
 
 /// Consensus network protocol handler. Manages statements and candidate requests.
 pub struct ConsensusGossip<B: BlockT> {
-	peers: HashMap<PeerId, PeerConsensus<B::Hash>>,
+	pub peers: HashMap<PeerId, PeerConsensus<B::Hash>>,
 	messages: Vec<MessageEntry<B>>,
 	known_messages: LruCache<B::Hash, ()>,
 	engine_id: ConsensusEngineId,
@@ -165,6 +166,11 @@ impl<B: BlockT> ConsensusGossip<B> {
 			next_broadcast: Instant::now() + REBROADCAST_INTERVAL,
 		}
 	}
+
+    /// For debug
+    pub fn peers(&self) -> &HashMap<PeerId, PeerConsensus<B::Hash>> {
+        &self.peers
+    }
 
 	/// Handle new connected peer.
 	pub fn new_peer(&mut self, network: &mut dyn Network<B>, who: PeerId, role: ObservedRole) {
