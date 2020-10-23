@@ -421,6 +421,16 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // receive ask proposal directive from upper layer
         let worker = self.get_mut();
 
+        match worker.gossip_engine.poll_unpin(cx) {
+            Poll::Ready(()) => {
+                // just drive gossip_engine to work, will not finish forever
+                info!("=> bftml: Gossip engine future finished");
+            },
+            Poll::Pending => {
+                info!("=> bftml: Gossip engine future poll returning Pending");
+            },
+        }
+
         match Stream::poll_next(Pin::new(&mut worker.ap_rx), cx) {
             Poll::Ready(Some(msg)) => {
 	            info!("=> Bftml BftmlWorker: poll ready: worker.ap_rx");
@@ -501,6 +511,9 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
                     // XXX: this is a wiered way to go around the conversion failure
                     if worker.current_block_hash.is_some() {
                         let block_hash = worker.current_block_hash.take().unwrap();
+
+	                    info!("=> Bftml BftmlWorker: go to commit this block: {:?}", block_hash);
+                        
                         // finalize this block, using block hash
                         worker.client.finalize_block(BlockId::Hash(block_hash), None, false).unwrap();
                     }
@@ -563,8 +576,8 @@ impl<B: BlockT> GossipValidator<B> {
 impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
     /// New peer is connected.
     fn new_peer(&self, _context: &mut dyn ValidatorContext<B>, _who: &PeerId, _roles: ObservedRole) {
-        info!("=> bftml GossipValidator: enter new_peer");
-        info!("=> bftml GossipValidator: leave new_peer");
+        //info!("=> bftml GossipValidator: enter new_peer");
+        //info!("=> bftml GossipValidator: leave new_peer");
     }
 
     /// New connection is dropped.
@@ -581,7 +594,7 @@ impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
         _data: &[u8]
     ) -> ValidationResult<B::Hash> {
         
-        info!("=> bftml GossipValidator: enter validate");
+        //info!("=> bftml GossipValidator: enter validate");
 
         // now, we should create a topic for message
         // XXX: we'd better to create unique topic for each round
@@ -590,7 +603,7 @@ impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
 	    
         info!("=> Bftml GossipValidator: validate: topic: {:?}", topic);
 
-        info!("=> bftml GossipValidator: leave validate");
+        //info!("=> bftml GossipValidator: leave validate");
 
         // And we return ProcessAndKeep variant to test
 	    // Message should be stored and propagated under given topic.
@@ -599,15 +612,15 @@ impl<B: BlockT> sc_network_gossip::Validator<B> for GossipValidator<B> {
 
     /// Produce a closure for validating messages on a given topic.
     fn message_expired<'a>(&'a self) -> Box<dyn FnMut(B::Hash, &[u8]) -> bool + 'a> {
-        info!("=> bftml GossipValidator: enter message_expired");
-        info!("=> bftml GossipValidator: leave message_expired");
+        //info!("=> bftml GossipValidator: enter message_expired");
+        //info!("=> bftml GossipValidator: leave message_expired");
         Box::new(move |_topic, _data| false)
     }
 
     /// Produce a closure for filtering egress messages.
     fn message_allowed<'a>(&'a self) -> Box<dyn FnMut(&PeerId, MessageIntent, &B::Hash, &[u8]) -> bool + 'a> {
-        info!("=> bftml GossipValidator: enter message_allowed");
-        info!("=> bftml GossipValidator: leave message_allowed");
+        //info!("=> bftml GossipValidator: enter message_allowed");
+        //info!("=> bftml GossipValidator: leave message_allowed");
         Box::new(move |_who, _intent, _topic, _data| true)
     }
 
