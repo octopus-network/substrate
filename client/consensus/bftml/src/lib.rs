@@ -16,7 +16,7 @@ use codec::{Encode, Decode, Codec};
 use sp_core::{Blake2Hasher, H256, Pair};
 use sp_runtime::{
     generic::{BlockId, Digest, DigestItem},
-    traits::{Block as BlockT, Header as HeaderT, Hash as HashT, DigestItemFor, Zero, BlakeTwo256},
+    traits::{Block as BlockT, Header as HeaderT, Hash as HashT, NumberFor, DigestItemFor, Zero, BlakeTwo256},
     Justification, ConsensusEngineId,
 };
 use sp_consensus::{
@@ -159,7 +159,8 @@ pub type BftProposal = OpaqueBlock;
 #[derive(Clone, Debug)]
 pub enum BftmlInnerMsg<B: BlockT> {
     BftProposal(BftProposal),
-    BlockHash(B::Hash)
+    BlockNumber(<B::Header as HeaderT>::Number),
+    BlockHash(B::Hash),
 }
 
 // Bft consensus middle layer channel messages
@@ -219,6 +220,7 @@ pub struct BftmlWorker<B: BlockT, C: ProvideRuntimeApi<B>, E, SO, S, CAW, H: ExH
     // XXX: keep current block hash in this structure, because we can't convert Vec<u8> to 
     // B::Hash 
     current_block_hash: Option<B::Hash>,
+    current_block_number: Option<NumberFor<B>>,
     // to store proposal Future
     proposal_future: Option<Pin<Box<dyn Future<Output=Result<(), Error<B>>> + Send>>>,
     proposing: bool,
@@ -279,6 +281,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
             can_author_with,
             _backend: PhantomData,
             current_block_hash: None,
+            current_block_number: None,
             proposal_future: None,
             proposing: false,
         };
@@ -399,6 +402,7 @@ impl<B, C, E, SO, S, CAW, H, BD> BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
 impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, BD> where
     B: BlockT + Clone + Eq,
     B::Hash: std::marker::Unpin,
+    NumberFor<B>: Unpin,
 	C: HeaderBackend<B> + AuxStore + ProvideRuntimeApi<B> + Finalizer<B, BD> + 'static,
     BD: Backend<B> + Send + std::marker::Unpin,
     E: Environment<B> + Send + Sync + std::marker::Unpin,
@@ -427,7 +431,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
                 info!("=> bftml: Gossip engine future finished");
             },
             Poll::Pending => {
-                info!("=> bftml: Gossip engine future poll returning Pending");
+                //info!("=> bftml: Gossip engine future poll returning Pending");
             },
         }
 
@@ -447,7 +451,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // when proposal is ready, give this proposal to upper layer
         match Stream::poll_next(Pin::new(&mut worker.imported_block_rx), cx) {
             Poll::Ready(Some(bft_inner_msg)) => {
-	            info!("=> Bftml BftmlWorker: poll ready: worker.imported_block_rx: {:?}", bft_inner_msg);
+	            info!("=> Bftml BftmlWorker: poll ready: worker.imported_block_rx");
                 match bft_inner_msg {
                     BftmlInnerMsg::BftProposal(bft_proposal) => {
                         // forward it with gp_tx
@@ -455,6 +459,9 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
                     }
                     BftmlInnerMsg::BlockHash(block_hash) => {
                         worker.current_block_hash = Some(block_hash);
+                    }
+                    BftmlInnerMsg::BlockNumber(block_number) => {
+                        worker.current_block_number= Some(block_number);
                     }
                 }
             },
@@ -465,7 +472,7 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // get msg from gossip network
         match Stream::poll_next(Pin::new(&mut worker.gossip_incoming_end), cx) {
             Poll::Ready(Some(gossip_msg_arrived)) => {
-	            info!("=> Bftml BftmlWorker: poll ready: worker.gossip_incoming_end: msg: {:?}", gossip_msg_arrived);
+	            info!("=> Bftml BftmlWorker: poll ready: worker.gossip_incoming_end");
                 // message is Vec<u8>
                 let message = gossip_msg_arrived.message.clone();
                 let msg_to_send = BftmlChannelMsg::GossipMsgIncoming(message);
@@ -479,14 +486,14 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
         // get msg from upper layer
         match Stream::poll_next(Pin::new(&mut worker.ts_rx), cx) {
             Poll::Ready(Some(msg)) => {
-	            info!("=> Bftml BftmlWorker: poll ready: worker.ts_rx: msg: {:?}", msg);
+	            info!("=> Bftml BftmlWorker: poll ready: worker.ts_rx");
                 match msg {
                     BftmlChannelMsg::GossipMsgOutgoing(msg) => {
                         // send it to gossip network
                         let topic = make_topic::<B>();
 	                    
                         info!("=> Bftml BftmlWorker: worker.gossip_engine.gossip_message(): topic: {}", topic);
-                        info!("=> Bftml BftmlWorker: GossipEngine: peers: {:?}", worker.gossip_engine.state_machine().peers());
+                        info!("=> Bftml BftmlWorker: GossipEngine: peers: {:?}", worker.gossip_engine.state_machine().peers().len());
                         // multicast to network
                         worker.gossip_engine.gossip_message(topic, msg, false);
                     },
@@ -509,15 +516,38 @@ impl<B, C, E, SO, S, CAW, H, BD> Future for BftmlWorker<B, C, E, SO, S, CAW, H, 
                     //let local_hash: <B as BlockT>::Hash = Decode::decode(&mut &block_hash).unwrap();
                     //let local_hash = unsafe {std::mem::transmute::<H256, <B as BlockT>::Hash>(local_hash)};
                     // XXX: this is a wiered way to go around the conversion failure
-                    if worker.current_block_hash.is_some() {
-                        let block_hash = worker.current_block_hash.take().unwrap();
+//                    if worker.current_block_hash.is_some() {
+//                        let block_hash = worker.current_block_hash.take().unwrap();
+//
+//	                    info!("=> Bftml BftmlWorker: go to commit this block: hash: {:?}", block_hash);
+//                        
+//                        // finalize this block, using block hash
+//                        match worker.client.finalize_block(BlockId::Hash(block_hash), None, false) {
+//                            Ok(_) => {
+//	                            info!("=> Bftml BftmlWorker: finalize_block result Ok");
+//                            }
+//                            Err(e) => {
+//                                info!("=> Bftml BftmlWorker: finalize_block result Err: {:?}", e);
+//                            }
+//                        }
+//                    }
 
-	                    info!("=> Bftml BftmlWorker: go to commit this block: {:?}", block_hash);
+                    if worker.current_block_number.is_some() {
+                        let block_number= worker.current_block_number.take().unwrap();
+
+	                    info!("=> Bftml BftmlWorker: go to commit this block: number: {:?}", block_number);
                         
                         // finalize this block, using block hash
-                        worker.client.finalize_block(BlockId::Hash(block_hash), None, false).unwrap();
+                        match worker.client.finalize_block(BlockId::Number(block_number), None, false) {
+                            Ok(_) => {
+	                            info!("=> Bftml BftmlWorker: finalize_block result Ok");
+                            }
+                            Err(e) => {
+                                info!("=> Bftml BftmlWorker: finalize_block result Err: {:?}", e);
+                                panic!("=> Bftml BftmlWorker. stoped.")
+                            }
+                        }
                     }
-
                 }
             },
             _ => {}
@@ -874,8 +904,12 @@ where
         // Send imported block to imported_block_rx, which was polled in the BftmlWorker.
         info!("=> Bftml BftmlBlockImport: imported_block_tx send bft_proposal");
         self.imported_block_tx.unbounded_send(BftmlInnerMsg::BftProposal(bft_proposal));
-        info!("=> Bftml BftmlBlockImport: imported_block_tx send block_hash");
+        info!("=> Bftml BftmlBlockImport: imported_block_tx send block_hash: {:?}", block_hash);
         self.imported_block_tx.unbounded_send(BftmlInnerMsg::BlockHash(block_hash));
+
+        let block_number = *block.header.number();
+        info!("=> Bftml BftmlBlockImport: imported_block_tx send block_number: {:?}", block_number);
+        self.imported_block_tx.unbounded_send(BftmlInnerMsg::BlockNumber(block_number));
 
         info!("=> Bftml BftmlBlockImport: leaving import_block()");
 
