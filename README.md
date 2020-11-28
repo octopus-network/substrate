@@ -7,7 +7,7 @@ BFTML, which is the abbreviation of BFT Middle Layer. It is the middle layer in 
 
 ## Advantages
 
-- Bftml reduces amounts of complexity of porting a new BFT-like consensus protocol/engine to substrate, it was very hard to program on raw consensus framework (if you ever tried it, you could understand)
+- Bftml reduces amounts of complexities of porting a new BFT-like consensus protocol/engine to substrate, it was very hard to program on raw consensus framework (if you ever tried it, you could understand)
 - Bftml exposes only 5 channels/interfaces for upper layer consensus engine, clearly
 - Bftml provides the possibility that a consensus engine written in a different language (such as go, c++, java, or python) could be integrated with substrate
 - So Bftml could make substrate a warm nursery for any new bft-like consensus innovations.
