@@ -264,6 +264,10 @@ pub struct RunCmd {
 	/// which includes: database, node key and keystore.
 	#[structopt(long, conflicts_with = "base-path")]
 	pub tmp: bool,
+
+	/// For Bftml: choose which AuthorityId by this number
+	#[structopt(long = "auth-num", value_name = "AuthNum")]
+	pub auth_num: Option<u16>,
 }
 
 impl RunCmd {
@@ -291,6 +295,7 @@ impl RunCmd {
 			None
 		}
 	}
+
 }
 
 impl CliConfiguration for RunCmd {
@@ -376,6 +381,10 @@ impl CliConfiguration for RunCmd {
 			sc_service::Role::Full
 		})
 	}
+
+    fn get_auth_num(&self) -> u16 {
+        self.auth_num.unwrap_or(0)
+    }
 
 	fn force_authoring(&self) -> Result<bool> {
 		// Imply forced authoring on --dev

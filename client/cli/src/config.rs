@@ -441,6 +441,10 @@ pub trait CliConfiguration<DCV: DefaultConfigurationValues = ()>: Sized {
 		Ok(true)
 	}
 
+    fn get_auth_num(&self) -> u16 {
+        0
+    }
+
 	/// Create a Configuration object from the current object
 	fn create_configuration<C: SubstrateCli>(
 		&self,
@@ -515,6 +519,7 @@ pub trait CliConfiguration<DCV: DefaultConfigurationValues = ()>: Sized {
 			role,
 			base_path: Some(base_path),
 			informant_output_format: Default::default(),
+			auth_num: self.get_auth_num(),
 		})
 	}
 

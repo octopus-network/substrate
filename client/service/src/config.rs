@@ -111,6 +111,8 @@ pub struct Configuration {
 	pub base_path: Option<BasePath>,
 	/// Configuration of the output format that the informant uses.
 	pub informant_output_format: sc_informant::OutputFormat,
+    /// For Bftml: authority num
+    pub auth_num: u16,
 }
 
 /// Type for tasks spawned by the executor.
