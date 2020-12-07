@@ -1,3 +1,27 @@
+
+# Substrate Bftml Branch
+
+This is the bftml branch of substrate.
+
+BFTML, which is the abbreviation of BFT Middle Layer. It is the middle layer in substrate consensus framework, lying below concrete consensus engine, and above the substrate raw consensus framework.
+
+## Advantages
+
+- Bftml reduces amounts of complexities of porting a new BFT-like consensus protocol/engine to substrate, it was very hard to program on raw consensus framework (if you ever tried it, you could understand)
+- Bftml exposes only 5 channels/interfaces for upper layer consensus engine, clearly
+- Bftml provides the possibility that a consensus engine written in a different language (such as go, c++, java, or python) could be integrated with substrate
+- So Bftml could make substrate a warm nursery for any new bft-like consensus innovations.
+
+## Status
+
+PoC0, before alpha.
+
+----
+
+
+
+
+
 # Substrate &middot; [![GitHub license](https://img.shields.io/badge/license-GPL3%2FApache2-blue)](LICENSE) [![GitLab Status](https://gitlab.parity.io/parity/substrate/badges/master/pipeline.svg)](https://gitlab.parity.io/parity/substrate/pipelines) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.adoc)
 
 <p align="center">
