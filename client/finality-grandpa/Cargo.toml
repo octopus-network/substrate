@@ -34,7 +34,7 @@ sp-keystore = { version = "0.8.0", path = "../../primitives/keystore" }
 sp-api = { version = "2.0.0", path = "../../primitives/api" }
 sc-telemetry = { version = "2.0.0", path = "../telemetry" }
 sc-keystore = { version = "2.0.0", path = "../keystore" }
-serde_json = "1.0.41"
+serde_json = "1.0.61"
 sc-client-api = { version = "2.0.0", path = "../api" }
 sp-inherents = { version = "2.0.0", path = "../../primitives/inherents" }
 sp-blockchain = { version = "2.0.0", path = "../../primitives/blockchain" }
