@@ -2785,9 +2785,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-version = "0.3.47"
+version = "0.3.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cfb73131c35423a367daf8cbd24100af0d077668c8c2943f0e7dd775fef0f65"
+checksum = "dc9f84f9b115ce7843d60706df1422a916680bfdfcbdb0447c5614ff9d7e4d78"
 dependencies = [
  "wasm-bindgen",
 ]
@@ -10703,9 +10703,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.20"
+version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3de431a2910c86679c34283a33f66f4e4abd7e0aec27b6669060148872aadf94"
+checksum = "8e67a5806118af01f0d9045915676b22aaebecf4178ae7021bc171dab0b897ab"
 dependencies = [
  "cfg-if 1.0.0",
  "js-sys",
