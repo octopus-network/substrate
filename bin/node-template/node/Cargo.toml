@@ -70,6 +70,10 @@ pallet-im-online = { version = "3.0.0", path = "../../../frame/im-online" }
 pallet-mmr-rpc = { version = "3.0.0", path = "../../../frame/merkle-mountain-range/rpc/" }
 pallet-staking = { version = "3.0.0", path = "../../../frame/staking" }
 
+beefy-gadget = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "octopus" }
+beefy-gadget-rpc = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "octopus" }
+beefy-primitives = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "octopus" }
+
 [build-dependencies]
 substrate-build-script-utils = { version = "3.0.0", path = "../../../utils/build-script-utils" }
 

@@ -18,6 +18,8 @@ use sc_consensus_babe::SlotProportion;
 
 use sc_finality_grandpa as grandpa;
 
+use beefy_primitives::ecdsa::AuthoritySignature as BeefySignature;
+
 // Our native executor instance.
 native_executor_instance!(
 	pub Executor,
@@ -48,6 +50,7 @@ pub fn new_partial(
 			sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
 			grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 			sc_consensus_babe::BabeLink<Block>,
+			beefy_gadget::notification::BeefySignedCommitmentSender<Block, BeefySignature>,
 		),
 		grandpa::SharedVoterState,
 		Option<Telemetry>,
@@ -128,10 +131,12 @@ pub fn new_partial(
 		telemetry.as_ref().map(|x| x.handle()),
 	)?;
 
-	let import_setup = (block_import, grandpa_link, babe_link);
+	let (beefy_link, signed_commitment_stream) =
+		beefy_gadget::notification::BeefySignedCommitmentStream::channel();
+	let import_setup = (block_import, grandpa_link, babe_link, beefy_link);
 
 	let (rpc_extensions_builder, rpc_setup) = {
-		let (_, grandpa_link, babe_link) = &import_setup;
+		let (_, grandpa_link, babe_link, _) = &import_setup;
 
 		let justification_stream = grandpa_link.justification_stream();
 		let shared_authority_set = grandpa_link.shared_authority_set().clone();
@@ -152,7 +157,7 @@ pub fn new_partial(
 		let keystore = keystore_container.sync_keystore();
 		let chain_spec = config.chain_spec.cloned_box();
 
-		let rpc_extensions_builder = move |deny_unsafe, subscription_executor| {
+		let rpc_extensions_builder = move |deny_unsafe, subscription_executor: sc_rpc::SubscriptionTaskExecutor| {
 			let deps = crate::rpc::FullDeps {
 				client: client.clone(),
 				pool: pool.clone(),
@@ -168,8 +173,12 @@ pub fn new_partial(
 					shared_voter_state: shared_voter_state.clone(),
 					shared_authority_set: shared_authority_set.clone(),
 					justification_stream: justification_stream.clone(),
-					subscription_executor,
+					subscription_executor: subscription_executor.clone(),
 					finality_provider: finality_proof_provider.clone(),
+				},
+				beefy: crate::rpc::BeefyDeps {
+					signed_commitment_stream: signed_commitment_stream.clone(),
+					subscription_executor,
 				},
 			};
 
@@ -220,6 +229,7 @@ pub fn new_full_base(
 	let shared_voter_state = rpc_setup;
 
 	config.network.extra_sets.push(grandpa::grandpa_peers_set_config());
+	config.network.extra_sets.push(beefy_gadget::beefy_peers_set_config());
 
 	#[cfg(feature = "cli")]
 	config.network.request_response_protocols.push(
@@ -273,7 +283,7 @@ pub fn new_full_base(
 		},
 	)?;
 
-	let (block_import, grandpa_link, babe_link) = import_setup;
+	let (block_import, grandpa_link, babe_link, beefy_link) = import_setup;
 
 	(with_startup_data)(&block_import, &babe_link);
 
@@ -337,6 +347,22 @@ pub fn new_full_base(
 	} else {
 		None
 	};
+
+	let beefy_params = beefy_gadget::BeefyParams {
+		client: client.clone(),
+		backend,
+		key_store: keystore.clone(),
+		network: network.clone(),
+		signed_commitment_sender: beefy_link,
+		min_block_delta: 4,
+		prometheus_registry: prometheus_registry.clone(),
+	};
+
+	// Start the BEEFY bridge gadget.
+	task_manager.spawn_essential_handle().spawn_blocking(
+		"beefy-gadget",
+		beefy_gadget::start_beefy_gadget::<_, beefy_primitives::ecdsa::AuthorityPair, _, _, _>(beefy_params),
+	);
 
 	let config = grandpa::Config {
 		// FIXME #1578 make this available through chainspec

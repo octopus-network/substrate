@@ -26,6 +26,19 @@ use sc_rpc::SubscriptionTaskExecutor;
 use sp_transaction_pool::TransactionPool;
 use sc_client_api::AuxStore;
 
+use sp_runtime::traits::Block as BlockT;
+
+use beefy_gadget::notification::BeefySignedCommitmentStream;
+use beefy_primitives::ecdsa::AuthoritySignature as BeefySignature;
+
+/// Extra dependencies for BEEFY
+pub struct BeefyDeps<BT: BlockT> {
+	/// Receives notifications about signed commitments from BEEFY.
+	pub signed_commitment_stream: BeefySignedCommitmentStream<BT, BeefySignature>,
+	/// Executor to drive the subscription manager in the BEEFY RPC handler.
+	pub subscription_executor: SubscriptionTaskExecutor,
+}
+
 /// Light client extra dependencies.
 pub struct LightDeps<C, F, P> {
 	/// The client instance to use.
@@ -63,7 +76,7 @@ pub struct GrandpaDeps<B> {
 }
 
 /// Full client dependencies.
-pub struct FullDeps<C, P, SC, B> {
+pub struct FullDeps<C, P, SC, B, BT: BlockT> {
 	/// The client instance to use.
 	pub client: Arc<C>,
 	/// Transaction pool instance.
@@ -78,14 +91,16 @@ pub struct FullDeps<C, P, SC, B> {
 	pub babe: BabeDeps,
 	/// GRANDPA specific dependencies.
 	pub grandpa: GrandpaDeps<B>,
+	/// BEEFY specific dependencies.
+	pub beefy: BeefyDeps<BT>,
 }
 
 /// A IO handler that uses all Full RPC extensions.
 pub type IoHandler = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 
 /// Instantiate all Full RPC extensions.
-pub fn create_full<C, P, SC, B>(
-	deps: FullDeps<C, P, SC, B>,
+pub fn create_full<C, P, SC, B, BT>(
+	deps: FullDeps<C, P, SC, B, BT>,
 ) -> jsonrpc_core::IoHandler<sc_rpc_api::Metadata> where
 	C: ProvideRuntimeApi<Block> + HeaderBackend<Block> + AuxStore +
 		HeaderMetadata<Block, Error=BlockChainError> + Sync + Send + 'static,
@@ -98,6 +113,7 @@ pub fn create_full<C, P, SC, B>(
 	SC: SelectChain<Block> +'static,
 	B: sc_client_api::Backend<Block> + Send + Sync + 'static,
 	B::State: sc_client_api::backend::StateBackend<sp_runtime::traits::HashFor<Block>>,
+	BT: BlockT,
 {
 	use substrate_frame_rpc_system::{FullSystem, SystemApi};
 	use pallet_mmr_rpc::{MmrApi, Mmr};
@@ -112,6 +128,7 @@ pub fn create_full<C, P, SC, B>(
 		deny_unsafe,
 		babe,
 		grandpa,
+		beefy,
 	} = deps;
 
 	let BabeDeps {
@@ -174,6 +191,10 @@ pub fn create_full<C, P, SC, B>(
 			)
 		)
 	);
+
+	io.extend_with(beefy_gadget_rpc::BeefyApi::to_delegate(
+		beefy_gadget_rpc::BeefyRpcHandler::new(beefy.signed_commitment_stream, beefy.subscription_executor),
+	));
 
 	io
 }

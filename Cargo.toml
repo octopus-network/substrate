@@ -276,3 +276,28 @@ zeroize = { opt-level = 3 }
 [profile.release]
 # Substrate runtime requires unwinding.
 panic = "unwind"
+
+# patch beefy
+[patch."https://github.com/paritytech/substrate"]
+frame-support = {path = './frame/support'}
+frame-system = {path = './frame/system'}
+pallet-session = {path = './frame/session'}
+sc-client-api = {path = './client/api'}
+sc-keystore = {path = './client/keystore'}
+sc-network = {path = './client/network'}
+sc-network-gossip = {path = './client/network-gossip'}
+sc-rpc = {path = './client/rpc'}
+sp-api = {path = './primitives/api'}
+sp-application-crypto = {path = './primitives/application-crypto'}
+sp-arithmetic = {path = './primitives/arithmetic'}
+sp-blockchain = {path = './primitives/blockchain'}
+sp-consensus = {path = './primitives/consensus/common'}
+sp-core = {path = './primitives/core'}
+sp-io = {path = './primitives/io'}
+sp-keystore = {path = './primitives/keystore'}
+sp-runtime = {path = './primitives/runtime'}
+sp-staking = {path = './primitives/staking'}
+sp-std = {path = './primitives/std'}
+sp-trie = {path = './primitives/trie'}
+sp-utils = {path = './primitives/utils'}
+substrate-prometheus-endpoint = {path = './utils/prometheus'}

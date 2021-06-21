@@ -54,6 +54,9 @@ use sp_runtime::traits::{self, StaticLookup, SaturatedConversion, OpaqueKeys};
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_session::{historical as pallet_session_historical};
 
+use sp_runtime::traits::Keccak256;
+use beefy_primitives::{ecdsa::AuthorityId as BeefyId, ValidatorSet};
+
 /// Import the template pallet.
 pub use pallet_template;
 
@@ -107,6 +110,7 @@ pub mod opaque {
 			pub babe: Babe,
 			pub grandpa: Grandpa,
 			pub im_online: ImOnline,
+			pub beefy: Beefy,
 		}
 	}
 }
@@ -463,6 +467,10 @@ impl pallet_staking::Config for Runtime {
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
 }
 
+impl pallet_beefy::Config for Runtime {
+	type AuthorityId = BeefyId;
+}
+
 impl pallet_sudo::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
@@ -547,12 +555,26 @@ impl pallet_im_online::Config for Runtime {
 	type WeightInfo = pallet_im_online::weights::SubstrateWeight<Runtime>;
 }
 
+type MmrHash = <Keccak256 as sp_runtime::traits::Hash>::Output;
+
+/// A BEEFY consensus digest item with MMR root hash.
+pub struct DepositLog;
+impl pallet_mmr::primitives::OnNewRoot<MmrHash> for DepositLog {
+	fn on_new_root(root: &Hash) {
+		let digest = DigestItem::Consensus(
+			beefy_primitives::BEEFY_ENGINE_ID,
+			codec::Encode::encode(&beefy_primitives::ConsensusLog::<BeefyId>::MmrRoot(*root)),
+		);
+		<frame_system::Pallet<Runtime>>::deposit_log(digest);
+	}
+}
+
 impl pallet_mmr::Config for Runtime {
 	const INDEXING_PREFIX: &'static [u8] = b"mmr";
-	type Hashing = <Runtime as frame_system::Config>::Hashing;
-	type Hash = <Runtime as frame_system::Config>::Hash;
+	type Hashing = Keccak256;
+	type Hash = MmrHash;
 	type LeafData = frame_system::Pallet<Self>;
-	type OnNewRoot = ();
+	type OnNewRoot = DepositLog;
 	type WeightInfo = ();
 }
 
@@ -601,6 +623,7 @@ construct_runtime!(
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Call, Storage},
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>},
 		Mmr: pallet_mmr::{Pallet, Storage},
+		Beefy: pallet_beefy::{Pallet, Storage, Config<T>},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
@@ -859,6 +882,12 @@ impl_runtime_apis! {
 		) -> Result<(), mmr::Error> {
 			let node = mmr::DataOrHash::Data(leaf.into_opaque_leaf());
 			pallet_mmr::verify_leaf_proof::<mmr::Hashing, _>(root, node, proof)
+		}
+	}
+
+	impl beefy_primitives::BeefyApi<Block, BeefyId> for Runtime {
+		fn validator_set() -> ValidatorSet<BeefyId> {
+			Beefy::validator_set()
 		}
 	}
 
