@@ -1,0 +1,257 @@
+---
+apiVersion: "v1"
+kind: "ConfigMap"
+metadata:
+  name: "octopus-config-zorh"
+  namespace: "default"
+  labels:
+    app: "octopus"
+data:
+  a: "1"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "octopus-validator-1"
+  namespace: "default"
+  labels:
+    app: "octopus-validator-1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "octopus-validator-1"
+  template:
+    metadata:
+      labels:
+        app: "octopus-validator-1"
+    spec:
+      containers:
+      - name: "octopus-node"
+        image: "gcr.io/cdot-dev-303308/substrate-octopus:latest"
+        ports:
+        - containerPort: 30333
+          name: p2p
+        - containerPort: 9933
+          name: http-rpc
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - exec /usr/local/bin/node-template
+            --bootnodes /dns/octopus-validator-2-service/tcp/30333/p2p/12D3KooWHdiAxVd8uMQR1hGWXccidmfCwLqcMpGwR6QcTP6QRMuD
+            --bootnodes /dns/octopus-validator-3-service/tcp/30333/p2p/12D3KooWSCufgHzV4fCwRijfH2k3abrpAJxTKxEvN1FDuRXA2U9x
+            --chain=local
+            --alice
+            --node-key 0000000000000000000000000000000000000000000000000000000000000001
+            --no-telemetry
+            --validator
+            --execution Native
+            --rpc-cors all
+        env:
+        - name: "a"
+          valueFrom:
+            configMapKeyRef:
+              key: "a"
+              name: "octopus-config-zorh"
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "octopus-validator-1-service"
+  namespace: "default"
+  labels:
+    app: "octopus-validator-1"
+spec:
+  ports:
+  - port: 30333
+    name: p2p
+    protocol: "TCP"
+    targetPort: 30333
+  - port: 9933
+    name: http-rpc
+    protocol: "TCP"
+    targetPort: 9933
+  selector:
+    app: "octopus-validator-1"
+  type: "ClusterIP"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "octopus-validator-2"
+  namespace: "default"
+  labels:
+    app: "octopus-validator-2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "octopus-validator-2"
+  template:
+    metadata:
+      labels:
+        app: "octopus-validator-2"
+    spec:
+      containers:
+      - name: "octopus-node"
+        image: "gcr.io/cdot-dev-303308/substrate-octopus:latest"
+        ports:
+        - containerPort: 30333
+          name: p2p
+        - containerPort: 9933
+          name: http-rpc
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - exec /usr/local/bin/node-template
+            --bootnodes /dns/octopus-validator-1-service/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+            --bootnodes /dns/octopus-validator-3-service/tcp/30333/p2p/12D3KooWSCufgHzV4fCwRijfH2k3abrpAJxTKxEvN1FDuRXA2U9x
+            --chain=local
+            --bob
+            --node-key 0000000000000000000000000000000000000000000000000000000000000002
+            --no-telemetry
+            --validator
+            --execution Native
+            --rpc-cors all
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "octopus-validator-2-service"
+  namespace: "default"
+  labels:
+    app: "octopus-validator-2"
+spec:
+  ports:
+  - port: 30333
+    name: p2p
+    protocol: "TCP"
+    targetPort: 30333
+  - port: 9933
+    name: http-rpc
+    protocol: "TCP"
+    targetPort: 9933
+  selector:
+    app: "octopus-validator-2"
+  type: "ClusterIP"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "octopus-validator-3"
+  namespace: "default"
+  labels:
+    app: "octopus-validator-3"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "octopus-validator-3"
+  template:
+    metadata:
+      labels:
+        app: "octopus-validator-3"
+    spec:
+      containers:
+      - name: "octopus-node"
+        image: "gcr.io/cdot-dev-303308/substrate-octopus:latest"
+        ports:
+        - containerPort: 30333
+          name: p2p
+        - containerPort: 9933
+          name: http-rpc
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - exec /usr/local/bin/node-template
+            --bootnodes /dns/octopus-validator-1-service/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+            --bootnodes /dns/octopus-validator-2-service/tcp/30333/p2p/12D3KooWHdiAxVd8uMQR1hGWXccidmfCwLqcMpGwR6QcTP6QRMuD
+            --chain=local
+            --charlie
+            --node-key 0000000000000000000000000000000000000000000000000000000000000003
+            --no-telemetry
+            --validator
+            --execution Native
+            --rpc-cors all
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "octopus-validator-3-service"
+  namespace: "default"
+  labels:
+    app: "octopus-validator-3"
+spec:
+  ports:
+  - port: 30333
+    name: p2p
+    protocol: "TCP"
+    targetPort: 30333
+  - port: 9933
+    name: http-rpc
+    protocol: "TCP"
+    targetPort: 9933
+  selector:
+    app: "octopus-validator-3"
+  type: "ClusterIP"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "octopus-light-1"
+  namespace: "default"
+  labels:
+    app: "octopus-light-1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "octopus-light-1"
+  template:
+    metadata:
+      labels:
+        app: "octopus-light-1"
+    spec:
+      containers:
+      - name: "octopus-node"
+        image: "gcr.io/cdot-dev-303308/substrate-octopus:latest"
+        ports:
+        - containerPort: 30333
+          name: p2p
+        - containerPort: 9933
+          name: http-rpc
+        - containerPort: 9944
+          name: websocket-rpc
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - exec /usr/local/bin/template
+            --bootnodes /dns/octopus-validator-1-service/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+            --bootnodes /dns/octopus-validator-2-service/tcp/30333/p2p/12D3KooWHdiAxVd8uMQR1hGWXccidmfCwLqcMpGwR6QcTP6QRMuD
+            --bootnodes /dns/octopus-validator-3-service/tcp/30333/p2p/12D3KooWSCufgHzV4fCwRijfH2k3abrpAJxTKxEvN1FDuRXA2U9x
+            --chain=local
+            --no-telemetry
+            --ws-external
+            --rpc-external
+            --rpc-cors all
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "octopus-light-1-service"
+  namespace: "default"
+  labels:
+    app: "octopus-light-1"
+spec:
+  ports:
+  - port: 9933
+    name: http-rpc
+    protocol: "TCP"
+    targetPort: 9933
+  - port: 9944
+    name: websocket-rpc
+    protocol: "TCP"
+    targetPort: 9944
+  selector:
+    app: "octopus-light-1"
+  type: "LoadBalancer"
