@@ -74,6 +74,8 @@ beefy-gadget = { git = "https://github.com/octopus-network/grandpa-bridge-gadget
 beefy-gadget-rpc = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "octopus" }
 beefy-primitives = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "octopus" }
 
+pallet-octopus-appchain = { path = "../pallets/octopus-appchain" }
+
 [build-dependencies]
 substrate-build-script-utils = { version = "3.0.0", path = "../../../utils/build-script-utils" }
 

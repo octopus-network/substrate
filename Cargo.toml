@@ -301,3 +301,15 @@ sp-std = {path = './primitives/std'}
 sp-trie = {path = './primitives/trie'}
 sp-utils = {path = './primitives/utils'}
 substrate-prometheus-endpoint = {path = './utils/prometheus'}
+
+# patch pallet-octopus-appchain
+[patch.crates-io]
+frame-benchmarking = {path = './frame/benchmarking'}
+frame-support = {path = './frame/support'}
+frame-system = {path = './frame/system'}
+pallet-session = {path = './frame/session'}
+sp-core = {path = './primitives/core'}
+sp-io = {path = './primitives/io'}
+sp-runtime = {path = './primitives/runtime'}
+sp-std = {path = './primitives/std'}
+sp-keystore = {path = './primitives/keystore'}

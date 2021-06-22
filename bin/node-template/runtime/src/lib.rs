@@ -56,6 +56,7 @@ use pallet_session::{historical as pallet_session_historical};
 
 use sp_runtime::traits::Keccak256;
 use beefy_primitives::{ecdsa::AuthorityId as BeefyId, ValidatorSet};
+use sp_runtime::traits::ConvertInto;
 
 /// Import the template pallet.
 pub use pallet_template;
@@ -111,6 +112,7 @@ pub mod opaque {
 			pub grandpa: Grandpa,
 			pub im_online: ImOnline,
 			pub beefy: Beefy,
+			pub octopus: OctopusAppchain,
 		}
 	}
 }
@@ -399,10 +401,10 @@ parameter_types! {
 impl pallet_session::Config for Runtime {
 	type Event = Event;
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
-	type ValidatorIdOf = pallet_staking::StashOf<Self>;
+	type ValidatorIdOf = ConvertInto;
 	type ShouldEndSession = Babe;
 	type NextSessionRotation = Babe;
-	type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, Staking>;
+	type SessionManager = OctopusAppchain;
 	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
 	type Keys = opaque::SessionKeys;
 	type DisabledValidatorsThreshold = DisabledValidatorsThreshold;
@@ -469,6 +471,29 @@ impl pallet_staking::Config for Runtime {
 
 impl pallet_beefy::Config for Runtime {
 	type AuthorityId = BeefyId;
+}
+
+pub struct OctopusAppCrypto;
+
+impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature> for OctopusAppCrypto {
+	type RuntimeAppPublic = pallet_octopus_appchain::AuthorityId;
+	type GenericSignature = sp_core::sr25519::Signature;
+	type GenericPublic = sp_core::sr25519::Public;
+}
+
+parameter_types! {
+	pub const GracePeriod: u32 = 5;
+	pub const UnsignedPriority: u64 = 1 << 20;
+}
+
+impl pallet_octopus_appchain::Config for Runtime {
+	type AuthorityId = OctopusAppCrypto;
+	type Event = Event;
+	type Call = Call;
+	type Assets = Assets;
+	type GracePeriod = GracePeriod;
+	type UnsignedPriority = UnsignedPriority;
+	const RELAY_CONTRACT: &'static [u8] = b"dev-oct-relay.testnet";
 }
 
 impl pallet_sudo::Config for Runtime {
@@ -624,6 +649,7 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>},
 		Mmr: pallet_mmr::{Pallet, Storage},
 		Beefy: pallet_beefy::{Pallet, Storage, Config<T>},
+		OctopusAppchain: pallet_octopus_appchain::{Pallet, Call, Storage, Config<T>, Event<T>, ValidateUnsigned},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},

@@ -58,6 +58,7 @@ sp-staking = { version = "3.0.0", default-features = false, path = "../../../pri
 
 beefy-primitives = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", default-features = false, branch = "octopus" }
 pallet-beefy = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", default-features = false, branch = "octopus" }
+pallet-octopus-appchain = { default-features = false, path = "../pallets/octopus-appchain" }
 
 pallet-template = { version = "3.0.0", default-features = false, path = "../pallets/template" }
 
@@ -102,6 +103,7 @@ std = [
 	"sp-staking/std",
 	"beefy-primitives/std",
 	"pallet-beefy/std",
+	"pallet-octopus-appchain/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",
