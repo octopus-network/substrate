@@ -93,6 +93,7 @@ std = [
 	"sp-std/std",
 	"sp-transaction-pool/std",
 	"sp-version/std",
+	"log/std",
 	"frame-election-provider-support/std",
 	"pallet-assets/std",
 	"pallet-authorship/std",
