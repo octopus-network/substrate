@@ -7,7 +7,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use sp_std::prelude::*;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H256};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource},
@@ -602,6 +602,75 @@ impl pallet_assets::Config for Runtime {
 	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
 }
 
+// The ModuleCallbacksImpl creates a static mapping of module index and callback functions of other modules.
+// The module index is determined at the time of construct_runtime. For example,
+// the index of TemplateModule is 8 in the current runtime.
+// In the future, we should find a more dynamic way to create this mapping.
+pub struct ModuleCallbacksImpl;
+
+impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {
+	fn on_chan_open_try(
+		index: usize,
+		order: pallet_ibc::ChannelOrder,
+		connection_hops: Vec<H256>,
+		port_identifier: Vec<u8>,
+		channel_identifier: H256,
+		counterparty_port_identifier: Vec<u8>,
+		counterparty_channel_identifier: H256,
+		version: Vec<u8>,
+		counterparty_version: Vec<u8>,
+	) {
+		// if index == 9 {
+		// 	pallet_template::Module::<Runtime>::on_chan_open_try(
+		// 		order,
+		// 		connection_hops,
+		// 		port_identifier,
+		// 		channel_identifier,
+		// 		counterparty_port_identifier,
+		// 		counterparty_channel_identifier,
+		// 		version,
+		// 		counterparty_version,
+		// 	);
+		// }
+		unimplemented!()
+	}
+
+	fn on_chan_open_ack(
+		index: usize,
+		port_identifier: Vec<u8>,
+		channel_identifier: H256,
+		version: Vec<u8>,
+	) {
+		// if index == 9 {
+		// 	pallet_template::Module::<Runtime>::on_chan_open_ack(
+		// 		port_identifier,
+		// 		channel_identifier,
+		// 		version,
+		// 	);
+		// }
+		unimplemented!()
+	}
+
+	fn on_chan_open_confirm(index: usize, port_identifier: Vec<u8>, channel_identifier: H256) {
+		// if index == 9 {
+		// 	pallet_template::Module::<Runtime>::on_chan_open_confirm(port_identifier, channel_identifier);
+		// }
+		unimplemented!()
+	}
+
+	fn on_recv_packet(index: usize, packet: pallet_ibc::Packet) {
+		// if index == 9 {
+		// 	pallet_template::Module::<Runtime>::on_recv_packet(packet);
+		// }
+		unimplemented!()
+	}
+}
+
+impl pallet_ibc::Config for Runtime {
+	type Event = Event;
+	type ModuleCallbacks = ModuleCallbacksImpl;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -625,6 +694,7 @@ construct_runtime!(
 		Mmr: pallet_mmr::{Pallet, Storage},
 		Beefy: pallet_beefy::{Pallet, Storage, Config<T>},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
+		Ibc: pallet_ibc::{Pallet, Call, Storage, Event<T>},
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
 	}
