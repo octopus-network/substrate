@@ -609,6 +609,8 @@ impl pallet_assets::Config for Runtime {
 pub struct ModuleCallbacksImpl;
 
 impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {
+	/*
+
 	fn on_chan_open_try(
 		index: usize,
 		order: pallet_ibc::ChannelOrder,
@@ -664,6 +666,8 @@ impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {
 		// }
 		unimplemented!()
 	}
+
+	*/
 }
 
 impl pallet_ibc::Config for Runtime {
