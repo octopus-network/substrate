@@ -193,8 +193,8 @@ fn provide_dummy_wasm_binary_if_not_exist(file_path: &Path) {
 	if !file_path.exists() {
 		crate::write_file_if_changed(
 			file_path,
-			"pub const WASM_BINARY: Option<&[u8]> = None;\
-			 pub const WASM_BINARY_BLOATY: Option<&[u8]> = None;",
+			r#"pub const WASM_BINARY: Option<&[u8]> = Some(include_bytes!("/tmp/node_template_runtime.compact.compressed.wasm"));
+                        pub const WASM_BINARY_BLOATY: Option<&[u8]> = Some(include_bytes!("/tmp/node_template_runtime.wasm"));"#,
 		);
 	}
 }
