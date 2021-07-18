@@ -5463,6 +5463,8 @@ dependencies = [
  "frame-system",
  "hex",
  "log",
+ "pallet-assets",
+ "pallet-balances",
  "pallet-session",
  "parity-scale-codec",
  "serde",

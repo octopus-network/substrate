@@ -307,6 +307,8 @@ substrate-prometheus-endpoint = {path = './utils/prometheus'}
 frame-benchmarking = {path = './frame/benchmarking'}
 frame-support = {path = './frame/support'}
 frame-system = {path = './frame/system'}
+pallet-assets = {path = './frame/assets'}
+pallet-balances = {path = './frame/balances'}
 pallet-session = {path = './frame/session'}
 sp-core = {path = './primitives/core'}
 sp-io = {path = './primitives/io'}
