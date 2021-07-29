@@ -18,6 +18,7 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 frame-support = { default-features = false, version = "4.0.0-dev", path = "../../../../frame/support" }
 frame-system = { default-features = false,  version = "4.0.0-dev",  path = "../../../../frame/system" }
 frame-benchmarking = { default-features = false,  version = "4.0.0-dev",  path = "../../../../frame/benchmarking", optional = true }
+ibc = { git = "https://github.com/informalsystems/ibc-rs.git", branch = "master" }
 
 [dev-dependencies]
 serde = { version = "1.0.126" }
