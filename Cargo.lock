@@ -1820,6 +1820,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "flex-error"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2c21e3345cc1318971ddb5d04add3b4eaa970349e4f3e1d870535173cb745cf"
+dependencies = [
+ "paste 1.0.5",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1852,7 +1861,7 @@ dependencies = [
  "linregress",
  "log",
  "parity-scale-codec",
- "paste 1.0.4",
+ "paste 1.0.5",
  "serde",
  "sp-api",
  "sp-io",
@@ -1941,7 +1950,7 @@ dependencies = [
  "once_cell",
  "parity-scale-codec",
  "parity-util-mem",
- "paste 1.0.4",
+ "paste 1.0.5",
  "pretty_assertions 0.6.1",
  "serde",
  "smallvec 1.6.1",
@@ -2758,13 +2767,13 @@ dependencies = [
 
 [[package]]
 name = "ibc"
-version = "0.5.0"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=master#f9278382143f44b8c1e1a6a99893b54b5999a30e"
+version = "0.6.1"
+source = "git+https://github.com/octopus-network/ibc-rs.git?branch=master#078480a09a920fc257e10347772c04c25d280617"
 dependencies = [
- "anomaly",
  "bytes 1.0.1",
  "chrono",
  "dyn-clonable",
+ "flex-error",
  "ibc-proto",
  "ics23",
  "prost",
@@ -2782,15 +2791,13 @@ dependencies = [
 
 [[package]]
 name = "ibc-proto"
-version = "0.8.1"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=master#f9278382143f44b8c1e1a6a99893b54b5999a30e"
+version = "0.9.0"
+source = "git+https://github.com/octopus-network/ibc-rs.git?branch=master#078480a09a920fc257e10347772c04c25d280617"
 dependencies = [
- "anomaly",
  "bytes 1.0.1",
  "prost",
  "prost-types",
  "tendermint-proto",
- "thiserror",
  "tonic",
 ]
 
@@ -5129,7 +5136,7 @@ dependencies = [
  "pallet-randomness-collective-flip",
  "pallet-timestamp",
  "parity-scale-codec",
- "paste 1.0.4",
+ "paste 1.0.5",
  "pretty_assertions 0.7.2",
  "pwasm-utils",
  "rand 0.8.3",
@@ -5229,7 +5236,7 @@ dependencies = [
  "pallet-balances",
  "parity-scale-codec",
  "parking_lot 0.11.1",
- "paste 1.0.4",
+ "paste 1.0.5",
  "rand 0.7.3",
  "sp-arithmetic",
  "sp-core",
@@ -5763,7 +5770,7 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "parking_lot 0.11.1",
- "paste 1.0.4",
+ "paste 1.0.5",
  "rand_chacha 0.2.2",
  "serde",
  "sp-application-crypto",
@@ -6228,9 +6235,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5d65c4d95931acda4498f675e332fcbdc9a06705cd07086c510e9b6009cd1c1"
+checksum = "acbf547ad0c65e31259204bd90935776d1c693cec2f4ff7abb7a1bbbd40dfe58"
 
 [[package]]
 name = "paste-impl"
@@ -7746,7 +7753,7 @@ dependencies = [
  "parity-scale-codec",
  "parity-wasm 0.42.2",
  "parking_lot 0.11.1",
- "paste 1.0.4",
+ "paste 1.0.5",
  "sc-executor-common",
  "sc-executor-wasmi",
  "sc-executor-wasmtime",
@@ -9473,7 +9480,7 @@ dependencies = [
  "max-encoded-len",
  "parity-scale-codec",
  "parity-util-mem",
- "paste 1.0.4",
+ "paste 1.0.5",
  "rand 0.7.3",
  "serde",
  "serde_json",
@@ -10239,9 +10246,9 @@ dependencies = [
 
 [[package]]
 name = "tendermint"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7d330f5d92e5e1c7a84130805b48b4983d98a37257034544492e3566315142b"
+checksum = "0752808f59b612916614e92e43be64e9ba566b762a266bcfcf7dce1b324e9319"
 dependencies = [
  "anomaly",
  "async-trait",
@@ -10271,9 +10278,9 @@ dependencies = [
 
 [[package]]
 name = "tendermint-proto"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fadcaea1eecd91dbdd9636fe8ad38d2b41fc0ae814c176e51e00925cdda78a34"
+checksum = "bfd0371c6b0c7fc4f6b053b8a1bc868a2a47c49a1408c4cd6f595d9f3bd3c238"
 dependencies = [
  "anomaly",
  "bytes 1.0.1",
@@ -10382,18 +10389,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.25"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa6f76457f59514c7eeb4e59d891395fab0b2fd1d40723ae737d64153392e9c6"
+checksum = "93119e4feac1cbe6c798c34d3a53ea0026b0b1de6a120deef895137c0529bfe2"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.25"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a36768c0fbf1bb15eca10defa29526bda730a2376c2ab4393ccfa16fb1a318d"
+checksum = "060d69a0afe7796bf42e9e2ff91f5ee691fb15c53d38b4b62a9a53eb23164745"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -11126,7 +11133,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
  "cfg-if 0.1.10",
- "rand 0.3.23",
+ "rand 0.7.3",
  "static_assertions",
 ]
 
@@ -11530,7 +11537,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "log",
- "paste 1.0.4",
+ "paste 1.0.5",
  "psm",
  "region",
  "rustc-demangle",
