@@ -18,6 +18,15 @@ frame-support = { default-features = false, version = "3.0.0", path = "../../../
 frame-system = { default-features = false,  version = "3.0.0",  path = "../../../../frame/system" }
 frame-benchmarking = { default-features = false,  version = "3.1.0",  path = "../../../../frame/benchmarking", optional = true }
 
+getrandom = { version = "0.2.3",  default-features = false, features = ["js"] }
+serde = { version = "1.0.125", default-features = false }
+serde_json = { version = "1.0.65", default-features = false, features = ["alloc"] }
+ics23 = { version = "0.6.5",  default-features = false , git = "https://github.com/DaviRain-Su/ics23.git", branch = "dv-tryinto-error" }
+regex = "1.5.4"
+
+#tonic = { version = "0.4.1", default-features = false }
+#socket2 = { version = "0.4.1", default-features = false }
+
 [dev-dependencies]
 serde = { version = "1.0.119" }
 sp-core = { default-features = false, version = "3.0.0", path = "../../../../primitives/core" }
@@ -31,6 +40,11 @@ std = [
 	'frame-support/std',
 	'frame-system/std',
 	'frame-benchmarking/std',
+	"serde/std",
+	"serde_json/std",
+	"ics23/std",
+	"regex/std",
+	"getrandom/std",
 ]
 
 runtime-benchmarks = ["frame-benchmarking"]
