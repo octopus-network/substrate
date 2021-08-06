@@ -27,8 +27,8 @@ sc-keystore = { version = "3.0.0", path = "../../../client/keystore" }
 sp-inherents = { version = "3.0.0", path = "../../../primitives/inherents" }
 sc-transaction-pool = { version = "3.0.0", path = "../../../client/transaction-pool" }
 sp-transaction-pool = { version = "3.0.0", path = "../../../primitives/transaction-pool" }
-sc-consensus-aura = { version = "0.9.0", path = "../../../client/consensus/aura" }
-sp-consensus-aura = { version = "0.9.0", path = "../../../primitives/consensus/aura" }
+sc-consensus-babe = { version = "0.9.0", path = "../../../client/consensus/babe" }
+sp-consensus-babe = { version = "0.9.0", path = "../../../primitives/consensus/babe" }
 sp-consensus = { version = "0.9.0", path = "../../../primitives/consensus/common" }
 sc-consensus = { version = "0.9.0", path = "../../../client/consensus/common" }
 sc-finality-grandpa = { version = "0.9.0", path = "../../../client/finality-grandpa" }
@@ -47,6 +47,22 @@ sp-block-builder = { version = "3.0.0", path = "../../../primitives/block-builde
 sc-basic-authorship = { version = "0.9.0", path = "../../../client/basic-authorship" }
 substrate-frame-rpc-system = { version = "3.0.0", path = "../../../utils/frame/rpc/system" }
 pallet-transaction-payment-rpc = { version = "3.0.0", path = "../../../frame/transaction-payment/rpc/" }
+
+rand = "0.7.2"
+
+sc-chain-spec = { version = "3.0.0", path = "../../../client/chain-spec" }
+sc-consensus-babe-rpc = { version = "0.9.0", path = "../../../client/consensus/babe/rpc" }
+sc-consensus-epochs = { version = "0.9.0", path = "../../../client/consensus/epochs" }
+sc-consensus-slots = { version = "0.9.0", path = "../../../client/consensus/slots" }
+sc-consensus-uncles = { version = "0.9.0", path = "../../../client/consensus/uncles" }
+sc-finality-grandpa-rpc = { version = "0.9.0", path = "../../../client/finality-grandpa/rpc" }
+sc-network = { version = "0.9.0", path = "../../../client/network" }
+sc-sync-state-rpc = { version = "0.9.0", path = "../../../client/sync-state-rpc" }
+sp-authorship = { version = "3.0.0", path = "../../../primitives/authorship" }
+sp-keystore = { version = "0.9.0", path = "../../../primitives/keystore" }
+pallet-im-online = { version = "3.0.0", path = "../../../frame/im-online" }
+pallet-mmr-rpc = { version = "3.0.0", path = "../../../frame/merkle-mountain-range/rpc/" }
+pallet-staking = { version = "3.0.0", path = "../../../frame/staking" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "3.1.0", path = "../../../frame/benchmarking" }
