@@ -47,6 +47,9 @@ pallet-staking = { version = "3.0.0", default-features = false, path = "../../..
 pallet-staking-reward-curve = { version = "3.0.0", default-features = false, path = "../../../frame/staking/reward-curve" }
 sp-staking = { version = "3.0.0", default-features = false, path = "../../../primitives/staking" }
 
+beefy-primitives = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
+pallet-beefy = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
+
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
 pallet-transaction-payment-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/transaction-payment/rpc/runtime-api/" }
@@ -98,6 +101,8 @@ std = [
         "pallet-session/std",
         "pallet-staking/std",
         "sp-staking/std",
+	"beefy-primitives/std",
+	"pallet-beefy/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

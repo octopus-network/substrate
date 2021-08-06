@@ -15,6 +15,8 @@ use sp_consensus_babe::{AuthorityId as BabeId};
 use sp_runtime::Perbill;
 use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
 use pallet_staking::StakerStatus;
+use node_template_runtime::BeefyConfig;
+use beefy_primitives::crypto::AuthorityId as BeefyId;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -26,8 +28,9 @@ fn session_keys(
 	babe: BabeId,
 	grandpa: GrandpaId,
 	im_online: ImOnlineId,
+	beefy: BeefyId,
 ) -> SessionKeys {
-	SessionKeys { babe, grandpa, im_online }
+	SessionKeys { babe, grandpa, im_online, beefy }
 }
 
 /// Generate a crypto pair from seed.
@@ -47,13 +50,14 @@ pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId where
 }
 
 /// Helper function to generate stash, controller and session key from seed
-pub fn authority_keys_from_seed(s: &str) -> (AccountId, AccountId, BabeId, GrandpaId, ImOnlineId) {
+pub fn authority_keys_from_seed(s: &str) -> (AccountId, AccountId, BabeId, GrandpaId, ImOnlineId, BeefyId) {
 	(
 		get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", s)),
 		get_account_id_from_seed::<sr25519::Public>(s),
 		get_from_seed::<BabeId>(s),
 		get_from_seed::<GrandpaId>(s),
 		get_from_seed::<ImOnlineId>(s),
+		get_from_seed::<BeefyId>(s),
 	)
 }
 
@@ -149,7 +153,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
 	wasm_binary: &[u8],
-	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId, ImOnlineId)>,
+	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId, ImOnlineId, BeefyId)>,
 	initial_nominators: Vec<AccountId>,
 	root_key: AccountId,
 	endowed_accounts: Option<Vec<AccountId>>,
@@ -217,6 +221,7 @@ fn testnet_genesis(
 					x.2.clone(),
 					x.3.clone(),
 					x.4.clone(),
+					x.5.clone(),
 				))
 			}).collect::<Vec<_>>(),
 		},
@@ -239,6 +244,9 @@ fn testnet_genesis(
 			keys: vec![],
 		},
 		grandpa: GrandpaConfig {
+			authorities: vec![],
+		},
+		beefy: BeefyConfig {
 			authorities: vec![],
 		},
 	}
