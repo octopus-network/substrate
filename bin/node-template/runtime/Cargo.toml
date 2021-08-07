@@ -49,6 +49,7 @@ sp-staking = { version = "3.0.0", default-features = false, path = "../../../pri
 
 beefy-primitives = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
 pallet-beefy = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
+pallet-octopus-appchain = { default-features = false, path = "../pallets/octopus-appchain" }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
@@ -103,6 +104,7 @@ std = [
         "sp-staking/std",
 	"beefy-primitives/std",
 	"pallet-beefy/std",
+	"pallet-octopus-appchain/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",
