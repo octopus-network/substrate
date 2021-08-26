@@ -53,6 +53,8 @@ frame-benchmarking = { version = "3.1.0", path = "../../../frame/benchmarking" }
 frame-benchmarking-cli = { version = "3.0.0", path = "../../../utils/frame/benchmarking-cli" }
 
 node-template-runtime = { version = "3.0.0", path = "../runtime" }
+pallet-ibc-rpc = { path = "../pallets/ibc/rpc" }
+pallet-ibc-runtime-api = { path = "../pallets/ibc/runtime-api" }
 
 rand = "0.7.2"
 

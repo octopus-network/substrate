@@ -905,6 +905,17 @@ impl_runtime_apis! {
 		}
 	}
 
+	// Here we implement our custom runtime API.
+	impl  pallet_ibc_runtime_api::ConsensusStateWithHeightApi<Block> for Runtime {
+		fn consensus_state_with_height(client_id: Vec<u8>) -> Vec<(Vec<u8>, Vec<u8>)> {
+			// This Runtime API calls into a specific pallet. Calling a pallet is a common
+			// design pattern. You can see most other APIs in this file do the same.
+			// It is also possible to write your logic right here in the runtime
+			// amalgamator file
+			Ibc::get_consensus_state_with_height(client_id)
+		}
+	}
+
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn dispatch_benchmark(
