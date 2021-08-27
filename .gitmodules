@@ -1,3 +1,6 @@
 [submodule "bin/node-template/pallets/octopus-appchain"]
 	path = bin/node-template/pallets/octopus-appchain
 	url = https://github.com/octopus-network/pallet-octopus-appchain.git
+[submodule "bin/node-template/pallets/octopus-lpos"]
+	path = bin/node-template/pallets/octopus-lpos
+	url = https://github.com/octopus-network/pallet-octopus-lpos.git

@@ -1,63 +1,62 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
-#![recursion_limit="256"]
+#![recursion_limit = "256"]
 
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use sp_std::prelude::*;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
-use sp_runtime::{
-	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
-	transaction_validity::{TransactionValidity, TransactionSource},
-};
-use sp_runtime::traits::{
-	BlakeTwo256, Block as BlockT, AccountIdLookup, Verify, IdentifyAccount, NumberFor,
-};
-use sp_api::impl_runtime_apis;
-use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use pallet_grandpa::fg_primitives;
-use sp_version::RuntimeVersion;
+use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
+use sp_api::impl_runtime_apis;
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_runtime::traits::{
+	AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, Verify,
+};
+use sp_runtime::{
+	create_runtime_str, generic, impl_opaque_keys,
+	transaction_validity::{TransactionSource, TransactionValidity},
+	ApplyExtrinsicResult, MultiSignature,
+};
+use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
+use sp_version::RuntimeVersion;
 
 // A few exports that help ease life for downstream crates.
-#[cfg(any(feature = "std", test))]
-pub use sp_runtime::BuildStorage;
-pub use pallet_timestamp::Call as TimestampCall;
-pub use pallet_balances::Call as BalancesCall;
-pub use sp_runtime::{Permill, Perbill};
 pub use frame_support::{
-	construct_runtime, parameter_types, StorageValue,
+	construct_runtime, parameter_types,
 	traits::{KeyOwnerProofSystem, Randomness},
 	weights::{
-		Weight, IdentityFee,
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
+		IdentityFee, Weight,
 	},
+	StorageValue,
 };
+pub use pallet_balances::Call as BalancesCall;
+pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::CurrencyAdapter;
+#[cfg(any(feature = "std", test))]
+pub use sp_runtime::BuildStorage;
+pub use sp_runtime::{Perbill, Permill};
 
-use frame_support::{
-	weights::DispatchClass,
-	traits::U128CurrencyToVote,
-};
+use frame_support::weights::DispatchClass;
 use frame_system::{
+	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
-	limits::{BlockWeights, BlockLength}
 };
-use sp_core::Encode;
-use sp_runtime::generic::Era;
-use sp_runtime::curve::PiecewiseLinear;
-use sp_runtime::transaction_validity::TransactionPriority;
-use sp_runtime::traits::{self, StaticLookup, SaturatedConversion, OpaqueKeys};
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
-use pallet_session::{historical as pallet_session_historical};
+use pallet_session::historical as pallet_session_historical;
+use sp_core::Encode;
+use sp_runtime::curve::PiecewiseLinear;
+use sp_runtime::generic::Era;
+use sp_runtime::traits::{self, OpaqueKeys, SaturatedConversion, StaticLookup};
+use sp_runtime::transaction_validity::TransactionPriority;
 
-use sp_runtime::traits::Keccak256;
 use beefy_primitives::{crypto::AuthorityId as BeefyId, ValidatorSet};
-use sp_runtime::traits::ConvertInto;
 use frame_support::PalletId;
+use sp_runtime::traits::ConvertInto;
+use sp_runtime::traits::Keccak256;
 
 /// Import the template pallet.
 pub use pallet_template;
@@ -174,23 +173,20 @@ pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
 
 pub const MILLICENTS: Balance = 1_000_000_000;
-pub const CENTS: Balance = 1_000 * MILLICENTS;    // assume this is worth about a cent.
+pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
 pub const DOLLARS: Balance = 100 * CENTS;
 
 /// The BABE epoch configuration at genesis.
 pub const BABE_GENESIS_EPOCH_CONFIG: sp_consensus_babe::BabeEpochConfiguration =
 	sp_consensus_babe::BabeEpochConfiguration {
 		c: PRIMARY_PROBABILITY,
-		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryPlainSlots
+		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryPlainSlots,
 	};
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
 pub fn native_version() -> NativeVersion {
-	NativeVersion {
-		runtime_version: VERSION,
-		can_author_with: Default::default(),
-	}
+	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
 }
 
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
@@ -388,7 +384,7 @@ impl pallet_authorship::Config for Runtime {
 	type FindAuthor = pallet_session::FindAccountFromAuthorIndex<Self, Babe>;
 	type UncleGenerations = UncleGenerations;
 	type FilterUncle = ();
-	type EventHandler = (Staking, ImOnline);
+	type EventHandler = (OctopusLpos, ImOnline);
 }
 
 parameter_types! {
@@ -401,7 +397,7 @@ impl pallet_session::Config for Runtime {
 	type ValidatorIdOf = ConvertInto;
 	type ShouldEndSession = Babe;
 	type NextSessionRotation = Babe;
-	type SessionManager = OctopusAppchain;
+	type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, OctopusLpos>;
 	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
 	type Keys = opaque::SessionKeys;
 	type DisabledValidatorsThreshold = DisabledValidatorsThreshold;
@@ -409,11 +405,11 @@ impl pallet_session::Config for Runtime {
 }
 
 impl pallet_session::historical::Config for Runtime {
-	type FullIdentification = pallet_staking::Exposure<AccountId, Balance>;
-	type FullIdentificationOf = pallet_staking::ExposureOf<Runtime>;
+	type FullIdentification = pallet_octopus_lpos::Exposure<AccountId, Balance>;
+	type FullIdentificationOf = pallet_octopus_lpos::ExposureOf<Runtime>;
 }
 
-pallet_staking_reward_curve::build! {
+pallet_octopus_lpos_reward_curve::build! {
 	const REWARD_CURVE: PiecewiseLinear<'static> = curve!(
 		min_inflation: 0_025_000,
 		max_inflation: 0_100_000,
@@ -426,28 +422,17 @@ pallet_staking_reward_curve::build! {
 
 parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
-	pub const BondingDuration: pallet_staking::EraIndex = 24 * 28;
-	pub const SlashDeferDuration: pallet_staking::EraIndex = 24 * 7; // 1/4 the bonding duration.
+	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
+	pub const SlashDeferDuration: pallet_octopus_lpos::EraIndex = 24 * 7; // 1/4 the bonding duration.
 	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
 	pub const MaxNominatorRewardedPerValidator: u32 = 256;
 	pub OffchainRepeat: BlockNumber = 5;
 }
 
-use frame_election_provider_support::onchain;
-
-impl onchain::Config for Runtime {
-	type AccountId = <Self as frame_system::Config>::AccountId;
-	type BlockNumber = <Self as frame_system::Config>::BlockNumber;
-	type BlockWeights = ();
-	type Accuracy = Perbill;
-	type DataProvider = Staking;
-}
-
-impl pallet_staking::Config for Runtime {
+impl pallet_octopus_lpos::Config for Runtime {
 	const MAX_NOMINATIONS: u32 = 16;
 	type Currency = Balances;
 	type UnixTime = Timestamp;
-	type CurrencyToVote = U128CurrencyToVote;
 	type RewardRemainder = ();
 	type Event = Event;
 	type Slash = ();
@@ -458,12 +443,12 @@ impl pallet_staking::Config for Runtime {
 	/// A super-majority of the council can cancel the slash.
 	type SlashCancelOrigin = frame_system::EnsureRoot<Self::AccountId>;
 	type SessionInterface = Self;
-	type EraPayout = pallet_staking::ConvertCurve<RewardCurve>;
+	type EraPayout = pallet_octopus_lpos::ConvertCurve<RewardCurve>;
 	type NextNewSession = Session;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
-	type ElectionProvider = onchain::OnChainSequentialPhragmen<Self>;
+	type ElectionProvider = OctopusAppchain;
 	type GenesisElectionProvider = Self::ElectionProvider;
-	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
@@ -473,8 +458,8 @@ parameter_types! {
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
-	where
-		Call: From<LocalCall>,
+where
+	Call: From<LocalCall>,
 {
 	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
 		call: Call,
@@ -484,10 +469,8 @@ impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for R
 	) -> Option<(Call, <UncheckedExtrinsic as traits::Extrinsic>::SignaturePayload)> {
 		let tip = 0;
 		// take the biggest period possible.
-		let period = BlockHashCount::get()
-			.checked_next_power_of_two()
-			.map(|c| c / 2)
-			.unwrap_or(2) as u64;
+		let period =
+			BlockHashCount::get().checked_next_power_of_two().map(|c| c / 2).unwrap_or(2) as u64;
 		let current_block = System::block_number()
 			.saturated_into::<u64>()
 			// The `System::block_number` is initialized with `n+1`,
@@ -508,10 +491,7 @@ impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for R
 				log::warn!("Unable to create signed payload: {:?}", e);
 			})
 			.ok()?;
-		let signature = raw_payload
-			.using_encoded(|payload| {
-				C::sign(payload, public)
-			})?;
+		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
 		let address = <Self as frame_system::Config>::Lookup::unlookup(account);
 		let (call, extra, _) = raw_payload.deconstruct();
 		Some((call, (address, signature.into(), extra)))
@@ -523,7 +503,8 @@ impl frame_system::offchain::SigningTypes for Runtime {
 	type Signature = Signature;
 }
 
-impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime where
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
 	Call: From<C>,
 {
 	type Extrinsic = UncheckedExtrinsic;
@@ -593,7 +574,9 @@ impl pallet_beefy::Config for Runtime {
 
 pub struct OctopusAppCrypto;
 
-impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature> for OctopusAppCrypto {
+impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
+	for OctopusAppCrypto
+{
 	type RuntimeAppPublic = pallet_octopus_appchain::AuthorityId;
 	type GenericSignature = sp_core::sr25519::Signature;
 	type GenericPublic = sp_core::sr25519::Public;
@@ -610,6 +593,7 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
 	type PalletId = OctopusAppchainPalletId;
+	type SessionInterface = Self;
 	type Currency = Balances;
 	type Assets = Assets;
 	type GracePeriod = GracePeriod;
@@ -639,7 +623,7 @@ construct_runtime!(
 		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
-		Staking: pallet_staking::{Pallet, Call, Config<T>, Storage, Event<T>},
+		OctopusLpos: pallet_octopus_lpos::{Pallet, Call, Config<T>, Storage, Event<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
@@ -669,7 +653,7 @@ pub type SignedExtra = (
 	frame_system::CheckEra<Runtime>,
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
-	pallet_transaction_payment::ChargeTransactionPayment<Runtime>
+	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
@@ -689,11 +673,7 @@ mod mmr {
 	use super::Runtime;
 	pub use pallet_mmr::primitives::*;
 
-	pub type Leaf = <
-		<Runtime as pallet_mmr::Config>::LeafData
-		as
-		LeafDataProvider
-	>::LeafData;
+	pub type Leaf = <<Runtime as pallet_mmr::Config>::LeafData as LeafDataProvider>::LeafData;
 	pub type Hash = <Runtime as pallet_mmr::Config>::Hash;
 	pub type Hashing = <Runtime as pallet_mmr::Config>::Hashing;
 }

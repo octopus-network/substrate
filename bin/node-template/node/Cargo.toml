@@ -62,13 +62,13 @@ sp-authorship = { version = "3.0.0", path = "../../../primitives/authorship" }
 sp-keystore = { version = "0.9.0", path = "../../../primitives/keystore" }
 pallet-im-online = { version = "3.0.0", path = "../../../frame/im-online" }
 pallet-mmr-rpc = { version = "3.0.0", path = "../../../frame/merkle-mountain-range/rpc/" }
-pallet-staking = { version = "3.0.0", path = "../../../frame/staking" }
 
 beefy-primitives = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev" }
 beefy-gadget = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev" }
 beefy-gadget-rpc = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev" }
 
 pallet-octopus-appchain = { path = "../pallets/octopus-appchain" }
+pallet-octopus-lpos = { path = "../pallets/octopus-lpos" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "3.1.0", path = "../../../frame/benchmarking" }

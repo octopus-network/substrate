@@ -43,13 +43,13 @@ pallet-authorship = { version = "3.0.0", default-features = false, path = "../..
 pallet-im-online = { version = "3.0.0", default-features = false, path = "../../../frame/im-online" }
 pallet-mmr = { version = "3.0.0", default-features = false, path = "../../../frame/merkle-mountain-range" }
 pallet-session = { version = "3.0.0", features = ["historical"], path = "../../../frame/session", default-features = false }
-pallet-staking = { version = "3.0.0", default-features = false, path = "../../../frame/staking" }
-pallet-staking-reward-curve = { version = "3.0.0", default-features = false, path = "../../../frame/staking/reward-curve" }
 sp-staking = { version = "3.0.0", default-features = false, path = "../../../primitives/staking" }
 
 beefy-primitives = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
 pallet-beefy = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
 pallet-octopus-appchain = { default-features = false, path = "../pallets/octopus-appchain" }
+pallet-octopus-lpos = { default-features = false, path = "../pallets/octopus-lpos" }
+pallet-octopus-lpos-reward-curve = { default-features = false, path = "../pallets/octopus-lpos/reward-curve" }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
@@ -94,17 +94,17 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 	"log/std",
-        "frame-election-provider-support/std",
-        "pallet-assets/std",
-        "pallet-authorship/std",
-        "pallet-im-online/std",
-        "pallet-mmr/std",
-        "pallet-session/std",
-        "pallet-staking/std",
-        "sp-staking/std",
+	"frame-election-provider-support/std",
+	"pallet-assets/std",
+	"pallet-authorship/std",
+	"pallet-im-online/std",
+	"pallet-mmr/std",
+	"pallet-session/std",
+	"sp-staking/std",
 	"beefy-primitives/std",
 	"pallet-beefy/std",
 	"pallet-octopus-appchain/std",
+	"pallet-octopus-lpos/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

@@ -314,3 +314,8 @@ sp-io = {path = './primitives/io'}
 sp-runtime = {path = './primitives/runtime'}
 sp-std = {path = './primitives/std'}
 sp-keystore = {path = './primitives/keystore'}
+sp-inherents = {path = './primitives/inherents'}
+sp-application-crypto = {path = './primitives/application-crypto'}
+sp-authorship = {path = './primitives/authorship'}
+sp-staking = {path = './primitives/staking'}
+pallet-authorship = {path = './frame/authorship'}
