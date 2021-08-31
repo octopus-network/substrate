@@ -207,6 +207,12 @@ members = [
 	# temp deps
 	"max-encoded-len",
 	"max-encoded-len/derive",
+
+	# octopus pallets
+	"bin/node-template/octopus-pallets/appchain",
+	"bin/node-template/octopus-pallets/lpos",
+	"bin/node-template/octopus-pallets/lpos/reward-curve",
+	"bin/node-template/octopus-pallets/lpos/reward-fn",
 ]
 
 # The list of dependencies below (which can be both direct and indirect dependencies) are crates

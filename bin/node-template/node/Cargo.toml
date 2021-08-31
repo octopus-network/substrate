@@ -67,8 +67,8 @@ beefy-primitives = { version = "0.1.0", git = "https://github.com/octopus-networ
 beefy-gadget = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev" }
 beefy-gadget-rpc = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev" }
 
-pallet-octopus-appchain = { path = "../pallets/octopus-appchain" }
-pallet-octopus-lpos = { path = "../pallets/octopus-lpos" }
+pallet-octopus-appchain = { path = "../octopus-pallets/appchain" }
+pallet-octopus-lpos = { path = "../octopus-pallets/lpos" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "3.1.0", path = "../../../frame/benchmarking" }
