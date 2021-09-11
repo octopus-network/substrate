@@ -446,8 +446,8 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type EraPayout = pallet_octopus_lpos::ConvertCurve<RewardCurve>;
 	type NextNewSession = Session;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
-	type ElectionProvider = OctopusAppchain;
-	type GenesisElectionProvider = Self::ElectionProvider;
+	type StakersProvider = OctopusAppchain;
+	type GenesisStakersProvider = Self::StakersProvider;
 	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
 }
 
@@ -593,7 +593,6 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
 	type PalletId = OctopusAppchainPalletId;
-	type SessionInterface = Self;
 	type LposInterface = OctopusLpos;
 	type Currency = Balances;
 	type Assets = Assets;

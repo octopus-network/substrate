@@ -5513,7 +5513,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-octopus-lpos-reward-curve"
-version = "3.0.0"
+version = "3.0.0-pre.0"
 dependencies = [
  "proc-macro-crate 1.0.0",
  "proc-macro2",
@@ -5524,7 +5524,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-octopus-lpos-reward-fn"
-version = "3.0.0"
+version = "3.0.0-pre.0"
 dependencies = [
  "log",
  "sp-arithmetic 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
