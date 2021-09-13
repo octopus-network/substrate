@@ -423,7 +423,6 @@ pallet_octopus_lpos_reward_curve::build! {
 parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
 	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
-	pub const SlashDeferDuration: pallet_octopus_lpos::EraIndex = 24 * 7; // 1/4 the bonding duration.
 	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
 	pub const MaxNominatorRewardedPerValidator: u32 = 256;
 	pub OffchainRepeat: BlockNumber = 5;
@@ -434,13 +433,9 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type UnixTime = Timestamp;
 	type RewardRemainder = ();
 	type Event = Event;
-	type Slash = ();
 	type Reward = (); // rewards are minted from the void
 	type SessionsPerEra = SessionsPerEra;
 	type BondingDuration = BondingDuration;
-	type SlashDeferDuration = SlashDeferDuration;
-	/// A super-majority of the council can cancel the slash.
-	type SlashCancelOrigin = frame_system::EnsureRoot<Self::AccountId>;
 	type SessionInterface = Self;
 	type EraPayout = pallet_octopus_lpos::ConvertCurve<RewardCurve>;
 	type NextNewSession = Session;

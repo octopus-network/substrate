@@ -15,7 +15,6 @@ use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_octopus_appchain::AuthorityId as OctopusId;
 use pallet_octopus_lpos::StakerStatus;
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_runtime::Perbill;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -225,8 +224,6 @@ fn testnet_genesis(
 		},
 		octopus_lpos: OctopusLposConfig {
 			validator_count: initial_authorities.len() as u32,
-			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
-			slash_reward_fraction: Perbill::from_percent(10),
 			stakers,
 			..Default::default()
 		},
