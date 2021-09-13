@@ -927,6 +927,12 @@ impl_runtime_apis! {
 			Ibc::get_client_connections(client_id)
 		}
 
+		// get IdentifiedChannelsEnd
+		fn get_connection_channels(connection_id: Vec<u8>) -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_connection_channels(connection_id)
+		}
+
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]
