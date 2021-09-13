@@ -906,7 +906,7 @@ impl_runtime_apis! {
 	}
 
 	// Here we implement our custom runtime API.
-	impl  pallet_ibc_runtime_api::ConsensusStateWithHeightApi<Block> for Runtime {
+	impl  pallet_ibc_runtime_api::IbcApi<Block> for Runtime {
 		fn consensus_state_with_height(client_id: Vec<u8>) -> Vec<(Vec<u8>, Vec<u8>)> {
 			// This Runtime API calls into a specific pallet. Calling a pallet is a common
 			// design pattern. You can see most other APIs in this file do the same.
