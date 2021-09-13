@@ -1904,7 +1904,7 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "sp-arithmetic 3.0.0",
- "sp-npos-elections 3.0.0",
+ "sp-npos-elections",
  "sp-runtime",
  "sp-std",
 ]
@@ -4530,7 +4530,7 @@ dependencies = [
  "sp-inherents",
  "sp-io",
  "sp-keyring",
- "sp-npos-elections 3.0.0",
+ "sp-npos-elections",
  "sp-offchain",
  "sp-runtime",
  "sp-session",
@@ -5140,7 +5140,7 @@ dependencies = [
  "sp-arithmetic 3.0.0",
  "sp-core",
  "sp-io",
- "sp-npos-elections 3.0.0",
+ "sp-npos-elections",
  "sp-runtime",
  "sp-std",
  "sp-tracing 3.0.0",
@@ -5176,7 +5176,7 @@ dependencies = [
  "parity-scale-codec",
  "sp-core",
  "sp-io",
- "sp-npos-elections 3.0.0",
+ "sp-npos-elections",
  "sp-runtime",
  "sp-std",
  "substrate-test-utils 3.0.0",
@@ -5473,7 +5473,6 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keystore",
- "sp-npos-elections 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sp-runtime",
  "sp-std",
 ]
@@ -5501,7 +5500,6 @@ dependencies = [
  "sp-application-crypto",
  "sp-core",
  "sp-io",
- "sp-npos-elections 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sp-runtime",
  "sp-staking",
  "sp-std",
@@ -9435,24 +9433,10 @@ dependencies = [
  "serde",
  "sp-arithmetic 3.0.0",
  "sp-core",
- "sp-npos-elections-compact 3.0.0",
+ "sp-npos-elections-compact",
  "sp-runtime",
  "sp-std",
  "substrate-test-utils 3.0.0",
-]
-
-[[package]]
-name = "sp-npos-elections"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54e6e8b84ee0dc7bb65b55beba55ffbc17803222ab7c746a74f72fc5869c7320"
-dependencies = [
- "parity-scale-codec",
- "serde",
- "sp-arithmetic 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sp-core",
- "sp-npos-elections-compact 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sp-std",
 ]
 
 [[package]]
@@ -9464,21 +9448,9 @@ dependencies = [
  "proc-macro2",
  "quote",
  "sp-arithmetic 3.0.0",
- "sp-npos-elections 3.0.0",
+ "sp-npos-elections",
  "syn",
  "trybuild",
-]
-
-[[package]]
-name = "sp-npos-elections-compact"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "085fbb1aa72d85a17524047fc1e708bc3bd038b02b46dc7ac601fa39c8af93d3"
-dependencies = [
- "proc-macro-crate 0.1.5",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -9489,7 +9461,7 @@ dependencies = [
  "parity-scale-codec",
  "rand 0.7.3",
  "sp-arithmetic 3.0.0",
- "sp-npos-elections 3.0.0",
+ "sp-npos-elections",
  "sp-runtime",
  "sp-std",
  "structopt",

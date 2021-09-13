@@ -430,7 +430,6 @@ parameter_types! {
 }
 
 impl pallet_octopus_lpos::Config for Runtime {
-	const MAX_NOMINATIONS: u32 = 16;
 	type Currency = Balances;
 	type UnixTime = Timestamp;
 	type RewardRemainder = ();
