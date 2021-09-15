@@ -223,7 +223,7 @@ fn testnet_genesis(
 				.collect::<Vec<_>>(),
 		},
 		octopus_lpos: OctopusLposConfig {
-			validator_count: initial_authorities.len() as u32,
+			// validator_count: initial_authorities.len() as u32,
 			stakers,
 			..Default::default()
 		},
