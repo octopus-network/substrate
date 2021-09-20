@@ -13,7 +13,7 @@ use node_template_runtime::{opaque::SessionKeys, Balance, ImOnlineConfig, Sessio
 use node_template_runtime::{OctopusAppchainConfig, OctopusLposConfig};
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_octopus_appchain::AuthorityId as OctopusId;
-use pallet_octopus_lpos::StakerStatus;
+use pallet_octopus_appchain::StakerStatus;
 use sp_consensus_babe::AuthorityId as BabeId;
 
 // The URL for the telemetry server.
@@ -223,7 +223,6 @@ fn testnet_genesis(
 				.collect::<Vec<_>>(),
 		},
 		octopus_lpos: OctopusLposConfig {
-			stakers,
 			..Default::default()
 		},
 		sudo: SudoConfig { key: root_key },
@@ -238,6 +237,7 @@ fn testnet_genesis(
 			appchain_id: "".to_string(),
 			relay_contract: "dev-oct-relay.testnet".to_string(),
 			asset_id_by_name: vec![("usdc.testnet".to_string(), 0)],
+			stakers,
 		},
 	}
 }

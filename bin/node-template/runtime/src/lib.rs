@@ -441,7 +441,6 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type NextNewSession = Session;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
 	type StakersProvider = OctopusAppchain;
-	type GenesisStakersProvider = Self::StakersProvider;
 	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
 }
 
