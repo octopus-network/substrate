@@ -2859,7 +2859,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.6.1"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=dv-octopus-relayer#62acb0f0c04b6b93dd7efa959472cc1757f99015"
+source = "git+https://github.com/octopus-network/ibc-rs.git?branch=dv-octopus-relayer#03074d6aaa12ab922a176089bca083df1499f7e5"
 dependencies = [
  "bytes 1.1.0",
  "chrono",
@@ -2883,7 +2883,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.9.0"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=dv-octopus-relayer#62acb0f0c04b6b93dd7efa959472cc1757f99015"
+source = "git+https://github.com/octopus-network/ibc-rs.git?branch=dv-octopus-relayer#03074d6aaa12ab922a176089bca083df1499f7e5"
 dependencies = [
  "bytes 1.1.0",
  "prost",
@@ -11405,8 +11405,8 @@ version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f559b464de2e2bdabcac6a210d12e9b5a5973c251e102c44c585c71d51bd78e"
 dependencies = [
- "cfg-if 1.0.0",
- "rand 0.8.4",
+ "cfg-if 0.1.10",
+ "rand 0.3.23",
  "static_assertions",
 ]
 
