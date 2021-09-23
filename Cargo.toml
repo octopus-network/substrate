@@ -311,3 +311,4 @@ sp-runtime = {path = './primitives/runtime'}
 frame-support = { path = "./frame/support" }
 frame-system = { path = "./frame/system" }
 frame-benchmarking = { path = "./frame/benchmarking" }
+crypto-mac = { git = "https://github.com/uinb/traits", package = "crypto-mac", tag = "crypto-mac-v0.7.0" }

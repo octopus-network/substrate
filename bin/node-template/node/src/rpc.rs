@@ -108,6 +108,7 @@ pub fn create_full<C, P, SC, B, BT>(
 	C::Api: pallet_mmr_rpc::MmrRuntimeApi<Block, <Block as sp_runtime::traits::Block>::Hash>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BabeApi<Block>,
+	C::Api: pallet_ibc_runtime_api::ConsensusStateWithHeightApi<Block>,
 	C::Api: BlockBuilder<Block>,
 	P: TransactionPool + 'static,
 	SC: SelectChain<Block> +'static,
@@ -184,7 +185,7 @@ pub fn create_full<C, P, SC, B, BT>(
 		sc_sync_state_rpc::SyncStateRpcApi::to_delegate(
 			sc_sync_state_rpc::SyncStateRpcHandler::new(
 				chain_spec,
-				client,
+				client.clone(),
 				shared_authority_set,
 				shared_epoch_changes,
 				deny_unsafe,
@@ -194,6 +195,10 @@ pub fn create_full<C, P, SC, B, BT>(
 
 	io.extend_with(beefy_gadget_rpc::BeefyApi::to_delegate(
 		beefy_gadget_rpc::BeefyRpcHandler::new(beefy.signed_commitment_stream, beefy.subscription_executor),
+	));
+
+	io.extend_with(pallet_ibc_rpc::ConsensusStateWithHeightApi::to_delegate(
+		pallet_ibc_rpc::ConsensusStateWithHeightStorage::new(client),
 	));
 
 	io

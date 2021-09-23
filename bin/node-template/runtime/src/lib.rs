@@ -608,67 +608,7 @@ impl pallet_assets::Config for Runtime {
 // In the future, we should find a more dynamic way to create this mapping.
 pub struct ModuleCallbacksImpl;
 
-impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {
-	/*
-
-	fn on_chan_open_try(
-		index: usize,
-		order: pallet_ibc::ChannelOrder,
-		connection_hops: Vec<H256>,
-		port_identifier: Vec<u8>,
-		channel_identifier: H256,
-		counterparty_port_identifier: Vec<u8>,
-		counterparty_channel_identifier: H256,
-		version: Vec<u8>,
-		counterparty_version: Vec<u8>,
-	) {
-		// if index == 9 {
-		// 	pallet_template::Module::<Runtime>::on_chan_open_try(
-		// 		order,
-		// 		connection_hops,
-		// 		port_identifier,
-		// 		channel_identifier,
-		// 		counterparty_port_identifier,
-		// 		counterparty_channel_identifier,
-		// 		version,
-		// 		counterparty_version,
-		// 	);
-		// }
-		unimplemented!()
-	}
-
-	fn on_chan_open_ack(
-		index: usize,
-		port_identifier: Vec<u8>,
-		channel_identifier: H256,
-		version: Vec<u8>,
-	) {
-		// if index == 9 {
-		// 	pallet_template::Module::<Runtime>::on_chan_open_ack(
-		// 		port_identifier,
-		// 		channel_identifier,
-		// 		version,
-		// 	);
-		// }
-		unimplemented!()
-	}
-
-	fn on_chan_open_confirm(index: usize, port_identifier: Vec<u8>, channel_identifier: H256) {
-		// if index == 9 {
-		// 	pallet_template::Module::<Runtime>::on_chan_open_confirm(port_identifier, channel_identifier);
-		// }
-		unimplemented!()
-	}
-
-	fn on_recv_packet(index: usize, packet: pallet_ibc::Packet) {
-		// if index == 9 {
-		// 	pallet_template::Module::<Runtime>::on_recv_packet(packet);
-		// }
-		unimplemented!()
-	}
-
-	*/
-}
+impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {}
 
 impl pallet_ibc::Config for Runtime {
 	type Event = Event;
@@ -962,6 +902,17 @@ impl_runtime_apis! {
 	impl beefy_primitives::BeefyApi<Block, BeefyId> for Runtime {
 		fn validator_set() -> ValidatorSet<BeefyId> {
 			Beefy::validator_set()
+		}
+	}
+
+	// Here we implement our custom runtime API.
+	impl  pallet_ibc_runtime_api::ConsensusStateWithHeightApi<Block> for Runtime {
+		fn consensus_state_with_height(client_id: Vec<u8>) -> Vec<(Vec<u8>, Vec<u8>)> {
+			// This Runtime API calls into a specific pallet. Calling a pallet is a common
+			// design pattern. You can see most other APIs in this file do the same.
+			// It is also possible to write your logic right here in the runtime
+			// amalgamator file
+			Ibc::get_consensus_state_with_height(client_id)
 		}
 	}
 
