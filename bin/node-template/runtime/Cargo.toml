@@ -49,7 +49,6 @@ beefy-primitives = { version = "0.1.0", git = "https://github.com/octopus-networ
 pallet-beefy = { version = "0.1.0", git = "https://github.com/octopus-network/grandpa-bridge-gadget", branch = "dev", default-features = false }
 pallet-octopus-appchain = { default-features = false, path = "../octopus-pallets/appchain" }
 pallet-octopus-lpos = { default-features = false, path = "../octopus-pallets/lpos" }
-pallet-octopus-lpos-reward-curve = { default-features = false, path = "../octopus-pallets/lpos/reward-curve" }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }

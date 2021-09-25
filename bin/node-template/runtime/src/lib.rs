@@ -48,7 +48,6 @@ use frame_system::{
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_session::historical as pallet_session_historical;
 use sp_core::Encode;
-use sp_runtime::curve::PiecewiseLinear;
 use sp_runtime::generic::Era;
 use sp_runtime::traits::{self, OpaqueKeys, SaturatedConversion, StaticLookup};
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -405,38 +404,24 @@ impl pallet_session::Config for Runtime {
 }
 
 impl pallet_session::historical::Config for Runtime {
-	type FullIdentification = <Self as frame_system::Config>::AccountId;
-	type FullIdentificationOf = ConvertInto;
-}
-
-pallet_octopus_lpos_reward_curve::build! {
-	const REWARD_CURVE: PiecewiseLinear<'static> = curve!(
-		min_inflation: 0_025_000,
-		max_inflation: 0_100_000,
-		ideal_stake: 0_500_000,
-		falloff: 0_050_000,
-		max_piece_count: 40,
-		test_precision: 0_005_000,
-	);
+	type FullIdentification = u128;
+	type FullIdentificationOf = pallet_octopus_lpos::ExposureOf<Runtime>;
 }
 
 parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
 	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
-	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
 	pub OffchainRepeat: BlockNumber = 5;
 }
 
 impl pallet_octopus_lpos::Config for Runtime {
 	type Currency = Balances;
 	type UnixTime = Timestamp;
-	type RewardRemainder = ();
 	type Event = Event;
 	type Reward = (); // rewards are minted from the void
 	type SessionsPerEra = SessionsPerEra;
 	type BondingDuration = BondingDuration;
 	type SessionInterface = Self;
-	type EraPayout = pallet_octopus_lpos::ConvertCurve<RewardCurve>;
 	type NextNewSession = Session;
 	type ValidatorsProvider = OctopusAppchain;
 	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;

@@ -197,7 +197,7 @@ fn testnet_genesis(
 				})
 				.collect::<Vec<_>>(),
 		},
-		octopus_lpos: OctopusLposConfig { ..Default::default() },
+		octopus_lpos: OctopusLposConfig { era_payout: 1024, ..Default::default() },
 		sudo: SudoConfig { key: root_key },
 		babe: BabeConfig {
 			authorities: vec![],

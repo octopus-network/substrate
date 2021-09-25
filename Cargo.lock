@@ -484,7 +484,7 @@ dependencies = [
  "sc-network-gossip",
  "sp-api 3.0.0",
  "sp-application-crypto",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-blockchain",
  "sp-consensus",
  "sp-core",
@@ -1903,7 +1903,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "parity-scale-codec",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-npos-elections",
  "sp-runtime",
  "sp-std",
@@ -1957,7 +1957,7 @@ dependencies = [
  "pretty_assertions 0.6.1",
  "serde",
  "smallvec 1.6.1",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-core",
  "sp-inherents",
  "sp-io",
@@ -4510,7 +4510,7 @@ dependencies = [
  "pallet-session-benchmarking",
  "pallet-society",
  "pallet-staking",
- "pallet-staking-reward-curve 3.0.0",
+ "pallet-staking-reward-curve",
  "pallet-sudo",
  "pallet-timestamp 3.0.0",
  "pallet-tips",
@@ -4622,7 +4622,6 @@ dependencies = [
  "pallet-mmr",
  "pallet-octopus-appchain",
  "pallet-octopus-lpos",
- "pallet-octopus-lpos-reward-curve",
  "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-sudo",
@@ -4938,7 +4937,7 @@ dependencies = [
  "pallet-offences",
  "pallet-session",
  "pallet-staking",
- "pallet-staking-reward-curve 3.0.0",
+ "pallet-staking-reward-curve",
  "pallet-timestamp 3.0.0",
  "parity-scale-codec",
  "sp-application-crypto",
@@ -5137,7 +5136,7 @@ dependencies = [
  "parking_lot 0.11.1",
  "paste 1.0.4",
  "rand 0.7.3",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-core",
  "sp-io",
  "sp-npos-elections",
@@ -5238,7 +5237,7 @@ dependencies = [
  "frame-system",
  "pallet-balances",
  "parity-scale-codec",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -5260,7 +5259,7 @@ dependencies = [
  "pallet-offences",
  "pallet-session",
  "pallet-staking",
- "pallet-staking-reward-curve 3.0.0",
+ "pallet-staking-reward-curve",
  "pallet-timestamp 3.0.0",
  "parity-scale-codec",
  "sp-application-crypto",
@@ -5490,7 +5489,6 @@ dependencies = [
  "pallet-balances",
  "pallet-octopus-appchain",
  "pallet-session",
- "pallet-staking-reward-curve 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-timestamp 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec",
  "parking_lot 0.11.1",
@@ -5507,25 +5505,6 @@ dependencies = [
  "sp-tracing 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "static_assertions",
  "substrate-test-utils 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "pallet-octopus-lpos-reward-curve"
-version = "3.0.0-pre.0"
-dependencies = [
- "proc-macro-crate 1.0.0",
- "proc-macro2",
- "quote",
- "sp-runtime",
- "syn",
-]
-
-[[package]]
-name = "pallet-octopus-lpos-reward-fn"
-version = "3.0.0-pre.0"
-dependencies = [
- "log",
- "sp-arithmetic 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -5560,7 +5539,7 @@ dependencies = [
  "pallet-offences",
  "pallet-session",
  "pallet-staking",
- "pallet-staking-reward-curve 3.0.0",
+ "pallet-staking-reward-curve",
  "pallet-timestamp 3.0.0",
  "parity-scale-codec",
  "serde",
@@ -5679,7 +5658,7 @@ dependencies = [
  "pallet-balances",
  "pallet-session",
  "pallet-staking",
- "pallet-staking-reward-curve 3.0.0",
+ "pallet-staking-reward-curve",
  "pallet-timestamp 3.0.0",
  "parity-scale-codec",
  "rand 0.7.3",
@@ -5720,7 +5699,7 @@ dependencies = [
  "pallet-authorship",
  "pallet-balances",
  "pallet-session",
- "pallet-staking-reward-curve 3.0.0",
+ "pallet-staking-reward-curve",
  "pallet-timestamp 3.0.0",
  "parity-scale-codec",
  "parking_lot 0.11.1",
@@ -5751,23 +5730,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-staking-reward-curve"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cb16d9e2597ce7cfc786b0ebf09cd5e6375fc65df6f38cd7e67797ec7bda990"
-dependencies = [
- "proc-macro-crate 0.1.5",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "pallet-staking-reward-fn"
 version = "3.0.0"
 dependencies = [
  "log",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
 ]
 
 [[package]]
@@ -7458,7 +7425,7 @@ dependencies = [
  "sc-client-api",
  "sc-executor",
  "sc-state-db",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-blockchain",
  "sp-consensus",
  "sp-core",
@@ -7700,7 +7667,7 @@ dependencies = [
  "sc-telemetry",
  "sp-api 3.0.0",
  "sp-application-crypto",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-blockchain",
  "sp-consensus",
  "sp-consensus-slots",
@@ -7843,7 +7810,7 @@ dependencies = [
  "serde_json",
  "sp-api 3.0.0",
  "sp-application-crypto",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-blockchain",
  "sp-consensus",
  "sp-consensus-babe",
@@ -8014,7 +7981,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec 1.6.1",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-blockchain",
  "sp-consensus",
  "sp-core",
@@ -9065,20 +9032,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-arithmetic"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0f1c69966c192d1dee8521f0b29ece2b14db07b9b44d801a94e295234761645"
-dependencies = [
- "integer-sqrt",
- "num-traits",
- "parity-scale-codec",
- "serde",
- "sp-debug-derive 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sp-std",
-]
-
-[[package]]
 name = "sp-arithmetic-fuzzer"
 version = "2.0.0"
 dependencies = [
@@ -9086,7 +9039,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "primitive-types",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
 ]
 
 [[package]]
@@ -9219,7 +9172,7 @@ name = "sp-consensus-slots"
 version = "0.9.0"
 dependencies = [
  "parity-scale-codec",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-runtime",
 ]
 
@@ -9431,7 +9384,7 @@ dependencies = [
  "parity-scale-codec",
  "rand 0.7.3",
  "serde",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-core",
  "sp-npos-elections-compact",
  "sp-runtime",
@@ -9447,7 +9400,7 @@ dependencies = [
  "proc-macro-crate 1.0.0",
  "proc-macro2",
  "quote",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-npos-elections",
  "syn",
  "trybuild",
@@ -9460,7 +9413,7 @@ dependencies = [
  "honggfuzz",
  "parity-scale-codec",
  "rand 0.7.3",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-npos-elections",
  "sp-runtime",
  "sp-std",
@@ -9521,7 +9474,7 @@ dependencies = [
  "serde_json",
  "sp-api 3.0.0",
  "sp-application-crypto",
- "sp-arithmetic 3.0.0",
+ "sp-arithmetic",
  "sp-core",
  "sp-io",
  "sp-state-machine 0.9.0",
