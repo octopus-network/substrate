@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"encoding/json"
@@ -165,7 +166,6 @@ func writeResult(vals []int, outfile string) error {
 
 	writer := bufio.NewWriter(file)
 	for _, v := range vals {
-
 		writer.WriteString(strconv.Itoa(v))
 		writer.WriteString(",")
 		writer.Flush()
@@ -204,10 +204,15 @@ func Test2() []interface{} {
 	return innerResult
 }
 
+var testData []interface{}
+var once sync.Once
+
 func ProduceResponse() Ret {
 	//test use case
-	innerResult := Test1()
-	result, _ := json.Marshal(innerResult)
+	once.Do(func() {
+	    testData = Test1()
+	})
+	result, _ := json.Marshal(testData)
 
 	retData := ResultData{
 		BlockHash:   "EczErquQLMpUvTQpKupoQp5yNkgNbniMSHq1gVvhAf84", //mock hash
@@ -240,7 +245,7 @@ type Req struct {
 
 var handleCnt uint64 = 0
 
-const HANDLER_TIMES = 20
+const HANDLER_TIMES = 20000
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -250,7 +255,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		handleCnt++
 	}()
 
-	fmt.Println("method:", r.Method)
+	//fmt.Println("method:", r.Method)
 	//body, err := ioutil.ReadAll(r.Body)
 	//if err != nil {
 	//	fmt.Printf("read body err, %v\n", err)
@@ -258,17 +263,17 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	//}
 	//println("request json:", string(body))
 
-	// //parse json to struct
-	// var req Req
-	// req.Jsonrpc = gjson.Get(string(body), "jsonrpc").String()
-	// req.Id = gjson.Get(string(body), "id").String()
-	// req.Method = gjson.Get(string(body), "method").String()
-	// req.Params.RequestType = gjson.Get(string(body), "params.request_type").String()
-	// req.Params.AccountId = gjson.Get(string(body), "params.account_id").String()
-	// req.Params.MethodName = gjson.Get(string(body), "params.method_name").String()
-	// req.Params.ArgsBase64 = gjson.Get(string(body), "params.args_base64").String()
+	////parse json to struct
+	//var req Req
+	//req.Jsonrpc = gjson.Get(string(body), "jsonrpc").String()
+	//req.Id = gjson.Get(string(body), "id").String()
+	//req.Method = gjson.Get(string(body), "method").String()
+	//req.Params.RequestType = gjson.Get(string(body), "params.request_type").String()
+	//req.Params.AccountId = gjson.Get(string(body), "params.account_id").String()
+	//req.Params.MethodName = gjson.Get(string(body), "params.method_name").String()
+	//req.Params.ArgsBase64 = gjson.Get(string(body), "params.args_base64").String()
 
-	// fmt.Printf("%+v\n", req)
+	//fmt.Printf("%+v\n", req)
 
 	//dealt the req
 	response := ProduceResponse()

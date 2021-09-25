@@ -1,6 +1,6 @@
 # rm -rf /tmp/alice
-#../../../target/debug/node-template purge-chain --base-path /tmp/alice --chain local 
-RUST_LOG=runtime::octopus-appchain ../../../target/debug/node-template \
+#../../target/debug/node-template purge-chain --base-path /tmp/alice --chain local 
+RUST_LOG=runtime::octopus-appchain ../../target/debug/node-template \
 --base-path /tmp/alice \
 --chain=local \
 --alice \

@@ -20,8 +20,8 @@ pids+=($!)
 timeout $duration bash start-eve.sh & 
 pids+=($!)
 
-# start js-client
-cd ../js-client
+# start js_client
+cd ../js_client
 node appchain.js &
 pids+=($!)
 

@@ -88,11 +88,11 @@ jobs:
       # yarn install 
       - name: Run yarn 
         run: |
-            cd ./substrate/test-utils/it-test/js-client
+            cd ./substrate/octopus_tests/js_client
             yarn add @polkadot/api
 
-      # Run mock server, node, js-client
+      # Run mock server, node, js_client
       - name: Run test 
         run: |
-            cd ./substrate/test-utils/it-test/
+            cd ./substrate/octopus_tests/
             ./action-all.sh

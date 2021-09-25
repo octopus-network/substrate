@@ -3,6 +3,18 @@ const getMockDataFromServer = require('./mockdata.js');
 const assert = require("assert");
 
 const customTypes = {
+    "Message": {
+        "nonce": "u64",
+        "payload_type": "PayloadType",
+        "payload": "Vec<u8>"
+    },
+    "StakerStatus": {
+        "_enum": {
+            "Idle": "Idle",
+            "Validator": "Validator",
+            "Nominator": "(Vec<AccountId>)"
+        }
+    },
     "BeefyKey": "[u8; 33]",
     "SessionKeys5B": "(AccountId, AccountId, AccountId, AccountId, BeefyKey)",
     "Validator": {
@@ -61,22 +73,24 @@ async function monitAppChain(testDataPath) {
                     validators1.sort();
                     validators2.sort();
 
-                    console.log(`vs1.length: ${validators1.length}`);
-                    console.log(`vs1: ${validators1[0]}`);
-                    console.log(`vs1: ${validators1[1]}`);
-                    console.log(`vs2 length: ${validators2.length}`);
-                    console.log(`vs2: ${validators2[0]}`);
-                    console.log(`vs2: ${validators2[1]}`);
+                    //console.log(`vs1.length: ${validators1.length}`);
+                    //console.log(`vs1: ${validators1[0]}`);
+                    //console.log(`vs1: ${validators1[1]}`);
+                    //console.log(`vs2 length: ${validators2.length}`);
+                    //console.log(`vs2: ${validators2[0]}`);
+                    //console.log(`vs2: ${validators2[1]}`);
 
                     //compare
                     assert((validators1.length == validators2.length), 
                         'validators1.length != validators2.length !');
+
                     
                     for (i = 0; i < validators1.length; i++) {
                         assert((validators1[i].toString() == validators2[i].toString()), 
                             'validator not match!');
                     }
                     
+                    console.log(`use case passed!`);
                     //just compare one time
                     process.exit();
                 })
@@ -88,6 +102,10 @@ async function monitAppChain(testDataPath) {
 
 (async () => { 
     await monitAppChain("../mock_server/test1.data");
+    process.on('unhandledRejection', (reason, promise) => {
+        console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+        process.exit();
+    });
 })();
 module.exports = monitAppChain;
 
