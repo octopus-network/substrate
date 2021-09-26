@@ -405,8 +405,8 @@ impl pallet_session::Config for Runtime {
 }
 
 impl pallet_session::historical::Config for Runtime {
-	type FullIdentification = pallet_octopus_lpos::Exposure<AccountId, Balance>;
-	type FullIdentificationOf = pallet_octopus_lpos::ExposureOf<Runtime>;
+	type FullIdentification = <Self as frame_system::Config>::AccountId;
+	type FullIdentificationOf = ConvertInto;
 }
 
 pallet_octopus_lpos_reward_curve::build! {
@@ -424,7 +424,6 @@ parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
 	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
 	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
-	pub const MaxNominatorRewardedPerValidator: u32 = 256;
 	pub OffchainRepeat: BlockNumber = 5;
 }
 
@@ -439,8 +438,7 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type SessionInterface = Self;
 	type EraPayout = pallet_octopus_lpos::ConvertCurve<RewardCurve>;
 	type NextNewSession = Session;
-	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
-	type StakersProvider = OctopusAppchain;
+	type ValidatorsProvider = OctopusAppchain;
 	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
 }
 
