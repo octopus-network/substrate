@@ -15,14 +15,20 @@ This directory is used for integration testing of octopus. The contents of each 
 ./modify.sh
 ```
 
-2、start mock server
+2、build node-template
+
+```
+cargo build -p node-template
+```
+
+3、start mock server
 
 ```
 cd mock_server
 go run mock_json_server.go
 ```
 
-3、start node
+4、start node
 
 ```
 cd scripts/
@@ -33,7 +39,7 @@ cd scripts/
 ./start-eve.sh
 ```
 
-4、start monitor
+5、start monitor
 
 ```
 cd js_client
