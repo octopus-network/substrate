@@ -3,6 +3,16 @@ const getMockDataFromServer = require('./mockdata.js');
 const assert = require("assert");
 
 const customTypes = {
+    "IdentificationTuple": "(ValidatorId, FullIdentification)",
+    "FullIdentification": {
+        "total": "Balance",
+        "own": "Balance",
+        "others": "Vec<IndividualExposure<AccountId, Balance>>"
+    },
+    "IndividualExposure": {
+        "who": "AccountId",
+        "value": "Balance",
+    },
     "Message": {
         "nonce": "u64",
         "payload_type": "PayloadType",
