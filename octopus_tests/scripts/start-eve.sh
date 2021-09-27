@@ -1,7 +1,7 @@
-# rm -rf /tmp/eve
-#../../target/debug/node-template purge-chain --base-path /tmp/eve --chain local
+rm -rf /tmp/eve
 
-RUST_LOG=runtime::octopus-appchain ../../target/debug/node-template \
+RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-downlink=debug,runtime::octopus-support=debug" \
+../../target/debug/node-template \
 --base-path /tmp/eve \
 --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp \
 --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWHdiAxVd8uMQR1hGWXccidmfCwLqcMpGwR6QcTP6QRMuD \
@@ -13,9 +13,5 @@ RUST_LOG=runtime::octopus-appchain ../../target/debug/node-template \
 --rpc-port 9937 \
 --ws-port 9948 \
 --no-telemetry \
---rpc-external \
---rpc-cors all \
---execution Native \
---rpc-methods=unsafe \
---ws-external
-# --validator \
+--execution=Native \
+--enable-offchain-indexing=true

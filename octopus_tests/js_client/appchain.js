@@ -69,7 +69,7 @@ const customTypes = {
 
 
 async function monitAppChain(testDataPath) {
-    const provider = new WsProvider('ws://127.0.0.1:9945', );
+    const provider = new WsProvider('ws://127.0.0.1:9944', );
     const api = await ApiPromise.create({ provider: provider, types: customTypes});
     
     api.query.system.events(events => {

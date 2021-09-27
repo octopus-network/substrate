@@ -245,7 +245,7 @@ type Req struct {
 
 var handleCnt uint64 = 0
 
-const HANDLER_TIMES = 20
+const HANDLER_TIMES = 200
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer func() {

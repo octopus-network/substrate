@@ -1,13 +1,16 @@
-# rm -rf /tmp/alice
-#../../target/debug/node-template purge-chain --base-path /tmp/alice --chain local 
-RUST_LOG=runtime::octopus-appchain ../../target/debug/node-template \
+rm -rf /tmp/alice
+
+RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-downlink=debug,runtime::octopus-support=debug" \
+../../target/debug/node-template \
 --base-path /tmp/alice \
 --chain=local \
 --alice \
 --node-key 0000000000000000000000000000000000000000000000000000000000000001 \
 --no-telemetry \
---execution Native \
---rpc-methods=unsafe \
---ws-external
-# -ltxpool
-# --validator \
+--rpc-external \
+--rpc-cors=all \
+--rpc-methods=Unsafe \
+--ws-external \
+--execution=Native \
+--enable-offchain-indexing=true \
+--pruning=archive
