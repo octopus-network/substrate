@@ -4621,6 +4621,7 @@ dependencies = [
  "pallet-im-online",
  "pallet-mmr",
  "pallet-octopus-appchain",
+ "pallet-octopus-downlink",
  "pallet-octopus-lpos",
  "pallet-randomness-collective-flip",
  "pallet-session",
@@ -5464,6 +5465,8 @@ dependencies = [
  "log",
  "pallet-assets",
  "pallet-balances",
+ "pallet-octopus-downlink",
+ "pallet-octopus-support",
  "pallet-session",
  "parity-scale-codec",
  "serde",
@@ -5472,6 +5475,21 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keystore",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-octopus-downlink"
+version = "3.0.0-pre.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-octopus-support",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-std",
 ]
@@ -5487,7 +5505,7 @@ dependencies = [
  "log",
  "pallet-authorship",
  "pallet-balances",
- "pallet-octopus-appchain",
+ "pallet-octopus-support",
  "pallet-session",
  "pallet-timestamp 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec",
@@ -5505,6 +5523,16 @@ dependencies = [
  "sp-tracing 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "static_assertions",
  "substrate-test-utils 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pallet-octopus-support"
+version = "3.0.0-pre.0"
+dependencies = [
+ "frame-support",
+ "parity-scale-codec",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
