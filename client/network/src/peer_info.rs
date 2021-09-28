@@ -317,28 +317,36 @@ impl NetworkBehaviour for PeerInfoBehaviour {
 					return Poll::Ready(NetworkBehaviourAction::NotifyHandler {
 						peer_id,
 						handler,
-						event: EitherOutput::First(event)
+						event: EitherOutput::First(event),
 					}),
 				Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }) =>
-					return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }),
+					return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr {
+						address,
+						score,
+					}),
+				Poll::Ready(NetworkBehaviourAction::CloseConnection { peer_id, connection }) =>
+					return Poll::Ready(NetworkBehaviourAction::CloseConnection {
+						peer_id,
+						connection,
+					}),
 			}
 		}
+
 
 		loop {
 			match self.identify.poll(cx, params) {
 				Poll::Pending => break,
-				Poll::Ready(NetworkBehaviourAction::GenerateEvent(event)) => {
-					match event {
-						IdentifyEvent::Received { peer_id, info, .. } => {
-							self.handle_identify_report(&peer_id, &info);
-							let event = PeerInfoEvent::Identified { peer_id, info };
-							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(event));
-						}
-						IdentifyEvent::Error { peer_id, error } =>
-							debug!(target: "sub-libp2p", "Identification with peer {:?} failed => {}", peer_id, error),
-						IdentifyEvent::Pushed { .. } => {}
-						IdentifyEvent::Sent { .. } => {}
-					}
+				Poll::Ready(NetworkBehaviourAction::GenerateEvent(event)) => match event {
+					IdentifyEvent::Received { peer_id, info, .. } => {
+						self.handle_identify_report(&peer_id, &info);
+						let event = PeerInfoEvent::Identified { peer_id, info };
+						return Poll::Ready(NetworkBehaviourAction::GenerateEvent(event))
+					},
+					IdentifyEvent::Error { peer_id, error } => {
+						debug!(target: "sub-libp2p", "Identification with peer {:?} failed => {}", peer_id, error)
+					},
+					IdentifyEvent::Pushed { .. } => {},
+					IdentifyEvent::Sent { .. } => {},
 				},
 				Poll::Ready(NetworkBehaviourAction::DialAddress { address }) =>
 					return Poll::Ready(NetworkBehaviourAction::DialAddress { address }),
@@ -348,10 +356,18 @@ impl NetworkBehaviour for PeerInfoBehaviour {
 					return Poll::Ready(NetworkBehaviourAction::NotifyHandler {
 						peer_id,
 						handler,
-						event: EitherOutput::Second(event)
+						event: EitherOutput::Second(event),
 					}),
 				Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }) =>
-					return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }),
+					return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr {
+						address,
+						score,
+					}),
+				Poll::Ready(NetworkBehaviourAction::CloseConnection { peer_id, connection }) =>
+					return Poll::Ready(NetworkBehaviourAction::CloseConnection {
+						peer_id,
+						connection,
+					}),
 			}
 		}
 

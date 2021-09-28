@@ -1351,6 +1351,7 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 			return Poll::Ready(NetworkBehaviourAction::GenerateEvent(message));
 		}
 
+
 		let event = match self.behaviour.poll(cx, params) {
 			Poll::Pending => return Poll::Pending,
 			Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev)) => ev,
@@ -1359,9 +1360,15 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 			Poll::Ready(NetworkBehaviourAction::DialPeer { peer_id, condition }) =>
 				return Poll::Ready(NetworkBehaviourAction::DialPeer { peer_id, condition }),
 			Poll::Ready(NetworkBehaviourAction::NotifyHandler { peer_id, handler, event }) =>
-				return Poll::Ready(NetworkBehaviourAction::NotifyHandler { peer_id, handler, event }),
+				return Poll::Ready(NetworkBehaviourAction::NotifyHandler {
+					peer_id,
+					handler,
+					event,
+				}),
 			Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }) =>
 				return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }),
+			Poll::Ready(NetworkBehaviourAction::CloseConnection { peer_id, connection }) =>
+				return Poll::Ready(NetworkBehaviourAction::CloseConnection { peer_id, connection }),
 		};
 
 		let outcome = match event {

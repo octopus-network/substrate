@@ -674,86 +674,132 @@ impl NetworkBehaviour for DiscoveryBehaviour {
 					NetworkBehaviourAction::GenerateEvent(ev) => match ev {
 						KademliaEvent::RoutingUpdated { peer, .. } => {
 							let ev = DiscoveryOut::Discovered(peer);
-							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
-						}
+							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev))
+						},
 						KademliaEvent::UnroutablePeer { peer, .. } => {
 							let ev = DiscoveryOut::UnroutablePeer(peer);
-							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
-						}
+							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev))
+						},
 						KademliaEvent::RoutablePeer { peer, .. } => {
 							let ev = DiscoveryOut::Discovered(peer);
-							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
-						}
-						KademliaEvent::PendingRoutablePeer { .. } => {
+							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev))
+						},
+						KademliaEvent::PendingRoutablePeer { .. } |
+						KademliaEvent::InboundRequestServed { .. } => {
 							// We are not interested in this event at the moment.
-						}
-						KademliaEvent::QueryResult { result: QueryResult::GetClosestPeers(res), .. } => {
-							match res {
-								Err(GetClosestPeersError::Timeout { key, peers }) => {
-									debug!(target: "sub-libp2p",
-										"Libp2p => Query for {:?} timed out with {} results",
-										HexDisplay::from(&key), peers.len());
-								},
-								Ok(ok) => {
-									trace!(target: "sub-libp2p",
-										"Libp2p => Query for {:?} yielded {:?} results",
-										HexDisplay::from(&ok.key), ok.peers.len());
-									if ok.peers.is_empty() && self.num_connections != 0 {
-										debug!(target: "sub-libp2p", "Libp2p => Random Kademlia query has yielded empty \
-											results");
-									}
+						},
+						KademliaEvent::OutboundQueryCompleted {
+							result: QueryResult::GetClosestPeers(res),
+							..
+						} => match res {
+							Err(GetClosestPeersError::Timeout { key, peers }) => {
+								debug!(
+									target: "sub-libp2p",
+									"Libp2p => Query for {:?} timed out with {} results",
+									HexDisplay::from(&key), peers.len(),
+								);
+							},
+							Ok(ok) => {
+								trace!(
+									target: "sub-libp2p",
+									"Libp2p => Query for {:?} yielded {:?} results",
+									HexDisplay::from(&ok.key), ok.peers.len(),
+								);
+								if ok.peers.is_empty() && self.num_connections != 0 {
+									debug!(
+										target: "sub-libp2p",
+										"Libp2p => Random Kademlia query has yielded empty results",
+									);
 								}
-							}
-						}
-						KademliaEvent::QueryResult { result: QueryResult::GetRecord(res), stats, .. } => {
+							},
+						},
+						KademliaEvent::OutboundQueryCompleted {
+							result: QueryResult::GetRecord(res),
+							stats,
+							..
+						} => {
 							let ev = match res {
 								Ok(ok) => {
-									let results = ok.records
+									let results = ok
+										.records
 										.into_iter()
 										.map(|r| (r.record.key, r.record.value))
 										.collect();
 
-									DiscoveryOut::ValueFound(results, stats.duration().unwrap_or_else(Default::default))
-								}
+									DiscoveryOut::ValueFound(
+										results,
+										stats.duration().unwrap_or_else(Default::default),
+									)
+								},
 								Err(e @ libp2p::kad::GetRecordError::NotFound { .. }) => {
-									trace!(target: "sub-libp2p",
-										"Libp2p => Failed to get record: {:?}", e);
-									DiscoveryOut::ValueNotFound(e.into_key(), stats.duration().unwrap_or_else(Default::default))
-								}
+									trace!(
+										target: "sub-libp2p",
+										"Libp2p => Failed to get record: {:?}",
+										e,
+									);
+									DiscoveryOut::ValueNotFound(
+										e.into_key(),
+										stats.duration().unwrap_or_else(Default::default),
+									)
+								},
 								Err(e) => {
-									debug!(target: "sub-libp2p",
-										"Libp2p => Failed to get record: {:?}", e);
-									DiscoveryOut::ValueNotFound(e.into_key(), stats.duration().unwrap_or_else(Default::default))
-								}
+									debug!(
+										target: "sub-libp2p",
+										"Libp2p => Failed to get record: {:?}",
+										e,
+									);
+									DiscoveryOut::ValueNotFound(
+										e.into_key(),
+										stats.duration().unwrap_or_else(Default::default),
+									)
+								},
 							};
-							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
-						}
-						KademliaEvent::QueryResult { result: QueryResult::PutRecord(res), stats, .. } => {
+							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev))
+						},
+						KademliaEvent::OutboundQueryCompleted {
+							result: QueryResult::PutRecord(res),
+							stats,
+							..
+						} => {
 							let ev = match res {
-								Ok(ok) => DiscoveryOut::ValuePut(ok.key, stats.duration().unwrap_or_else(Default::default)),
+								Ok(ok) => DiscoveryOut::ValuePut(
+									ok.key,
+									stats.duration().unwrap_or_else(Default::default),
+								),
 								Err(e) => {
-									debug!(target: "sub-libp2p",
-										"Libp2p => Failed to put record: {:?}", e);
-									DiscoveryOut::ValuePutFailed(e.into_key(), stats.duration().unwrap_or_else(Default::default))
-								}
+									debug!(
+										target: "sub-libp2p",
+										"Libp2p => Failed to put record: {:?}",
+										e,
+									);
+									DiscoveryOut::ValuePutFailed(
+										e.into_key(),
+										stats.duration().unwrap_or_else(Default::default),
+									)
+								},
 							};
-							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
-						}
-						KademliaEvent::QueryResult { result: QueryResult::RepublishRecord(res), .. } => {
-							match res {
-								Ok(ok) => debug!(target: "sub-libp2p",
-									"Libp2p => Record republished: {:?}",
-									ok.key),
-								Err(e) => debug!(target: "sub-libp2p",
-									"Libp2p => Republishing of record {:?} failed with: {:?}",
-									e.key(), e)
-							}
-						}
+							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev))
+						},
+						KademliaEvent::OutboundQueryCompleted {
+							result: QueryResult::RepublishRecord(res),
+							..
+						} => match res {
+							Ok(ok) => debug!(
+								target: "sub-libp2p",
+								"Libp2p => Record republished: {:?}",
+								ok.key,
+							),
+							Err(e) => debug!(
+								target: "sub-libp2p",
+								"Libp2p => Republishing of record {:?} failed with: {:?}",
+								e.key(), e,
+							),
+						},
 						// We never start any other type of query.
-						e => {
+						KademliaEvent::OutboundQueryCompleted { result: e, .. } => {
 							warn!(target: "sub-libp2p", "Libp2p => Unhandled Kademlia event: {:?}", e)
-						}
-					}
+						},
+					},
 					NetworkBehaviourAction::DialAddress { address } =>
 						return Poll::Ready(NetworkBehaviourAction::DialAddress { address }),
 					NetworkBehaviourAction::DialPeer { peer_id, condition } =>
@@ -762,41 +808,55 @@ impl NetworkBehaviour for DiscoveryBehaviour {
 						return Poll::Ready(NetworkBehaviourAction::NotifyHandler {
 							peer_id,
 							handler,
-							event: (pid.clone(), event)
+							event: (pid.clone(), event),
 						}),
 					NetworkBehaviourAction::ReportObservedAddr { address, score } =>
-						return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }),
+						return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr {
+							address,
+							score,
+						}),
+					NetworkBehaviourAction::CloseConnection { peer_id, connection } =>
+						return Poll::Ready(NetworkBehaviourAction::CloseConnection {
+							peer_id,
+							connection,
+						}),
 				}
 			}
 		}
 
+
 		// Poll mDNS.
-		#[cfg(not(target_os = "unknown"))]
 		while let Poll::Ready(ev) = self.mdns.poll(cx, params) {
 			match ev {
-				NetworkBehaviourAction::GenerateEvent(event) => {
-					match event {
-						MdnsEvent::Discovered(list) => {
-							if self.num_connections >= self.discovery_only_if_under_num {
-								continue;
-							}
+				NetworkBehaviourAction::GenerateEvent(event) => match event {
+					MdnsEvent::Discovered(list) => {
+						if self.num_connections >= self.discovery_only_if_under_num {
+							continue
+						}
 
-							self.pending_events.extend(list.map(|(peer_id, _)| DiscoveryOut::Discovered(peer_id)));
-							if let Some(ev) = self.pending_events.pop_front() {
-								return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
-							}
-						},
-						MdnsEvent::Expired(_) => {}
-					}
+						self.pending_events
+							.extend(list.map(|(peer_id, _)| DiscoveryOut::Discovered(peer_id)));
+						if let Some(ev) = self.pending_events.pop_front() {
+							return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev))
+						}
+					},
+					MdnsEvent::Expired(_) => {},
 				},
 				NetworkBehaviourAction::DialAddress { address } =>
 					return Poll::Ready(NetworkBehaviourAction::DialAddress { address }),
 				NetworkBehaviourAction::DialPeer { peer_id, condition } =>
 					return Poll::Ready(NetworkBehaviourAction::DialPeer { peer_id, condition }),
-				NetworkBehaviourAction::NotifyHandler { event, .. } =>
-					match event {},		// `event` is an enum with no variant
+				NetworkBehaviourAction::NotifyHandler { event, .. } => match event {}, /* `event` is an enum with no variant */
 				NetworkBehaviourAction::ReportObservedAddr { address, score } =>
-					return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr { address, score }),
+					return Poll::Ready(NetworkBehaviourAction::ReportObservedAddr {
+						address,
+						score,
+					}),
+				NetworkBehaviourAction::CloseConnection { peer_id, connection } =>
+					return Poll::Ready(NetworkBehaviourAction::CloseConnection {
+						peer_id,
+						connection,
+					}),
 			}
 		}
 

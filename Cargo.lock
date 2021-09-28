@@ -8474,7 +8474,7 @@ dependencies = [
  "async-std",
  "futures 0.3.17",
  "futures-timer 3.0.2",
- "libp2p 0.37.1",
+ "libp2p 0.39.1",
  "log",
  "lru",
  "quickcheck",
@@ -8556,7 +8556,7 @@ name = "sc-peerset"
 version = "3.0.0"
 dependencies = [
  "futures 0.3.17",
- "libp2p 0.37.1",
+ "libp2p 0.39.1",
  "log",
  "rand 0.7.3",
  "serde_json",
@@ -9594,7 +9594,7 @@ dependencies = [
  "async-trait",
  "futures 0.3.17",
  "futures-timer 3.0.2",
- "libp2p 0.37.1",
+ "libp2p 0.39.1",
  "log",
  "parity-scale-codec 2.3.0",
  "parking_lot 0.11.2",
