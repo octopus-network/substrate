@@ -1,6 +1,6 @@
 rm -rf /tmp/dave
 
-RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-downlink=debug,runtime::octopus-support=debug" \
+RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-upward-messages=debug,runtime::octopus-support=debug" \
 ../../target/debug/node-template \
 --base-path /tmp/dave \
 --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp \

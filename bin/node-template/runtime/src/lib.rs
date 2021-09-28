@@ -570,14 +570,14 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type Call = Call;
 	type PalletId = OctopusAppchainPalletId;
 	type LposInterface = OctopusLpos;
-	type DownlinkInterface = OctopusDownlink;
+	type UpwardMessagesInterface = OctopusUpwardMessages;
 	type Currency = Balances;
 	type Assets = Assets;
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
 }
 
-impl pallet_octopus_downlink::Config for Runtime {
+impl pallet_octopus_upward_messages::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
 }
@@ -606,8 +606,8 @@ construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		OctopusAppchain: pallet_octopus_appchain::{Pallet, Call, Storage, Config<T>, Event<T>, ValidateUnsigned},
-		OctopusDownlink: pallet_octopus_downlink::{Pallet, Call, Storage, Event<T>},
 		OctopusLpos: pallet_octopus_lpos::{Pallet, Call, Config<T>, Storage, Event<T>},
+		OctopusUpwardMessages: pallet_octopus_upward_messages::{Pallet, Call, Storage, Event<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},

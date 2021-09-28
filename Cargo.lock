@@ -4621,8 +4621,8 @@ dependencies = [
  "pallet-im-online",
  "pallet-mmr",
  "pallet-octopus-appchain",
- "pallet-octopus-downlink",
  "pallet-octopus-lpos",
+ "pallet-octopus-upward-messages",
  "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-sudo",
@@ -5465,8 +5465,8 @@ dependencies = [
  "log",
  "pallet-assets",
  "pallet-balances",
- "pallet-octopus-downlink",
  "pallet-octopus-support",
+ "pallet-octopus-upward-messages",
  "pallet-session",
  "parity-scale-codec",
  "serde",
@@ -5475,21 +5475,6 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keystore",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-octopus-downlink"
-version = "3.0.0-pre.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "pallet-octopus-support",
- "parity-scale-codec",
- "sp-core",
- "sp-io",
  "sp-runtime",
  "sp-std",
 ]
@@ -5531,6 +5516,21 @@ version = "3.0.0-pre.0"
 dependencies = [
  "frame-support",
  "parity-scale-codec",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-octopus-upward-messages"
+version = "3.0.0-pre.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-octopus-support",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-std",
 ]

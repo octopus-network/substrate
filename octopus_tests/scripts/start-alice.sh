@@ -1,6 +1,6 @@
 rm -rf /tmp/alice
 
-RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-downlink=debug,runtime::octopus-support=debug" \
+RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-upward-messages=debug,runtime::octopus-support=debug" \
 ../../target/debug/node-template \
 --base-path /tmp/alice \
 --chain=local \
