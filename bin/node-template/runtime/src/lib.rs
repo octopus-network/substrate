@@ -425,6 +425,7 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type NextNewSession = Session;
 	type ValidatorsProvider = OctopusAppchain;
 	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
+	type UpwardMessagesInterface = OctopusUpwardMessages;
 }
 
 parameter_types! {
@@ -606,7 +607,7 @@ construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		OctopusAppchain: pallet_octopus_appchain::{Pallet, Call, Storage, Config<T>, Event<T>, ValidateUnsigned},
-		OctopusLpos: pallet_octopus_lpos::{Pallet, Call, Config<T>, Storage, Event<T>},
+		OctopusLpos: pallet_octopus_lpos::{Pallet, Call, Config, Storage, Event<T>},
 		OctopusUpwardMessages: pallet_octopus_upward_messages::{Pallet, Call, Storage, Event<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned},
