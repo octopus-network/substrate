@@ -4,26 +4,11 @@ const assert = require("assert");
 
 const customTypes = {
     "IdentificationTuple": "(ValidatorId, FullIdentification)",
-    "FullIdentification": {
-        "total": "Balance",
-        "own": "Balance",
-        "others": "Vec<IndividualExposure<AccountId, Balance>>"
-    },
-    "IndividualExposure": {
-        "who": "AccountId",
-        "value": "Balance",
-    },
+    "FullIdentification": "u128",
     "Message": {
         "nonce": "u64",
         "payload_type": "PayloadType",
         "payload": "Vec<u8>"
-    },
-    "StakerStatus": {
-        "_enum": {
-            "Idle": "Idle",
-            "Validator": "Validator",
-            "Nominator": "(Vec<AccountId>)"
-        }
     },
     "BeefyKey": "[u8; 33]",
     "SessionKeys5B": "(AccountId, AccountId, AccountId, AccountId, BeefyKey)",
@@ -69,26 +54,30 @@ const customTypes = {
 
 
 async function monitAppChain(testDataPath) {
-    const provider = new WsProvider('ws://127.0.0.1:9945', );
+    const provider = new WsProvider('ws://127.0.0.1:9944', );
     const api = await ApiPromise.create({ provider: provider, types: customTypes});
-    
+   
+    cnt = 0;
     api.query.system.events(events => {
         events.forEach((record) => {
             const { event, phase } = record;
 
-            if (event.section == "octopusLpos" && event.method == "StakingElection") {
+            //if (event.section == "octopusLpos" && event.method == "StakingElection") {
             //if (event.section == "system" && event.method == "ExtrinsicSuccess") {
+            if (event.section == "grandpa" && event.method == "NewAuthorities") 
+            {
                 api.query.session.validators(async validators1 => {
-                    validators2 = await getMockDataFromServer(testDataPath);
+                    cnt ++;
+                    validators2 = await getMockDataFromServer(testDataPath, cnt);
                     validators1.sort();
                     validators2.sort();
 
-                    //console.log(`vs1.length: ${validators1.length}`);
-                    //console.log(`vs1: ${validators1[0]}`);
-                    //console.log(`vs1: ${validators1[1]}`);
-                    //console.log(`vs2 length: ${validators2.length}`);
-                    //console.log(`vs2: ${validators2[0]}`);
-                    //console.log(`vs2: ${validators2[1]}`);
+                    console.log(`vs1.length: ${validators1.length}`);
+                    console.log(`vs1: ${validators1[0]}`);
+                    console.log(`vs1: ${validators1[1]}`);
+                    console.log(`vs2 length: ${validators2.length}`);
+                    console.log(`vs2: ${validators2[0]}`);
+                    console.log(`vs2: ${validators2[1]}`);
 
                     //compare
                     assert((validators1.length == validators2.length), 
@@ -100,9 +89,11 @@ async function monitAppChain(testDataPath) {
                             'validator not match!');
                     }
                     
-                    console.log(`use case passed!`);
-                    //just compare one time
-                    process.exit();
+                    if (cnt == 6) {
+                        console.log(`use case passed!`);
+                        //just compare one time
+                        process.exit();
+                    }
                 })
             } 
         });

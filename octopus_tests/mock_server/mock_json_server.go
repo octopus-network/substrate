@@ -155,8 +155,7 @@ func ProduceUpdateValidatorSets(curr []int) UpdateValidatorSetData {
 }
 
 // write mock data to file which used to compare
-func writeResult(vals []int, outfile string) error {
-
+func writeResult(vals [][]int, outfile string) error {
 	file, err := os.Create(outfile)
 	if err != nil {
 		fmt.Println("writer", err)
@@ -165,54 +164,45 @@ func writeResult(vals []int, outfile string) error {
 	defer file.Close()
 
 	writer := bufio.NewWriter(file)
-	for _, v := range vals {
-		writer.WriteString(strconv.Itoa(v))
-		writer.WriteString(",")
+	for _, v1 := range vals {
+		for _, v2 := range v1 {
+			writer.WriteString(strconv.Itoa(v2))
+			writer.WriteString(",")
+			writer.Flush()
+		}
+		writer.WriteString("\n")
 		writer.Flush()
 	}
-
-	writer.WriteString("\n")
-	writer.Flush()
 
 	return err
 }
 
-//case 1
-func Test1() []interface{} {
+//First item in every line is data type:
+//1: validator sets
+//2: lockToken
+//3: burn event
+//For example:
+//simulationSequence = {
+//	{1, 1, 2, 3},   // validator sets
+//  {2, ...},		// locktoken
+//  {3, ...}		// burn event
+//}
+func ProduceNewResponse(simulationSequence [][]int) Ret {
 	innerResult := []interface{}{}
 
-	//This part will be replaced by random data
-	var curr = []int{0, 1, 2}
-	if writeResult(curr, "./test1.data") != nil {
-		panic("Write data to file error in mock server!")
+	for i := 0; i < len(simulationSequence); i++ {
+		if simulationSequence[i][0] == 1 { //update validators
+			curr := simulationSequence[i][1:]
+			innerResult = append(innerResult,
+				InnerResultValidatorSet{UpdateValidatorSet: ProduceUpdateValidatorSets(curr)})
+		} else if simulationSequence[i][0] == 2 { //lockToken
+			//to do
+		} else if simulationSequence[i][0] == 3 { //burn event
+			//to do
+		}
 	}
 
-	innerResult = append(innerResult,
-		InnerResultValidatorSet{UpdateValidatorSet: ProduceUpdateValidatorSets(curr)})
-
-	return innerResult
-}
-
-//case 2
-func Test2() []interface{} {
-	innerResult := []interface{}{}
-
-	var curr = []int{2, 1, 3}
-	innerResult = append(innerResult,
-		InnerResultValidatorSet{UpdateValidatorSet: ProduceUpdateValidatorSets(curr)})
-
-	return innerResult
-}
-
-var testData []interface{}
-var once sync.Once
-
-func ProduceResponse() Ret {
-	//test use case
-	once.Do(func() {
-	    testData = Test1()
-	})
-	result, _ := json.Marshal(testData)
+	result, _ := json.Marshal(innerResult)
 
 	retData := ResultData{
 		BlockHash:   "EczErquQLMpUvTQpKupoQp5yNkgNbniMSHq1gVvhAf84", //mock hash
@@ -226,6 +216,55 @@ func ProduceResponse() Ret {
 		Id:      "dontcare",
 		Result:  retData,
 	}
+}
+
+//case 1
+func Test1() [][]int {
+	mockData := [][]int{
+		{1, 0, 1, 2, 3, 4},
+		{1, 3, 4, 1, 2},
+		{1, 0, 2, 1},
+		{1, 1, 2, 4, 3, 0},
+		{1, 2, 4, 3, 0},
+		{1, 2, 4, 1, 0},
+	}
+
+	return mockData
+}
+
+var testData [][]int
+var once sync.Once
+var currRet Ret
+var preTime int64 = 0
+var startLine int = 0
+var endLine int = 0
+
+func ProduceResponse() Ret {
+	//test use case
+	once.Do(func() {
+		testData = Test1()
+	})
+
+	//produce responce data
+	currTime := time.Now().Unix()
+	deltTime := currTime - preTime
+	if deltTime > 60*2 && endLine < len(testData) {
+
+		rand.Seed(time.Now().UnixNano())
+		// delt := rand.Intn(len(testData))
+		delt := 1
+		endLine = startLine + delt
+		if endLine > len(testData) {
+			endLine = len(testData)
+		}
+
+		currRet = ProduceNewResponse(testData[startLine:endLine])
+		fmt.Printf("start: %v, end: %v\n", startLine, endLine)
+		startLine = endLine
+		preTime = currTime
+	}
+
+	return currRet
 }
 
 type ParamsData struct {
@@ -245,7 +284,7 @@ type Req struct {
 
 var handleCnt uint64 = 0
 
-const HANDLER_TIMES = 20
+const HANDLER_TIMES = 200000
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -288,6 +327,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+    mockData := Test1()
+	if writeResult(mockData, "./test1.data") != nil {
+		panic("Write data to file error in mock server!")
+	}
+
 	http.HandleFunc("/handler", Handler)
 
 	err := http.ListenAndServe(":8080", nil)
