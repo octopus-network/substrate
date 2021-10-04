@@ -412,6 +412,7 @@ parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
 	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
 	pub OffchainRepeat: BlockNumber = 5;
+	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6 / (SECS_PER_BLOCK as u32);
 }
 
 impl pallet_octopus_lpos::Config for Runtime {
@@ -420,6 +421,7 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type Event = Event;
 	type Reward = (); // rewards are minted from the void
 	type SessionsPerEra = SessionsPerEra;
+	type BlocksPerEra = BlocksPerEra;
 	type BondingDuration = BondingDuration;
 	type SessionInterface = Self;
 	type NextNewSession = Session;
