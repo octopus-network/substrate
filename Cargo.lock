@@ -2841,7 +2841,6 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.6.1"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=dv-octopus-relayer#e65263fe897339966baa1fc061ae8015efcdb88f"
 dependencies = [
  "bytes 1.1.0",
  "chrono",
@@ -2865,7 +2864,6 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.9.0"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=dv-octopus-relayer#e65263fe897339966baa1fc061ae8015efcdb88f"
 dependencies = [
  "bytes 1.1.0",
  "prost 0.7.0",

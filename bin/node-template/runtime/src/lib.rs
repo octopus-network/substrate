@@ -907,32 +907,11 @@ impl_runtime_apis! {
 
 	// Here we implement our custom runtime API.
 	impl  pallet_ibc_runtime_api::IbcApi<Block> for Runtime {
-		fn get_consensus_state_with_height(client_id: Vec<u8>) -> Vec<(Vec<u8>, Vec<u8>)> {
-			// This Runtime API calls into a specific pallet. Calling a pallet is a common
-			// design pattern. You can see most other APIs in this file do the same.
-			// It is also possible to write your logic right here in the runtime
-			// amalgamator file
-			Ibc::get_consensus_state_with_height(client_id)
-		}
-
 		// get identifiedAnyClientState
 		fn get_identified_any_client_state() -> Vec<(Vec<u8>, Vec<u8>)> {
 
 			Ibc::get_identified_any_client_state()
 		}
-
-		// get client_connections
-		fn get_client_connections(client_id: Vec<u8>) -> Vec<Vec<u8>> {
-
-			Ibc::get_client_connections(client_id)
-		}
-
-		// get IdentifiedChannelsEnd
-		fn get_connection_channels(connection_id: Vec<u8>) -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> {
-
-			Ibc::get_connection_channels(connection_id)
-		}
-
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]
