@@ -159,7 +159,7 @@ pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);
 
 // NOTE: Currently it is not possible to change the epoch duration after the chain has started.
 //       Attempting to do so will brick block production.
-pub const EPOCH_DURATION_IN_BLOCKS: BlockNumber = 10 * MINUTES;
+pub const EPOCH_DURATION_IN_BLOCKS: BlockNumber = 1 * MINUTES;
 pub const EPOCH_DURATION_IN_SLOTS: u64 = {
 	const SLOT_FILL_RATE: f64 = MILLISECS_PER_BLOCK as f64 / SLOT_DURATION as f64;
 
@@ -352,6 +352,8 @@ parameter_types! {
 		BondingDuration::get() as u64 * SessionsPerEra::get() as u64 * EpochDuration::get();
 }
 
+use crate::{generic as genericTest};
+
 impl pallet_babe::Config for Runtime {
 	type EpochDuration = EpochDuration;
 	type ExpectedBlockTime = ExpectedBlockTime;
@@ -379,10 +381,61 @@ parameter_types! {
 	pub const UncleGenerations: BlockNumber = 5;
 }
 
+use frame_support::{
+	dispatch, traits::{FindAuthor, VerifySeal, Get},
+};
+use frame_support::ConsensusEngineId;
+// use sp_runtime::traits::{Header as HeaderT};
+// use sp_runtime::{testing::Header as HeaderT};
+
+type HeaderTest = genericTest::Header<u32, BlakeTwo256>;
+
+pub struct AuthorGiven;
+impl FindAuthor<u64> for AuthorGiven {
+	fn find_author<'a, I>(digests: I) -> Option<u64>
+		where I: 'a + IntoIterator<Item=(ConsensusEngineId, &'a [u8])>
+	{
+		for (id, data) in digests {
+			// if id == TEST_ID {
+				return u64::decode(&mut &data[..]).ok();
+			// }
+		}
+
+		None
+	}
+}
+
+pub struct VerifyBlock;
+impl VerifySeal<HeaderTest, AccountId> for VerifyBlock {
+	fn verify_seal(header: &HeaderTest) -> Result<Option<AccountId>, &'static str> {
+		let pre_runtime_digests = header.digest.logs.iter().filter_map(|d| d.as_pre_runtime());
+		let seals = header.digest.logs.iter().filter_map(|d| d.as_seal());
+
+		let author = AuthorGiven::find_author(pre_runtime_digests).ok_or_else(|| "no author")?;
+
+/*		for (id, seal) in seals {
+			if id == TEST_ID {
+				match u64::decode(&mut &seal[..]) {
+					Err(_) => return Err("wrong seal"),
+					Ok(a) => {
+						if a != author {
+							return Err("wrong author in seal");
+						}
+						break
+					}
+				}
+			}
+		}*/
+
+		Ok(Some(author))
+	}
+}
+
 impl pallet_authorship::Config for Runtime {
 	type FindAuthor = pallet_session::FindAccountFromAuthorIndex<Self, Babe>;
 	type UncleGenerations = UncleGenerations;
-	type FilterUncle = ();
+	type FilterUncle = pallet_authorship::OnePerAuthorPerHeight<VerifyBlock, AccountId>;
+	// type FilterUncle = ();
 	type EventHandler = (OctopusLpos, ImOnline);
 }
 
