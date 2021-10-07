@@ -352,7 +352,7 @@ parameter_types! {
 		BondingDuration::get() as u64 * SessionsPerEra::get() as u64 * EpochDuration::get();
 }
 
-use crate::{generic as genericTest};
+// use crate::{generic as genericTest};
 
 impl pallet_babe::Config for Runtime {
 	type EpochDuration = EpochDuration;
@@ -386,10 +386,8 @@ use frame_support::{
 };
 use frame_support::ConsensusEngineId;
 use codec::Decode;
-// use sp_runtime::traits::{Header as HeaderT};
-// use sp_runtime::{testing::Header as HeaderT};
 
-type HeaderTest = genericTest::Header<u32, BlakeTwo256>;
+type HeaderTest = generic::Header<BlockNumber, BlakeTwo256>;
 
 pub struct AuthorGiven;
 impl FindAuthor<u64> for AuthorGiven {
@@ -414,7 +412,8 @@ impl VerifySeal<HeaderTest, AccountId> for VerifyBlock {
 
 		let author = AuthorGiven::find_author(pre_runtime_digests).ok_or_else(|| "no author")?;
 
-/*		for (id, seal) in seals {
+		/*
+		for (id, seal) in seals {
 			if id == TEST_ID {
 				match u64::decode(&mut &seal[..]) {
 					Err(_) => return Err("wrong seal"),
@@ -428,7 +427,6 @@ impl VerifySeal<HeaderTest, AccountId> for VerifyBlock {
 			}
 		}*/
 		Ok(Some(AccountId::default()))
-		// Ok(Some(author))
 	}
 }
 
