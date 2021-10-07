@@ -17,6 +17,11 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 frame-support = { default-features = false, version = "3.0.0", path = "../../../../frame/support" }
 frame-system = { default-features = false,  version = "3.0.0",  path = "../../../../frame/system" }
 frame-benchmarking = { default-features = false,  version = "3.1.0",  path = "../../../../frame/benchmarking", optional = true }
+# add pallet-ibc
+pallet-ibc  = { default-features = false, version = "3.0.0-pre.0", path = "../ibc" }
+ibc = { path = "../../../../../ibc-rs/modules" }
+ibc-proto = {path = "../../../../../ibc-rs/proto" }
+prost-types = "0.7"
 
 [dev-dependencies]
 serde = { version = "1.0.119" }
@@ -31,6 +36,7 @@ std = [
 	'frame-support/std',
 	'frame-system/std',
 	'frame-benchmarking/std',
+	'pallet-ibc/std',
 ]
 
 runtime-benchmarks = ["frame-benchmarking"]

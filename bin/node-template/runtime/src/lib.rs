@@ -912,6 +912,18 @@ impl_runtime_apis! {
 
 			Ibc::get_identified_any_client_state()
 		}
+
+		// get_packet_commitment_state()
+		fn get_packet_commitment_state() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_packet_commitment_state()
+		}
+
+		// get_packet_acknowledge_state()
+		fn get_packet_acknowledge_state() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_packet_acknowledge_state()
+		}
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]
