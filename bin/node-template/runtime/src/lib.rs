@@ -159,7 +159,7 @@ pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);
 
 // NOTE: Currently it is not possible to change the epoch duration after the chain has started.
 //       Attempting to do so will brick block production.
-pub const EPOCH_DURATION_IN_BLOCKS: BlockNumber = 1 * MINUTES;
+pub const EPOCH_DURATION_IN_BLOCKS: BlockNumber = 10 * MINUTES;
 pub const EPOCH_DURATION_IN_SLOTS: u64 = {
 	const SLOT_FILL_RATE: f64 = MILLISECS_PER_BLOCK as f64 / SLOT_DURATION as f64;
 
@@ -386,10 +386,6 @@ use frame_support::{
 };
 use frame_support::ConsensusEngineId;
 use codec::Decode;
-// use sp_runtime::traits::{Header as HeaderT};
-// use sp_runtime::{testing::Header as HeaderT};
-
-type HeaderTest = genericTest::Header<u32, BlakeTwo256>;
 
 pub struct AuthorGiven;
 impl FindAuthor<u64> for AuthorGiven {
@@ -407,8 +403,8 @@ impl FindAuthor<u64> for AuthorGiven {
 }
 
 pub struct VerifyBlock;
-impl VerifySeal<HeaderTest, AccountId> for VerifyBlock {
-	fn verify_seal(header: &HeaderTest) -> Result<Option<AccountId>, &'static str> {
+impl VerifySeal<Header, AccountId> for VerifyBlock {
+	fn verify_seal(header: &Header) -> Result<Option<AccountId>, &'static str> {
 		let pre_runtime_digests = header.digest.logs.iter().filter_map(|d| d.as_pre_runtime());
 		let seals = header.digest.logs.iter().filter_map(|d| d.as_seal());
 
@@ -427,8 +423,14 @@ impl VerifySeal<HeaderTest, AccountId> for VerifyBlock {
 				}
 			}
 		}*/
-		Ok(Some(AccountId::default()))
-		// Ok(Some(author))
+		let _array_val = author.to_be_bytes();
+		let mut acc_array: [u8; 32] = [0; 32];
+		for (i, elem) in acc_array.iter_mut().enumerate() {
+			if(i < _array_val.len()) {
+				*elem = _array_val[i];
+			}
+		}
+		Ok(Some(AccountId::from(acc_array)))
 	}
 }
 
