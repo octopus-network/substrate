@@ -385,6 +385,7 @@ use frame_support::{
 	dispatch, traits::{FindAuthor, VerifySeal, Get},
 };
 use frame_support::ConsensusEngineId;
+use codec::Decode;
 // use sp_runtime::traits::{Header as HeaderT};
 // use sp_runtime::{testing::Header as HeaderT};
 
@@ -426,15 +427,15 @@ impl VerifySeal<HeaderTest, AccountId> for VerifyBlock {
 				}
 			}
 		}*/
-
-		Ok(Some(author))
+		Ok(Some(AccountId::default()))
+		// Ok(Some(author))
 	}
 }
 
 impl pallet_authorship::Config for Runtime {
 	type FindAuthor = pallet_session::FindAccountFromAuthorIndex<Self, Babe>;
 	type UncleGenerations = UncleGenerations;
-	type FilterUncle = pallet_authorship::OnePerAuthorPerHeight<VerifyBlock, AccountId>;
+	type FilterUncle = pallet_authorship::OnePerAuthorPerHeight<VerifyBlock, u32>;
 	// type FilterUncle = ();
 	type EventHandler = (OctopusLpos, ImOnline);
 }
