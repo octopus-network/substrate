@@ -3,11 +3,6 @@ resolver = "2"
 
 members = [
 	"bin/node-template/node",
-	"bin/node-template/octopus-pallets/appchain",
-	"bin/node-template/octopus-pallets/ibc",
-	"bin/node-template/octopus-pallets/lpos",
-	"bin/node-template/octopus-pallets/support",
-	"bin/node-template/octopus-pallets/upward-messages",
 	"bin/node-template/pallets/template",
 	"bin/node-template/runtime",
 	"bin/node/bench",
