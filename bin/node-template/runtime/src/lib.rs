@@ -409,28 +409,6 @@ impl pallet_session::historical::Config for Runtime {
 }
 
 parameter_types! {
-	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
-	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
-	pub OffchainRepeat: BlockNumber = 5;
-	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6 / (SECS_PER_BLOCK as u32);
-}
-
-impl pallet_octopus_lpos::Config for Runtime {
-	type Currency = Balances;
-	type UnixTime = Timestamp;
-	type Event = Event;
-	type Reward = (); // rewards are minted from the void
-	type SessionsPerEra = SessionsPerEra;
-	type BlocksPerEra = BlocksPerEra;
-	type BondingDuration = BondingDuration;
-	type SessionInterface = Self;
-	type NextNewSession = Session;
-	type ValidatorsProvider = OctopusAppchain;
-	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
-	type UpwardMessagesInterface = OctopusUpwardMessages;
-}
-
-parameter_types! {
 	pub const ImOnlineUnsignedPriority: TransactionPriority = TransactionPriority::max_value();
 	/// We prioritize im-online heartbeats over election solution submission.
 	pub const StakingUnsignedPriority: TransactionPriority = TransactionPriority::max_value() / 2;
@@ -578,6 +556,28 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type Assets = Assets;
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
+}
+
+parameter_types! {
+	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
+	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
+	pub OffchainRepeat: BlockNumber = 5;
+	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6 / (SECS_PER_BLOCK as u32);
+}
+
+impl pallet_octopus_lpos::Config for Runtime {
+	type Currency = Balances;
+	type UnixTime = Timestamp;
+	type Event = Event;
+	type Reward = (); // rewards are minted from the void
+	type SessionsPerEra = SessionsPerEra;
+	type BlocksPerEra = BlocksPerEra;
+	type BondingDuration = BondingDuration;
+	type SessionInterface = Self;
+	type ValidatorsProvider = OctopusAppchain;
+	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
+	type UpwardMessagesInterface = OctopusUpwardMessages;
+	type PalletId = OctopusAppchainPalletId;
 }
 
 impl pallet_octopus_upward_messages::Config for Runtime {
