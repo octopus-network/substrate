@@ -19,8 +19,8 @@ frame-system = { default-features = false,  version = "3.0.0",  path = "../../..
 frame-benchmarking = { default-features = false,  version = "3.1.0",  path = "../../../../frame/benchmarking", optional = true }
 # add pallet-ibc
 pallet-ibc  = { default-features = false, version = "3.0.0-pre.0", path = "../ibc" }
-ibc = { path = "../../../../../ibc-rs/modules" }
-ibc-proto = {path = "../../../../../ibc-rs/proto" }
+#ibc = { path = "../../../../../ibc-rs/modules" }
+#ibc-proto = {path = "../../../../../ibc-rs/proto" }
 prost-types = "0.7"
 
 [dev-dependencies]

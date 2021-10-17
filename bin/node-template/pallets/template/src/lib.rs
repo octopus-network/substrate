@@ -22,10 +22,10 @@ pub mod pallet {
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use pallet_ibc::event::primitive::{PortId, ChannelId, Height, Timestamp};
-	use ibc::signer::Signer;
-	use ibc::application::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+	// use ibc::signer::Signer;
+	// use ibc::application::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 	use alloc::string::String;
-	use ibc::tx_msg::Msg;
+	// use ibc::tx_msg::Msg;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -108,42 +108,42 @@ pub mod pallet {
 			}
 		}
 
-		#[pallet::weight(0)]
-		pub fn send_trc20_token(
-			origin: OriginFor<T>,
-			source_port: PortId,
-			source_channel: ChannelId,
-			denom: Vec<u8>,
-			amount: Vec<u8>,
-			sender: Vec<u8>,
-			receiver: Vec<u8>,
-			// timeout_height: Height,
-			// timeout_timestamp: Timestamp
-		) -> DispatchResult {
-			let _who = ensure_signed(origin.clone())?;
-
-
-			// construct MsgTransfer Msg
-			let msg = MsgTransfer {
-				source_port: source_port.to_ibc_port_id(),
-				source_channel: source_channel.to_ibc_channel_id(),
-				token: Some(ibc_proto::cosmos::base::v1beta1::Coin {
-					denom: String::from_utf8(denom).unwrap(),
-					amount: String::from_utf8(amount).unwrap(),
-				}),
-				sender: Signer::from(String::from_utf8(sender).unwrap()),
-				receiver: Signer::from(String::from_utf8(receiver).unwrap()),
-				timeout_height: ibc::Height::zero(),
-				timeout_timestamp: ibc::timestamp::Timestamp::now(),
-			};
-			let raw_msg = msg.to_any();
-			let msgs = vec![raw_msg];
-
-			let msgs = msgs.into_iter()
-				.map(|message| message.into())
-				.collect();
-
-			<pallet_ibc::Pallet<T>>::deliver(origin, msgs, 0)
-		}
+		// #[pallet::weight(0)]
+		// pub fn send_trc20_token(
+		// 	origin: OriginFor<T>,
+		// 	source_port: PortId,
+		// 	source_channel: ChannelId,
+		// 	denom: Vec<u8>,
+		// 	amount: Vec<u8>,
+		// 	sender: Vec<u8>,
+		// 	receiver: Vec<u8>,
+		// 	// timeout_height: Height,
+		// 	// timeout_timestamp: Timestamp
+		// ) -> DispatchResult {
+		// 	let _who = ensure_signed(origin.clone())?;
+		//
+		//
+		// 	// construct MsgTransfer Msg
+		// 	let msg = MsgTransfer {
+		// 		source_port: source_port.to_ibc_port_id(),
+		// 		source_channel: source_channel.to_ibc_channel_id(),
+		// 		token: Some(ibc_proto::cosmos::base::v1beta1::Coin {
+		// 			denom: String::from_utf8(denom).unwrap(),
+		// 			amount: String::from_utf8(amount).unwrap(),
+		// 		}),
+		// 		sender: Signer::from(String::from_utf8(sender).unwrap()),
+		// 		receiver: Signer::from(String::from_utf8(receiver).unwrap()),
+		// 		timeout_height: ibc::Height::zero(),
+		// 		timeout_timestamp: ibc::timestamp::Timestamp::now(),
+		// 	};
+		// 	let raw_msg = msg.to_any();
+		// 	let msgs = vec![raw_msg];
+		//
+		// 	let msgs = msgs.into_iter()
+		// 		.map(|message| message.into())
+		// 		.collect();
+		//
+		// 	<pallet_ibc::Pallet<T>>::deliver(origin, msgs, 0)
+		// }
 	}
 }
