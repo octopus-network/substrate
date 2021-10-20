@@ -221,12 +221,14 @@ func ProduceNewResponse(simulationSequence [][]int) Ret {
 //case 1
 func Test1() [][]int {
 	mockData := [][]int{
+		{1, 0, 1, 2, 3},
+		{1, 3, 4, 1},
+		{1, 0, 2},
+		{1, 3, 2, 1},
+		{1, 4, 1, 2, 3},
 		{1, 0, 1, 2, 3, 4},
-		{1, 3, 4, 1, 2},
-		{1, 0, 2, 1},
-		{1, 1, 2, 4, 3, 0},
-		{1, 2, 4, 3, 0},
-		{1, 2, 4, 1, 0},
+		{1, 0, 3, 2, 4},
+		{1, 0, 3, 1, 4},
 	}
 
 	return mockData
@@ -248,7 +250,7 @@ func ProduceResponse() Ret {
 	//produce responce data
 	currTime := time.Now().Unix()
 	deltTime := currTime - preTime
-	if deltTime > 60*2 && endLine < len(testData) {
+	if (preTime == 0) || (deltTime > 60*2 && endLine < len(testData)) {
 
 		rand.Seed(time.Now().UnixNano())
 		// delt := rand.Intn(len(testData))
@@ -324,6 +326,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(ret)
+	fmt.Printf("Handle one request, time: %v\n", time.Now())
 }
 
 func main() {
