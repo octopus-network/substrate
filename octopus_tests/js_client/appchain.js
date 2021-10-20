@@ -4,26 +4,11 @@ const assert = require("assert");
 
 const customTypes = {
     "IdentificationTuple": "(ValidatorId, FullIdentification)",
-    "FullIdentification": {
-        "total": "Balance",
-        "own": "Balance",
-        "others": "Vec<IndividualExposure<AccountId, Balance>>"
-    },
-    "IndividualExposure": {
-        "who": "AccountId",
-        "value": "Balance",
-    },
+    "FullIdentification": "u128",
     "Message": {
         "nonce": "u64",
         "payload_type": "PayloadType",
         "payload": "Vec<u8>"
-    },
-    "StakerStatus": {
-        "_enum": {
-            "Idle": "Idle",
-            "Validator": "Validator",
-            "Nominator": "(Vec<AccountId>)"
-        }
     },
     "BeefyKey": "[u8; 33]",
     "SessionKeys5B": "(AccountId, AccountId, AccountId, AccountId, BeefyKey)",
@@ -67,43 +52,75 @@ const customTypes = {
     }
 };
 
+function compare(v1, v2) {
+    v1.sort();
+    v2.sort();
+    
+    if (v1.length != v2.length) {
+        return false;
+    }
+
+    for (i = 0; i < v1.length; i++) {
+        if (v1[i].toString() != v2[i].toString()) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 async function monitAppChain(testDataPath) {
     const provider = new WsProvider('ws://127.0.0.1:9944', );
     const api = await ApiPromise.create({ provider: provider, types: customTypes});
-    
-    api.query.system.events(events => {
-        events.forEach((record) => {
+   
+    cnt = 0;
+    await api.query.system.events(events => {
+        events.forEach(async (record) => {
             const { event, phase } = record;
 
-            if (event.section == "octopusLpos" && event.method == "StakingElection") {
-            //if (event.section == "system" && event.method == "ExtrinsicSuccess") {
-                api.query.session.validators(async validators1 => {
-                    validators2 = await getMockDataFromServer(testDataPath);
-                    validators1.sort();
-                    validators2.sort();
+            if (event.section == "grandpa" && event.method == "NewAuthorities") 
+            {
+                cnt ++;
+                console.log(`cnt =============== ${cnt}`);
+                v1 = await api.query.session.validators();
+                v2 = await getMockDataFromServer(testDataPath, cnt);
+               
+                v1.sort();
+                v2.sort();
 
-                    //console.log(`vs1.length: ${validators1.length}`);
-                    //console.log(`vs1: ${validators1[0]}`);
-                    //console.log(`vs1: ${validators1[1]}`);
-                    //console.log(`vs2 length: ${validators2.length}`);
-                    //console.log(`vs2: ${validators2[0]}`);
-                    //console.log(`vs2: ${validators2[1]}`);
+                console.log(`vs1.length: ${v1.length}`);
+                console.log(`vs1: ${v1[0]}`);
+                console.log(`vs1: ${v1[1]}`);
+                console.log(`vs2 length: ${v2.length}`);
+                console.log(`vs2: ${v2[0]}`);
+                console.log(`vs2: ${v2[1]}`);
 
-                    //compare
-                    assert((validators1.length == validators2.length), 
-                        'validators1.length != validators2.length !');
-
-                    
-                    for (i = 0; i < validators1.length; i++) {
-                        assert((validators1[i].toString() == validators2[i].toString()), 
-                            'validator not match!');
+                compare_flag = compare(v1, v2);
+                if (!compare_flag) {
+                    if (cnt == 1) {
+                        assert(false, "Validators switch failed")
                     }
-                    
+
+                    cnt --;
+                    v3 = await getMockDataFromServer(testDataPath, cnt);
+                    v3.sort();
+                    console.log(`vs3 length: ${v3.length}`);
+                    console.log(`vs3: ${v3[0]}`);
+                    console.log(`vs3: ${v3[1]}`);
+
+                    compare_flag = compare(v1, v3);
+                    if (!compare_flag) {
+                        assert(false, "Validators switch failed")
+                    }
+                }
+
+                console.log(`cnt %%%%%%%%%%%%%%%%% ${cnt}`);
+                if (cnt == 6) {
                     console.log(`use case passed!`);
                     //just compare one time
                     process.exit();
-                })
+                }
+                
             } 
         });
     });	

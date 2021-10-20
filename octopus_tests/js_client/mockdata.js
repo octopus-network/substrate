@@ -11,26 +11,30 @@ var presetValidators = new Array(
   '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL',
 );
 
-async function getMockDataFromServer(filepath) {
+async function getMockDataFromServer(filepath, number) {
   const rl = readline.createInterface({
     input: fs.createReadStream(filepath)
   });
 
+  f = 0
   const promise = new Promise(resolve => {
     rl.on('line', (str) => {
-      str = str.slice(0, str.length-1);
-      arr = str.split(',');
+      f++
+      if (f == number) {
+        str = str.slice(0, str.length-1);
+        arr = str.split(',');
 
-      // console.log(arr.toString()) 
+        console.log(arr.toString()) 
 
-      var validators= new Array();
-      for (i = 0; i < arr.length; i++) {
-        validators.push(presetValidators[arr[i]]); 
-        // console.log(validators[i]);
+        var validators= new Array();
+        for (i = 1; i < arr.length; i++) {
+          validators.push(presetValidators[arr[i]]); 
+          // console.log(validators[i]);
+        }
+
+        // console.log("va: ", validators);
+        resolve(validators);
       }
-
-      // console.log("va: ", validators);
-      resolve(validators);
     });
   });
 
@@ -39,9 +43,9 @@ async function getMockDataFromServer(filepath) {
   return validators;
 }
 
-//(async () => { 
-//  const va = await getMockDataFromServer("test1.data");
-//  console.log("va: ", va);
-//})();
+// (async () => { 
+//   const va = await getMockDataFromServer("../mock_server/test1.data", 1);
+//   console.log("va: ", va);
+// })();
 
 module.exports = getMockDataFromServer;
