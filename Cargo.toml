@@ -312,3 +312,17 @@ frame-support = { path = "./frame/support" }
 frame-system = { path = "./frame/system" }
 frame-benchmarking = { path = "./frame/benchmarking" }
 crypto-mac = { git = "https://github.com/uinb/traits", package = "crypto-mac", tag = "crypto-mac-v0.7.0" }
+
+# for tendermint
+tendermint              = { git = "https://github.com/informalsystems/tendermint-rs", branch = "soares/activate-no-std" }
+tendermint-rpc          = { git = "https://github.com/informalsystems/tendermint-rs", branch = "soares/activate-no-std" }
+tendermint-proto        = { git = "https://github.com/informalsystems/tendermint-rs", branch = "soares/activate-no-std" }
+tendermint-light-client = { git = "https://github.com/informalsystems/tendermint-rs", branch = "soares/activate-no-std" }
+tendermint-testgen      = { git = "https://github.com/informalsystems/tendermint-rs", branch = "soares/activate-no-std" }
+ics23                   = { git = "https://github.com/informalsystems/ics23.git", branch = "master" }
+safe-regex          = { git = "https://github.com/informalsystems/safe-regex.git", branch = "main" }
+safe-regex-macro    = { git = "https://github.com/informalsystems/safe-regex.git", branch = "main" }
+safe-regex-compiler = { git = "https://github.com/informalsystems/safe-regex.git", branch = "main" }
+safe-quote          = { git = "https://github.com/informalsystems/safe-regex.git", branch = "main" }
+safe-proc-macro2    = { git = "https://github.com/informalsystems/safe-regex.git", branch = "main" }
+tonic = { package = "informalsystems-tonic", git = "https://github.com/informalsystems/tonic.git", branch = "thane/informal-0.5.2" }

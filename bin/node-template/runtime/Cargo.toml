@@ -104,6 +104,7 @@ std = [
 	"sp-staking/std",
 	"beefy-primitives/std",
 	"pallet-beefy/std",
+	"pallet-ibc/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

@@ -199,6 +199,17 @@ fn provide_dummy_wasm_binary_if_not_exist(file_path: &Path) {
 	}
 }
 
+//
+// /// Provide a dummy WASM binary if there doesn't exist one.
+// fn provide_dummy_wasm_binary_if_not_exist(file_path: &Path) {
+// 	if !file_path.exists() {
+// 		crate::write_file_if_changed(
+// 			file_path,
+// 			r#"pub const WASM_BINARY: Option<&[u8]> = None;
+//                        pub const WASM_BINARY_BLOATY: Option<&[u8]> = None;"#,
+// 		);
+// 	}
+// }
 /// Generate the `rerun-if-changed` instructions for cargo to make sure that the WASM binary is
 /// rebuilt when needed.
 fn generate_rerun_if_changed_instructions() {
