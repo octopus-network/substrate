@@ -272,3 +272,21 @@ zeroize = { opt-level = 3 }
 [profile.release]
 # Substrate runtime requires unwinding.
 panic = "unwind"
+
+[patch."https://github.com/paritytech/substrate"]
+frame-benchmarking = { path = "./frame/benchmarking" }
+frame-support = { path = "./frame/support" }
+frame-system = { path = "./frame/system" }
+pallet-authorship = { path = "./frame/authorship" }
+pallet-balances = { path = "./frame/balances" }
+pallet-session = { path = "./frame/session" }
+pallet-timestamp = { path = "./frame/timestamp" }
+sp-core = { path = "./primitives/core" }
+sp-io = { path = "./primitives/io" }
+sp-keystore = { path = "./primitives/keystore" }
+sp-runtime = { path = "./primitives/runtime" }
+sp-staking = { path = "./primitives/staking" }
+sp-std = { path = "./primitives/std" }
+sp-storage = { path = "./primitives/storage" }
+sp-tracing = { path = "./primitives/tracing" }
+substrate-test-utils = { path = "./test-utils" }

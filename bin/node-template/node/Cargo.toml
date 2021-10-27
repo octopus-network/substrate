@@ -50,12 +50,10 @@ pallet-transaction-payment-rpc = { version = "4.0.0-dev", path = "../../../frame
 
 codec = { package = "parity-scale-codec", version = "2.0.0" }
 serde = { version = "1.0.126", features = ["derive"] }
-rand = "0.7.2"
 frame-system = { version = "4.0.0-dev", path = "../../../frame/system" }
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", path = "../../../frame/system/rpc/runtime-api" }
 pallet-im-online = { version = "4.0.0-dev", path = "../../../frame/im-online" }
 pallet-mmr-rpc = { version = "3.0.0", path = "../../../frame/merkle-mountain-range/rpc/" }
-pallet-staking = { version = "4.0.0-dev", path = "../../../frame/staking" }
 pallet-transaction-payment = { version = "4.0.0-dev", path = "../../../frame/transaction-payment" }
 sc-chain-spec = { version = "4.0.0-dev", path = "../../../client/chain-spec" }
 sc-consensus-babe-rpc = { version = "0.10.0-dev", path = "../../../client/consensus/babe/rpc" }
@@ -72,6 +70,9 @@ sp-transaction-storage-proof = { version = "4.0.0-dev", path = "../../../primiti
 beefy-gadget = { version = "4.0.0-dev", path = "../../../client/beefy" }
 beefy-gadget-rpc = { version = "4.0.0-dev", path = "../../../client/beefy/rpc" }
 beefy-primitives = { version = "4.0.0-dev", path = "../../../primitives/beefy" }
+
+pallet-octopus-appchain = { path = "../octopus-pallets/appchain" }
+pallet-octopus-lpos = { path = "../octopus-pallets/lpos" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "4.0.0-dev", path = "../../../frame/benchmarking" }

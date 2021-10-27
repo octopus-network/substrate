@@ -40,7 +40,6 @@ sp-version = { version = "4.0.0-dev", default-features = false, path = "../../..
 
 static_assertions = "1.1.0"
 log = { version = "0.4.14", default-features = false }
-frame-election-provider-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/election-provider-support" }
 pallet-assets = { version = "4.0.0-dev", default-features = false, path = "../../../frame/assets" }
 pallet-authorship = { version = "4.0.0-dev", default-features = false, path = "../../../frame/authorship" }
 pallet-im-online = { version = "4.0.0-dev", default-features = false, path = "../../../frame/im-online" }
@@ -48,14 +47,16 @@ pallet-mmr = { version = "4.0.0-dev", default-features = false, path = "../../..
 pallet-session = { version = "4.0.0-dev", features = [
 	"historical",
 ], path = "../../../frame/session", default-features = false }
-pallet-staking = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking" }
-pallet-staking-reward-curve = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking/reward-curve" }
 sp-staking = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/staking" }
 
 beefy-primitives = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/beefy" }
 pallet-beefy = { version = "4.0.0-dev", default-features = false, path = "../../../frame/beefy" }
 pallet-beefy-mmr = { version = "4.0.0-dev", default-features = false, path = "../../../frame/beefy-mmr" }
 pallet-mmr-primitives = { version = "4.0.0-dev", default-features = false, path = "../../../frame/merkle-mountain-range/primitives" }
+
+pallet-octopus-appchain = { path = "../octopus-pallets/appchain", default-features = false }
+pallet-octopus-lpos = { path = "../octopus-pallets/lpos", default-features = false }
+pallet-octopus-upward-messages = { path = "../octopus-pallets/upward-messages", default-features = false }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
@@ -101,18 +102,19 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 	"log/std",
-	"frame-election-provider-support/std",
 	"pallet-assets/std",
 	"pallet-authorship/std",
 	"pallet-im-online/std",
 	"pallet-mmr/std",
 	"pallet-session/std",
-	"pallet-staking/std",
 	"sp-staking/std",
 	"beefy-primitives/std",
 	"pallet-beefy/std",
 	"pallet-beefy-mmr/std",
 	"pallet-mmr-primitives/std",
+	"pallet-octopus-appchain/std",
+	"pallet-octopus-lpos/std",
+	"pallet-octopus-upward-messages/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",
