@@ -87,6 +87,14 @@ pub struct GrandpaDeps<B> {
 	pub finality_provider: Arc<FinalityProofProvider<B, Block>>,
 }
 
+/// Dependencies for BEEFY
+pub struct BeefyDeps {
+	/// Receives notifications about signed commitment events from BEEFY.
+	pub beefy_commitment_stream: beefy_gadget::notification::BeefySignedCommitmentStream<Block>,
+	/// Executor to drive the subscription manager in the BEEFY RPC handler.
+	pub subscription_executor: sc_rpc::SubscriptionTaskExecutor,
+}
+
 /// Full client dependencies.
 pub struct FullDeps<C, P, SC, B> {
 	/// The client instance to use.
@@ -103,6 +111,8 @@ pub struct FullDeps<C, P, SC, B> {
 	pub babe: BabeDeps,
 	/// GRANDPA specific dependencies.
 	pub grandpa: GrandpaDeps<B>,
+	/// BEEFY specific dependencies.
+	pub beefy: BeefyDeps,
 }
 
 /// A IO handler that uses all Full RPC extensions.
@@ -135,7 +145,8 @@ where
 	use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
 	let mut io = jsonrpc_core::IoHandler::default();
-	let FullDeps { client, pool, select_chain, chain_spec, deny_unsafe, babe, grandpa } = deps;
+	let FullDeps { client, pool, select_chain, chain_spec, deny_unsafe, babe, grandpa, beefy } =
+		deps;
 
 	let BabeDeps { keystore, babe_config, shared_epoch_changes } = babe;
 	let GrandpaDeps {
@@ -176,6 +187,13 @@ where
 			shared_epoch_changes,
 			deny_unsafe,
 		)?,
+	));
+
+	io.extend_with(beefy_gadget_rpc::BeefyApi::to_delegate(
+		beefy_gadget_rpc::BeefyRpcHandler::new(
+			beefy.beefy_commitment_stream,
+			beefy.subscription_executor,
+		),
 	));
 
 	Ok(io)

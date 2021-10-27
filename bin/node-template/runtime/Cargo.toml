@@ -52,6 +52,11 @@ pallet-staking = { version = "4.0.0-dev", default-features = false, path = "../.
 pallet-staking-reward-curve = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking/reward-curve" }
 sp-staking = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/staking" }
 
+beefy-primitives = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/beefy" }
+pallet-beefy = { version = "4.0.0-dev", default-features = false, path = "../../../frame/beefy" }
+pallet-beefy-mmr = { version = "4.0.0-dev", default-features = false, path = "../../../frame/beefy-mmr" }
+pallet-mmr-primitives = { version = "4.0.0-dev", default-features = false, path = "../../../frame/merkle-mountain-range/primitives" }
+
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
 pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/transaction-payment/rpc/runtime-api/" }
@@ -104,6 +109,10 @@ std = [
 	"pallet-session/std",
 	"pallet-staking/std",
 	"sp-staking/std",
+	"beefy-primitives/std",
+	"pallet-beefy/std",
+	"pallet-beefy-mmr/std",
+	"pallet-mmr-primitives/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",
