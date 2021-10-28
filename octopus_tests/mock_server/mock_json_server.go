@@ -45,22 +45,19 @@ var presetValidators = [...]ValidatorInfo{
 }
 
 type ValidatorData struct {
-	Id          string        `json:"id"`
-	AccountId   string        `json:"account_id"`
-	Weight      string        `json:"weight"`
-	BlockHeight uint64        `json:"block_weight"`
-	Delegators  []interface{} `json:"delegators"`
+	ValidatorId string `json:"validator_id"`
+	TotalStake  string `json:"total_stake"`
 }
 
-type UpdateValidatorSetData struct {
-	SeqNum       uint64          `json:"seq_num"`
-	SetId        uint64          `json:"set_id"`
-	ValidatorSet []ValidatorData `json:"validators"`
-}
+// type UpdateValidatorSetData struct {
+// 	SeqNum       uint64          `json:"seq_num"`
+// 	SetId        uint64          `json:"set_id"`
+// 	ValidatorSet []ValidatorData `json:"validators"`
+// }
 
-type InnerResultValidatorSet struct {
-	UpdateValidatorSet UpdateValidatorSetData `json:"UpdateValidatorSet"`
-}
+// type InnerResultValidatorSet struct {
+// 	UpdateValidatorSet UpdateValidatorSetData `json:"UpdateValidatorSet"`
+// }
 
 type InnerResultLockToken struct {
 	LockToken LockTokenData `json:"LockAsset"`
@@ -95,11 +92,8 @@ func ProduceValidatorData(curr int) ValidatorData {
 	}
 
 	return ValidatorData{
-		Id:          validator.Id,
-		AccountId:   validator.AccountId,
-		Weight:      validator.Weight,
-		BlockHeight: blockHeight,
-		Delegators:  []interface{}{}, //delegators is null
+		ValidatorId: validator.Id,
+		TotalStake:  validator.Weight,
 	}
 }
 
@@ -130,10 +124,10 @@ func StringToInts(s string) []int {
 	return intSlice
 }
 
-func ProduceUpdateValidatorSets(curr []int) UpdateValidatorSetData {
+func ProduceUpdateValidatorSets(curr []int) []interface{} {
 	num := len(curr)
 
-	var validatorSet = []ValidatorData{}
+	var validatorSet = []interface{}{}
 	for i := 0; i < num; i++ {
 		if curr[i] < 0 {
 			continue
@@ -142,16 +136,8 @@ func ProduceUpdateValidatorSets(curr []int) UpdateValidatorSetData {
 		validatorSet = append(validatorSet, data)
 	}
 
-	ret := UpdateValidatorSetData{
-		SeqNum:       seqNum,
-		SetId:        setId,
-		ValidatorSet: validatorSet,
-	}
-
-	seqNum++
-	setId++
-
-	return ret
+	// fmt.Printf("%v\n", validatorSet...)
+	return validatorSet
 }
 
 // write mock data to file which used to compare
@@ -187,18 +173,18 @@ func writeResult(vals [][]int, outfile string) error {
 //  {2, ...},		// locktoken
 //  {3, ...}		// burn event
 //}
-func ProduceNewResponse(simulationSequence [][]int) Ret {
-	innerResult := []interface{}{}
+func ProduceNewResponseForValidatorSets(simulationSequence [][]int) Ret {
+	var innerResult interface{}
+
+	if len(simulationSequence) != 1 {
+		panic("Should 1")
+	}
 
 	for i := 0; i < len(simulationSequence); i++ {
 		if simulationSequence[i][0] == 1 { //update validators
 			curr := simulationSequence[i][1:]
-			innerResult = append(innerResult,
-				InnerResultValidatorSet{UpdateValidatorSet: ProduceUpdateValidatorSets(curr)})
-		} else if simulationSequence[i][0] == 2 { //lockToken
-			//to do
-		} else if simulationSequence[i][0] == 3 { //burn event
-			//to do
+			// innerResult = append(innerResult, ProduceUpdateValidatorSets(curr))
+			innerResult = ProduceUpdateValidatorSets(curr)
 		}
 	}
 
@@ -251,7 +237,6 @@ func ProduceResponse() Ret {
 	currTime := time.Now().Unix()
 	deltTime := currTime - preTime
 	if (preTime == 0) || (deltTime > 60*2 && endLine < len(testData)) {
-
 		rand.Seed(time.Now().UnixNano())
 		// delt := rand.Intn(len(testData))
 		delt := 1
@@ -260,7 +245,7 @@ func ProduceResponse() Ret {
 			endLine = len(testData)
 		}
 
-		currRet = ProduceNewResponse(testData[startLine:endLine])
+		currRet = ProduceNewResponseForValidatorSets(testData[startLine:endLine])
 		fmt.Printf("start: %v, end: %v\n", startLine, endLine)
 		startLine = endLine
 		preTime = currTime
@@ -330,7 +315,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    mockData := Test1()
+	mockData := Test1()
 	if writeResult(mockData, "./test1.data") != nil {
 		panic("Write data to file error in mock server!")
 	}

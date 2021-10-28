@@ -49,6 +49,13 @@ const customTypes = {
         "block_number": "BlockNumber",
         "next_fact_sequence": "u32",
         "observations": "Vec<Observation<AccountId>>"
+    },
+    "ObservationType": {
+        "_enum": {
+            "UpdateValidatorSet": "UpdateValidatorSet",
+            "Burn": "Burn",
+            "LockAsset": "LockAsset"
+        }
     }
 };
 
