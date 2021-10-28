@@ -39,7 +39,7 @@ jobs:
         with:
             repository: octopus-network/octopus-pallets
             path: ./substrate/bin/node-template/octopus-pallets 
-            ref: dev 
+            ref: main 
 
       # Set up Go enviroment
       - name: Setup Go environment
