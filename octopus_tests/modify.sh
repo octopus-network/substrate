@@ -1,5 +1,5 @@
 #!/bin/bash
-sed -i "s/appchain_id: \"\".to_string()/appchain_id: \"oct-it-test\".to_string()/g" ../bin/node-template/node/src/chain_spec.rs
+sed -i "s/anchor_contract: \"\".to_string()/anchor_contract: \"oct-it-test\".to_string()/g" ../bin/node-template/node/src/chain_spec.rs
 line=`sed -n "/appchain_id:/p" ../bin/node-template/node/src/chain_spec.rs`
 echo "$line"
 
