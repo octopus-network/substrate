@@ -188,7 +188,7 @@ fn testnet_genesis(
 	let validators = initial_authorities.iter().map(|x| (x.0.clone(), STASH)).collect::<Vec<_>>();
 
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
-	const STASH: Balance = 100 * DOLLARS;
+	const STASH: Balance = 100 * 1_000_000_000_000_000_000; // 100 OCT with 18 decimals
 
 	GenesisConfig {
 		system: SystemConfig {
@@ -227,8 +227,7 @@ fn testnet_genesis(
 		assets: Default::default(),
 		beefy: Default::default(),
 		octopus_appchain: OctopusAppchainConfig {
-			appchain_id: "".to_string(),
-			anchor_contract: "octopus-anchor.testnet".to_string(),
+			anchor_contract: "".to_string(),
 			asset_id_by_name: vec![("usdc.testnet".to_string(), 0)],
 			validators,
 			premined_amount: 0,

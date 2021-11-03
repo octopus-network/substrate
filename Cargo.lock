@@ -2566,6 +2566,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "h2"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fd819562fcebdac5afc5c113c3ec36f902840b70fd4fc458799c8ce4607ae55"
+dependencies = [
+ "bytes 1.0.1",
+ "fnv",
+ "futures-core",
+ "futures-sink",
+ "futures-util",
+ "http",
+ "indexmap",
+ "slab",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "half"
 version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2785,6 +2804,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
+ "h2",
  "http",
  "http-body",
  "httparse",
@@ -5819,7 +5839,6 @@ dependencies = [
  "serde_json",
  "sp-core",
  "sp-io",
- "sp-keystore",
  "sp-runtime",
  "sp-std",
 ]
@@ -5835,22 +5854,14 @@ dependencies = [
  "hex",
  "log 0.4.14",
  "pallet-authorship",
- "pallet-balances",
  "pallet-octopus-support",
  "pallet-session",
- "pallet-timestamp",
  "parity-scale-codec",
- "parking_lot 0.11.1",
- "rand_chacha 0.2.2",
  "scale-info",
- "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-staking",
  "sp-std",
- "sp-storage",
- "sp-tracing",
- "substrate-test-utils",
 ]
 
 [[package]]
