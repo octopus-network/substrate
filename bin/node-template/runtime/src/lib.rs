@@ -571,6 +571,7 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type BondingDuration = BondingDuration;
 	type BlocksPerEra = BlocksPerEra;
 	type SessionInterface = Self;
+	type AppchainInterface = OctopusAppchain;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
 	type PalletId = OctopusAppchainPalletId;
 	type ValidatorsProvider = OctopusAppchain;
