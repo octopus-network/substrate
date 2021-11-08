@@ -104,6 +104,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Bob"),
 				]),
 				true,
+				"https://rpc.testnet.near.org".to_string(), //
 			)
 		},
 		// Bootnodes
@@ -145,6 +146,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
 				]),
 				true,
+				"https://rpc.testnet.near.org".to_string(),
 			)
 		},
 		// Bootnodes
@@ -167,6 +169,7 @@ fn testnet_genesis(
 	root_key: AccountId,
 	endowed_accounts: Option<Vec<AccountId>>,
 	_enable_println: bool,
+	rpc_url: String,
 ) -> GenesisConfig {
 	let mut endowed_accounts: Vec<AccountId> = endowed_accounts.unwrap_or_else(|| {
 		vec![
@@ -230,6 +233,7 @@ fn testnet_genesis(
 			anchor_contract: "".to_string(),
 			asset_id_by_name: vec![("usdc.testnet".to_string(), 0)],
 			validators,
+			rpc_url,
 			premined_amount: 1024 * DOLLARS,
 		},
 		octopus_lpos: OctopusLposConfig { era_payout: 2 * DOLLARS, ..Default::default() },
