@@ -540,6 +540,7 @@ parameter_types! {
 	   pub const GracePeriod: u32 = 5;
 	   pub const UnsignedPriority: u64 = 1 << 20;
 	   pub const RequestEventLimit: u32 = 10;
+	   pub const SubmitMessagesLimit: u32 = 10;
 }
 
 impl pallet_octopus_appchain::Config for Runtime {
@@ -581,6 +582,7 @@ impl pallet_octopus_lpos::Config for Runtime {
 impl pallet_octopus_upward_messages::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
+	type SubmitMessagesLimit = SubmitMessagesLimit;
 }
 
 impl pallet_sudo::Config for Runtime {
