@@ -45,7 +45,7 @@ var presetValidators = [...]ValidatorInfo{
 }
 
 type ValidatorData struct {
-	ValidatorId string `json:"validator_id"`
+	ValidatorId string `json:"validator_id_in_appchain"`
 	TotalStake  string `json:"total_stake"`
 }
 
