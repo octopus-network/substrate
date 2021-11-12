@@ -56,6 +56,7 @@ use static_assertions::const_assert;
 
 use beefy_primitives::crypto::AuthorityId as BeefyId;
 use pallet_mmr_primitives as mmr;
+use beefy_primitives::mmr::MmrLeafVersion;
 use sp_runtime::traits::Keccak256;
 
 use frame_support::PalletId;
@@ -492,7 +493,7 @@ impl pallet_mmr::Config for Runtime {
 	const INDEXING_PREFIX: &'static [u8] = b"mmr";
 	type Hashing = Keccak256;
 	type Hash = <Keccak256 as traits::Hash>::Output;
-	type LeafData = frame_system::Pallet<Self>;
+	type LeafData = pallet_beefy_mmr::Pallet<Runtime>;
 	type OnNewRoot = pallet_beefy_mmr::DepositBeefyDigest<Runtime>;
 	type WeightInfo = ();
 }
@@ -523,6 +524,29 @@ impl pallet_assets::Config for Runtime {
 
 impl pallet_beefy::Config for Runtime {
 	type BeefyId = BeefyId;
+}
+
+parameter_types! {
+	/// Version of the produced MMR leaf.
+	///
+	/// The version consists of two parts;
+	/// - `major` (3 bits)
+	/// - `minor` (5 bits)
+	///
+	/// `major` should be updated only if decoding the previous MMR Leaf format from the payload
+	/// is not possible (i.e. backward incompatible change).
+	/// `minor` should be updated if fields are added to the previous MMR Leaf, which given SCALE
+	/// encoding does not prevent old leafs from being decoded.
+	///
+	/// Hence we expect `major` to be changed really rarely (think never).
+	/// See [`MmrLeafVersion`] type documentation for more details.
+	pub LeafVersion: MmrLeafVersion = MmrLeafVersion::new(0, 0);
+}
+
+impl pallet_beefy_mmr::Config for Runtime {
+	type LeafVersion = LeafVersion;
+	type BeefyAuthorityToMerkleLeaf = pallet_beefy_mmr::BeefyEcdsaToEthereum;
+	type ParachainHeads = ();
 }
 
 pub struct OctopusAppCrypto;
@@ -619,6 +643,7 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Mmr: pallet_mmr::{Pallet, Storage},
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage},
+		MmrLeaf: pallet_beefy_mmr::{Pallet, Storage},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
