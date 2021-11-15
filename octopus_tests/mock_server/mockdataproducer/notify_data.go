@@ -111,9 +111,7 @@ func ProduceNotificationHistories(testData []SimulationData) []AppchainNotificat
 }
 
 func ProduceNewResponseForNotifyHistories(testData []SimulationData) Ret {
-	var innerResult interface{}
-	innerResult = ProduceNewResponseForNotifyHistories(testData)
-
+	innerResult := ProduceNotificationHistories(testData)
 	result, _ := json.Marshal(innerResult)
 
 	retData := ResultData{
