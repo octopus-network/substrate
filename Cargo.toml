@@ -303,10 +303,11 @@ sp-utils = {path = './primitives/utils'}
 substrate-prometheus-endpoint = {path = './utils/prometheus'}
 
 [patch.crates-io]
-sp-runtime-interface = {path = './primitives/runtime-interface'}
-sp-application-crypto = {path = './primitives/application-crypto'}
-sp-core = {path = './primitives/core'}
-sp-std = {path = './primitives/std'}
+sp-runtime-interface = { path = './primitives/runtime-interface'}
+sp-application-crypto = { path = './primitives/application-crypto'}
+sp-core = { path = './primitives/core'}
+sp-std = { path = './primitives/std'}
+sp-io = { path = './primitives/io'}
 sp-runtime = {path = './primitives/runtime'}
 frame-support = { path = "./frame/support" }
 frame-system = { path = "./frame/system" }
