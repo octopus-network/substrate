@@ -57,8 +57,8 @@ func writeResult(vals [][]int, outfile string) error {
 func Test1() [][]int {
 	mockData := [][]int{
 		{1, 0, 1, 2, 3},
-		{1, 3, 4, 1},
-		{1, 0, 2},
+		{1, 0, 1, 2},
+		{1, 0, 1},
 		{1, 3, 2, 1},
 		{1, 4, 1, 2, 3},
 		{1, 0, 1, 2, 3, 4},
@@ -85,7 +85,7 @@ func ProduceValidatorResponse(eraNumber uint32) producer.Ret {
 	//produce responce data
 	currTime := time.Now().Unix()
 	deltTime := currTime - preTime
-	if (preTime == 0) || (deltTime > 60*2 && endLine < len(testData)) {
+	if (preTime == 0) || (deltTime > 60*8 && endLine < len(testData)) {
 		rand.Seed(time.Now().UnixNano())
 		// delt := rand.Intn(len(testData))
 		delt := 1
@@ -156,7 +156,7 @@ func ParseBody(body []byte) map[string]interface{} {
 	req.Params.MethodName = gjson.Get(string(body), "params.method_name").String()
 	req.Params.ArgsBase64 = gjson.Get(string(body), "params.args_base64").String()
 
-	fmt.Printf("%+v\n", req)
+	// fmt.Printf("%+v\n", req)
 
 	s, err := DecodeFromBase64(req.Params.ArgsBase64)
 	if err != nil {
@@ -186,17 +186,17 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		handleCnt++
 	}()
 
-	fmt.Println("method:", r.Method)
+	// fmt.Println("method:", r.Method)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Printf("read body err, %v\n", err)
 		return
 	}
-	println("request json:", string(body))
+	// println("request json:", string(body))
 
 	//parse request
 	pb := ParseBody(body)
-	fmt.Println("pb === ", pb)
+	// fmt.Println("pb === ", pb)
 
 	//dealt the req
 	var response producer.Ret
