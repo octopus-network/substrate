@@ -16,6 +16,7 @@
 // limitations under the License.
 
 use super::helper;
+use frame_support_procedural_tools::get_doc_literals;
 use syn::spanned::Spanned;
 
 /// List of additional token to be used for parsing.
@@ -52,14 +53,11 @@ pub struct ExtraConstantDef {
 }
 
 impl ExtraConstantsDef {
-	pub fn try_from(
-		index: usize,
-		item: &mut syn::Item
-	) -> syn::Result<Self> {
+	pub fn try_from(index: usize, item: &mut syn::Item) -> syn::Result<Self> {
 		let item = if let syn::Item::Impl(item) = item {
 			item
 		} else {
-			return Err(syn::Error::new(item.span(), "Invalid pallet::call, expected item impl"));
+			return Err(syn::Error::new(item.span(), "Invalid pallet::call, expected item impl"))
 		};
 
 		let mut instances = vec![];
@@ -78,28 +76,28 @@ impl ExtraConstantsDef {
 				method
 			} else {
 				let msg = "Invalid pallet::call, only method accepted";
-				return Err(syn::Error::new(impl_item.span(), msg));
+				return Err(syn::Error::new(impl_item.span(), msg))
 			};
 
 			if !method.sig.inputs.is_empty() {
 				let msg = "Invalid pallet::extra_constants, method must have 0 args";
-				return Err(syn::Error::new(method.sig.span(), msg));
+				return Err(syn::Error::new(method.sig.span(), msg))
 			}
 
 			if !method.sig.generics.params.is_empty() {
 				let msg = "Invalid pallet::extra_constants, method must have 0 generics";
-				return Err(syn::Error::new(method.sig.generics.params[0].span(), msg));
+				return Err(syn::Error::new(method.sig.generics.params[0].span(), msg))
 			}
 
 			if method.sig.generics.where_clause.is_some() {
 				let msg = "Invalid pallet::extra_constants, method must have no where clause";
-				return Err(syn::Error::new(method.sig.generics.where_clause.span(), msg));
+				return Err(syn::Error::new(method.sig.generics.where_clause.span(), msg))
 			}
 
 			let type_ = match &method.sig.output {
 				syn::ReturnType::Default => {
 					let msg = "Invalid pallet::extra_constants, method must have a return type";
-					return Err(syn::Error::new(method.span(), msg));
+					return Err(syn::Error::new(method.span(), msg))
 				},
 				syn::ReturnType::Type(_, type_) => *type_.clone(),
 			};
@@ -107,7 +105,7 @@ impl ExtraConstantsDef {
 			extra_constants.push(ExtraConstantDef {
 				ident: method.sig.ident.clone(),
 				type_,
-				doc: helper::get_doc_literals(&method.attrs),
+				doc: get_doc_literals(&method.attrs),
 			});
 		}
 

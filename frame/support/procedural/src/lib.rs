@@ -19,19 +19,49 @@
 
 #![recursion_limit = "512"]
 
-mod storage;
-mod construct_runtime;
-mod pallet;
-mod pallet_version;
-mod transactional;
-mod debug_no_bound;
 mod clone_no_bound;
-mod partial_eq_no_bound;
+mod construct_runtime;
+mod crate_version;
+mod debug_no_bound;
 mod default_no_bound;
+mod dummy_part_checker;
 mod key_prefix;
+mod pallet;
+mod partial_eq_no_bound;
+mod storage;
+mod transactional;
 
-pub(crate) use storage::INHERENT_INSTANCE_NAME;
 use proc_macro::TokenStream;
+use std::{cell::RefCell, str::FromStr};
+pub(crate) use storage::INHERENT_INSTANCE_NAME;
+
+thread_local! {
+	/// A global counter, can be used to generate a relatively unique identifier.
+	static COUNTER: RefCell<Counter> = RefCell::new(Counter(0));
+}
+
+/// Counter to generate a relatively unique identifier for macros querying for the existence of
+/// pallet parts. This is necessary because declarative macros gets hoisted to the crate root,
+/// which shares the namespace with other pallets containing the very same query macros.
+struct Counter(u64);
+
+impl Counter {
+	fn inc(&mut self) -> u64 {
+		let ret = self.0;
+		self.0 += 1;
+		ret
+	}
+}
+
+/// Get the value from the given environment variable set by cargo.
+///
+/// The value is parsed into the requested destination type.
+fn get_cargo_env_var<T: FromStr>(version_env: &str) -> std::result::Result<T, ()> {
+	let version = std::env::var(version_env)
+		.unwrap_or_else(|_| panic!("`{}` is always set by cargo; qed", version_env));
+
+	T::from_str(&version).map_err(drop)
+}
 
 /// Declares strongly-typed wrappers around codec-compatible types in storage.
 ///
@@ -73,23 +103,24 @@ use proc_macro::TokenStream;
 ///   ```
 ///
 /// * Map: `Foo: map hasher($hash) type => type`: Implements the
-///   [`StorageMap`](../frame_support/storage/trait.StorageMap.html) trait using the
-///   [`StorageMap generator`](../frame_support/storage/generator/trait.StorageMap.html).
-///   And [`StoragePrefixedMap`](../frame_support/storage/trait.StoragePrefixedMap.html).
+///   [`StorageMap`](../frame_support/storage/trait.StorageMap.html) trait using the [`StorageMap
+///   generator`](../frame_support/storage/generator/trait.StorageMap.html). And
+///   [`StoragePrefixedMap`](../frame_support/storage/trait.StoragePrefixedMap.html).
 ///
 ///   `$hash` representing a choice of hashing algorithms available in the
 ///   [`Hashable`](../frame_support/trait.Hashable.html) trait. You will generally want to use one
 ///   of three hashers:
 ///   * `blake2_128_concat`: The default, safe choice. Use if you are unsure or don't care. It is
-///     secure against user-tainted keys, fairly fast and memory-efficient and supports
-///     iteration over its keys and values. This must be used if the keys of your map can be
-///     selected *en masse* by untrusted users.
+///     secure against user-tainted keys, fairly fast and memory-efficient and supports iteration
+///     over its keys and values. This must be used if the keys of your map can be selected *en
+///     masse* by untrusted users.
 ///   * `twox_64_concat`: This is an insecure hasher and can only be used safely if you know that
 ///     the preimages cannot be chosen at will by untrusted users. It is memory-efficient, extremely
 ///     performant and supports iteration over its keys and values. You can safely use this is the
 ///     key is:
 ///     - A (slowly) incrementing index.
-///     - Known to be the result of a cryptographic hash (though `identity` is a better choice here).
+///     - Known to be the result of a cryptographic hash (though `identity` is a better choice
+///       here).
 ///     - Known to be the public key of a cryptographic key pair in existence.
 ///   * `identity`: This is not a hasher at all, and just uses the key material directly. Since it
 ///     does no hashing or appending, it's the fastest possible hasher, however, it's also the least
@@ -113,8 +144,9 @@ use proc_macro::TokenStream;
 ///
 /// * Double map: `Foo: double_map hasher($hash1) u32, hasher($hash2) u32 => u32`: Implements the
 ///   [`StorageDoubleMap`](../frame_support/storage/trait.StorageDoubleMap.html) trait using the
-///   [`StorageDoubleMap generator`](../frame_support/storage/generator/trait.StorageDoubleMap.html).
-///   And [`StoragePrefixedMap`](../frame_support/storage/trait.StoragePrefixedMap.html).
+///   [`StorageDoubleMap
+///   generator`](../frame_support/storage/generator/trait.StorageDoubleMap.html). And
+///   [`StoragePrefixedMap`](../frame_support/storage/trait.StoragePrefixedMap.html).
 ///
 ///   `$hash1` and `$hash2` representing choices of hashing algorithms available in the
 ///   [`Hashable`](../frame_support/trait.Hashable.html) trait. They must be chosen with care, see
@@ -128,8 +160,8 @@ use proc_macro::TokenStream;
 ///
 ///   Thus keys are stored at:
 ///   ```nocompile
-///   Twox128(module_prefix) ++ Twox128(storage_prefix) ++ Hasher1(encode(key1)) ++ Hasher2(encode(key2))
-///   ```
+///   Twox128(module_prefix) ++ Twox128(storage_prefix) ++ Hasher1(encode(key1)) ++
+/// Hasher2(encode(key2))   ```
 ///
 /// Supported hashers (ordered from least to best security):
 ///
@@ -157,8 +189,8 @@ use proc_macro::TokenStream;
 /// Will include the item in `GenesisConfig`.
 /// * \[optional\] `build(#closure)`: Closure called with storage overlays.
 /// * \[optional\] `max_values(#expr)`: `expr` is an expression returning a `u32`. It is used to
-/// implement `StorageInfoTrait`. Note this attribute is not available for storage value as the maximum
-/// number of values is 1.
+/// implement `StorageInfoTrait`. Note this attribute is not available for storage value as the
+/// maximum number of values is 1.
 /// * `#type`: Storage type.
 /// * \[optional\] `#default`: Value returned when none.
 ///
@@ -180,14 +212,14 @@ use proc_macro::TokenStream;
 ///
 /// 		// Your storage items
 /// 	}
-///		add_extra_genesis {
-///			config(genesis_field): GenesisFieldType;
-///			config(genesis_field2): GenesisFieldType;
-///			...
-///			build(|_: &Self| {
-///				// Modification of storage
-///			})
-///		}
+/// 		add_extra_genesis {
+/// 			config(genesis_field): GenesisFieldType;
+/// 			config(genesis_field2): GenesisFieldType;
+/// 			...
+/// 			build(|_: &Self| {
+/// 				// Modification of storage
+/// 			})
+/// 		}
 /// }
 /// ```
 ///
@@ -199,7 +231,7 @@ use proc_macro::TokenStream;
 ///         ...,
 ///         Example: example::{Pallet, Storage, ..., Config<T>},
 ///         ...,
-///	}
+/// 	}
 /// );
 /// ```
 ///
@@ -269,7 +301,7 @@ pub fn decl_storage(input: TokenStream) -> TokenStream {
 /// construct_runtime!(
 ///     pub enum Runtime where
 ///         Block = Block,
-///         NodeBlock = runtime::Block,
+///         NodeBlock = node::Block,
 ///         UncheckedExtrinsic = UncheckedExtrinsic
 ///     {
 ///         System: system::{Pallet, Call, Event<T>, Config<T>} = 0,
@@ -320,8 +352,8 @@ pub fn decl_storage(input: TokenStream) -> TokenStream {
 ///
 /// # Type definitions
 ///
-/// * The macro generates a type alias for each pallet to their `Module` (or `Pallet`).
-///   E.g. `type System = frame_system::Pallet<Runtime>`
+/// * The macro generates a type alias for each pallet to their `Module` (or `Pallet`). E.g. `type
+///   System = frame_system::Pallet<Runtime>`
 #[proc_macro]
 pub fn construct_runtime(input: TokenStream) -> TokenStream {
 	construct_runtime::construct_runtime(input)
@@ -364,7 +396,7 @@ pub fn derive_clone_no_bound(input: TokenStream) -> TokenStream {
 	clone_no_bound::derive_clone_no_bound(input)
 }
 
-/// Derive [`Debug`] but do not bound any generics. Docs are at `frame_support::DeriveNoBounds`.
+/// Derive [`Debug`] but do not bound any generics. Docs are at `frame_support::DebugNoBound`.
 #[proc_macro_derive(DebugNoBound)]
 pub fn derive_debug_no_bound(input: TokenStream) -> TokenStream {
 	debug_no_bound::derive_debug_no_bound(input)
@@ -393,7 +425,8 @@ pub fn derive_runtime_debug_no_bound(input: TokenStream) -> TokenStream {
 					}
 				}
 			};
-		).into()
+		)
+		.into()
 	}
 
 	#[cfg(feature = "std")]
@@ -424,7 +457,8 @@ pub fn derive_eq_no_bound(input: TokenStream) -> TokenStream {
 		const _: () = {
 			impl #impl_generics core::cmp::Eq for #name #ty_generics #where_clause {}
 		};
-	).into()
+	)
+	.into()
 }
 
 /// derive `Default` but do no bound any generic. Docs are at `frame_support::DefaultNoBound`.
@@ -435,12 +469,15 @@ pub fn derive_default_no_bound(input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn require_transactional(attr: TokenStream, input: TokenStream) -> TokenStream {
-	transactional::require_transactional(attr, input).unwrap_or_else(|e| e.to_compile_error().into())
+	transactional::require_transactional(attr, input)
+		.unwrap_or_else(|e| e.to_compile_error().into())
 }
 
 #[proc_macro]
-pub fn crate_to_pallet_version(input: TokenStream) -> TokenStream {
-	pallet_version::crate_to_pallet_version(input).unwrap_or_else(|e| e.to_compile_error()).into()
+pub fn crate_to_crate_version(input: TokenStream) -> TokenStream {
+	crate_version::crate_to_crate_version(input)
+		.unwrap_or_else(|e| e.to_compile_error())
+		.into()
 }
 
 /// The number of module instances supported by the runtime, starting at index 1,
@@ -451,5 +488,13 @@ pub(crate) const NUMBER_OF_INSTANCE: u8 = 16;
 /// It implements the trait `HasKeyPrefix` and `HasReversibleKeyPrefix` for tuple of `Key`.
 #[proc_macro]
 pub fn impl_key_prefix_for_tuples(input: TokenStream) -> TokenStream {
-	key_prefix::impl_key_prefix_for_tuples(input).unwrap_or_else(syn::Error::into_compile_error).into()
+	key_prefix::impl_key_prefix_for_tuples(input)
+		.unwrap_or_else(syn::Error::into_compile_error)
+		.into()
+}
+
+/// Internal macro use by frame_support to generate dummy part checker for old pallet declaration
+#[proc_macro]
+pub fn __generate_dummy_part_checker(input: TokenStream) -> TokenStream {
+	dummy_part_checker::generate_dummy_part_checker(input)
 }

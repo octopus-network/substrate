@@ -18,17 +18,16 @@
 //! Traits, types and structs to support putting a bounded vector into storage, as a raw value, map
 //! or a double map.
 
-use sp_std::prelude::*;
-use sp_std::{convert::TryFrom, fmt, marker::PhantomData};
-use codec::{Encode, Decode};
+use crate::{
+	storage::{StorageDecodeLength, StorageTryAppend},
+	traits::Get,
+};
+use codec::{Decode, Encode, MaxEncodedLen};
 use core::{
 	ops::{Deref, Index, IndexMut},
 	slice::SliceIndex,
 };
-use crate::{
-	traits::{Get, MaxEncodedLen},
-	storage::{StorageDecodeLength, StorageTryAppend},
-};
+use sp_std::{convert::TryFrom, marker::PhantomData, prelude::*};
 
 /// A weakly bounded vector.
 ///
@@ -37,7 +36,8 @@ use crate::{
 ///
 /// The length of the vec is not strictly bounded. Decoding a vec with more element that the bound
 /// is accepted, and some method allow to bypass the restriction with warnings.
-#[derive(Encode)]
+#[derive(Encode, scale_info::TypeInfo)]
+#[scale_info(skip_type_params(S))]
 pub struct WeakBoundedVec<T, S>(Vec<T>, PhantomData<S>);
 
 impl<T: Decode, S: Get<u32>> Decode for WeakBoundedVec<T, S> {
@@ -88,6 +88,14 @@ impl<T, S> WeakBoundedVec<T, S> {
 	/// Exactly the same semantics as [`Vec::retain`].
 	pub fn retain<F: FnMut(&T) -> bool>(&mut self, f: F) {
 		self.0.retain(f)
+	}
+
+	/// Exactly the same semantics as [`Vec::get_mut`].
+	pub fn get_mut<I: SliceIndex<[T]>>(
+		&mut self,
+		index: I,
+	) -> Option<&mut <I as SliceIndex<[T]>>::Output> {
+		self.0.get_mut(index)
 	}
 }
 
@@ -163,12 +171,12 @@ impl<T, S> Default for WeakBoundedVec<T, S> {
 }
 
 #[cfg(feature = "std")]
-impl<T, S> fmt::Debug for WeakBoundedVec<T, S>
+impl<T, S> std::fmt::Debug for WeakBoundedVec<T, S>
 where
-	T: fmt::Debug,
+	T: std::fmt::Debug,
 	S: Get<u32>,
 {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_tuple("WeakBoundedVec").field(&self.0).field(&Self::bound()).finish()
 	}
 }
@@ -263,8 +271,8 @@ impl<T, S> codec::DecodeLength for WeakBoundedVec<T, S> {
 }
 
 // NOTE: we could also implement this as:
-// impl<T: Value, S1: Get<u32>, S2: Get<u32>> PartialEq<WeakBoundedVec<T, S2>> for WeakBoundedVec<T, S1>
-// to allow comparison of bounded vectors with different bounds.
+// impl<T: Value, S1: Get<u32>, S2: Get<u32>> PartialEq<WeakBoundedVec<T, S2>> for WeakBoundedVec<T,
+// S1> to allow comparison of bounded vectors with different bounds.
 impl<T, S> PartialEq for WeakBoundedVec<T, S>
 where
 	T: PartialEq,
@@ -309,9 +317,9 @@ where
 #[cfg(test)]
 pub mod test {
 	use super::*;
+	use crate::Twox128;
 	use sp_io::TestExternalities;
 	use sp_std::convert::TryInto;
-	use crate::Twox128;
 
 	crate::parameter_types! {
 		pub const Seven: u32 = 7;

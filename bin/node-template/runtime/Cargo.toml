@@ -1,80 +1,86 @@
 [package]
 name = "node-template-runtime"
-version = "3.0.0"
+version = "4.0.0-dev"
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
 edition = "2018"
 license = "Unlicense"
 homepage = "https://substrate.dev"
 repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
+publish = false
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
-pallet-babe = { version = "3.0.0", default-features = false, path = "../../../frame/babe" }
-pallet-balances = { version = "3.0.0", default-features = false, path = "../../../frame/balances" }
-frame-support = { version = "3.0.0", default-features = false, path = "../../../frame/support" }
-pallet-grandpa = { version = "3.1.0", default-features = false, path = "../../../frame/grandpa" }
-pallet-randomness-collective-flip = { version = "3.0.0", default-features = false, path = "../../../frame/randomness-collective-flip" }
-pallet-sudo = { version = "3.0.0", default-features = false, path = "../../../frame/sudo" }
-frame-system = { version = "3.0.0", default-features = false, path = "../../../frame/system" }
-pallet-timestamp = { version = "3.0.0", default-features = false, path = "../../../frame/timestamp" }
-pallet-transaction-payment = { version = "3.0.0", default-features = false, path = "../../../frame/transaction-payment" }
-frame-executive = { version = "3.0.0", default-features = false, path = "../../../frame/executive" }
-sp-api = { version = "3.0.0", default-features = false, path = "../../../primitives/api" }
-sp-block-builder = { path = "../../../primitives/block-builder", default-features = false, version = "3.0.0"}
-sp-consensus-babe = { version = "0.9.0", default-features = false, path = "../../../primitives/consensus/babe" }
-sp-core = { version = "3.0.0", default-features = false, path = "../../../primitives/core" }
-sp-inherents = { path = "../../../primitives/inherents", default-features = false, version = "3.0.0"}
-sp-offchain = { version = "3.0.0", default-features = false, path = "../../../primitives/offchain" }
-sp-runtime = { version = "3.0.0", default-features = false, path = "../../../primitives/runtime" }
-sp-session = { version = "3.0.0", default-features = false, path = "../../../primitives/session" }
-sp-std = { version = "3.0.0", default-features = false, path = "../../../primitives/std" }
-sp-transaction-pool = { version = "3.0.0", default-features = false, path = "../../../primitives/transaction-pool" }
-sp-version = { version = "3.0.0", default-features = false, path = "../../../primitives/version" }
+
+pallet-aura = { version = "4.0.0-dev", default-features = false, path = "../../../frame/aura" }
+pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../../../frame/balances" }
+frame-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/support" }
+pallet-grandpa = { version = "4.0.0-dev", default-features = false, path = "../../../frame/grandpa" }
+pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, path = "../../../frame/randomness-collective-flip" }
+pallet-sudo = { version = "4.0.0-dev", default-features = false, path = "../../../frame/sudo" }
+frame-system = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system" }
+pallet-timestamp = { version = "4.0.0-dev", default-features = false, path = "../../../frame/timestamp" }
+pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, path = "../../../frame/transaction-payment" }
+frame-executive = { version = "4.0.0-dev", default-features = false, path = "../../../frame/executive" }
+sp-api = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/api" }
+sp-block-builder = { path = "../../../primitives/block-builder", default-features = false, version = "4.0.0-dev"}
+sp-consensus-aura = { version = "0.10.0-dev", default-features = false, path = "../../../primitives/consensus/aura" }
+sp-core = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/core" }
+sp-inherents = { path = "../../../primitives/inherents", default-features = false, version = "4.0.0-dev"}
+sp-offchain = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/offchain" }
+sp-runtime = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/runtime" }
+sp-session = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/session" }
+sp-std = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/std" }
+sp-transaction-pool = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/transaction-pool" }
+sp-version = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/version" }
 
 # Used for the node template's RPCs
-frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
-pallet-transaction-payment-rpc-runtime-api = { version = "3.0.0", default-features = false, path = "../../../frame/transaction-payment/rpc/runtime-api/" }
+frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
+pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/transaction-payment/rpc/runtime-api/" }
 
 # Used for runtime benchmarking
-frame-benchmarking = { version = "3.1.0", default-features = false, path = "../../../frame/benchmarking", optional = true }
-frame-system-benchmarking = { version = "3.0.0", default-features = false, path = "../../../frame/system/benchmarking", optional = true }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, path = "../../../frame/benchmarking", optional = true }
+frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system/benchmarking", optional = true }
 hex-literal = { version = "0.3.1", optional = true }
 
 log = { version = "0.4.14", default-features = false }
 
-frame-election-provider-support = { version = "3.0.0", default-features = false, path = "../../../frame/election-provider-support" }
-pallet-assets = { version = "3.0.0", default-features = false, path = "../../../frame/assets" }
-pallet-authorship = { version = "3.0.0", default-features = false, path = "../../../frame/authorship" }
-pallet-im-online = { version = "3.0.0", default-features = false, path = "../../../frame/im-online" }
-pallet-mmr = { version = "3.0.0", default-features = false, path = "../../../frame/merkle-mountain-range" }
-pallet-session = { version = "3.0.0", features = ["historical"], path = "../../../frame/session", default-features = false }
-pallet-staking = { version = "3.0.0", default-features = false, path = "../../../frame/staking" }
-pallet-staking-reward-curve = { version = "3.0.0", default-features = false, path = "../../../frame/staking/reward-curve" }
-sp-staking = { version = "3.0.0", default-features = false, path = "../../../primitives/staking" }
+frame-election-provider-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/election-provider-support" }
+pallet-assets = { version = "4.0.0-dev", default-features = false, path = "../../../frame/assets" }
+pallet-authorship = { version = "4.0.0-dev", default-features = false, path = "../../../frame/authorship" }
+pallet-im-online = { version = "4.0.0-dev", default-features = false, path = "../../../frame/im-online" }
+pallet-mmr = { version = "4.0.0-dev", default-features = false, path = "../../../frame/merkle-mountain-range" }
+pallet-session = { version = "4.0.0-dev", features = ["historical"], path = "../../../frame/session", default-features = false }
+pallet-staking = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking" }
+pallet-staking-reward-curve = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking/reward-curve" }
+sp-staking = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/staking" }
 
-beefy-primitives = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", default-features = false, branch = "octopus" }
-pallet-beefy = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", default-features = false, branch = "octopus" }
+beefy-primitives = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", default-features = false, branch = "octopus-0.9.11" }
+#beefy-primitives = { path = "../../../../grandpa-bridge-gadget", default-features = false }
+pallet-beefy = { git = "https://github.com/octopus-network/grandpa-bridge-gadget", default-features = false, branch = "octopus-0.9.11" }
+#pallet-beefy = { path = "../../../../grandpa-bridge-gadget", default-features = false }
 
 pallet-ibc = { default-features = false, path = "../pallets/ibc" }
-pallet-template = { version = "3.0.0", default-features = false, path = "../pallets/template" }
+pallet-template = { version = "4.0.0-dev", default-features = false, path = "../pallets/template" }
 pallet-ibc-runtime-api = { default-features = false, path = "../pallets/ibc/runtime-api" }
 
 [build-dependencies]
-substrate-wasm-builder = { version = "4.0.0", path = "../../../utils/wasm-builder" }
+substrate-wasm-builder = { version = "5.0.0-dev", path = "../../../utils/wasm-builder" }
 
 [features]
 default = ["std"]
 std = [
 	"codec/std",
+	"scale-info/std",
 	"frame-executive/std",
 	"frame-support/std",
 	"frame-system-rpc-runtime-api/std",
 	"frame-system/std",
-	"pallet-babe/std",
+#	"pallet-babe/std",
 	"pallet-balances/std",
 	"pallet-grandpa/std",
 	"pallet-randomness-collective-flip/std",
@@ -85,7 +91,7 @@ std = [
 	"pallet-transaction-payment/std",
 	"sp-api/std",
 	"sp-block-builder/std",
-	"sp-consensus-babe/std",
+#	"sp-consensus-babe/std",
 	"sp-core/std",
 	"sp-inherents/std",
 	"sp-offchain/std",

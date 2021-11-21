@@ -2,41 +2,39 @@
 authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
 edition = '2018'
 name = 'pallet-template'
-version = "3.0.0"
+version = "4.0.0-dev"
 license = "Unlicense"
 homepage = "https://substrate.dev"
 repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
 description = "FRAME pallet template for defining custom runtime logic."
 readme = "README.md"
+publish = false
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-frame-support = { default-features = false, version = "3.0.0", path = "../../../../frame/support" }
-frame-system = { default-features = false,  version = "3.0.0",  path = "../../../../frame/system" }
-frame-benchmarking = { default-features = false,  version = "3.1.0",  path = "../../../../frame/benchmarking", optional = true }
-# add pallet-ibc
-pallet-ibc  = { default-features = false, version = "3.0.0-pre.0", path = "../ibc" }
-#ibc = { path = "../../../../../ibc-rs/modules" }
-#ibc-proto = {path = "../../../../../ibc-rs/proto" }
-prost-types = "0.7"
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [
+	"derive",
+] }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+frame-support = { default-features = false, version = "4.0.0-dev", path = "../../../../frame/support" }
+frame-system = { default-features = false, version = "4.0.0-dev", path = "../../../../frame/system" }
+frame-benchmarking = { default-features = false, version = "4.0.0-dev", path = "../../../../frame/benchmarking", optional = true }
 
 [dev-dependencies]
-serde = { version = "1.0.119" }
-sp-core = { default-features = false, version = "3.0.0", path = "../../../../primitives/core" }
-sp-io = { default-features = false, version = "3.0.0", path = "../../../../primitives/io" }
-sp-runtime = { default-features = false, version = "3.0.0", path = "../../../../primitives/runtime" }
+sp-core = { default-features = false, version = "4.0.0-dev", path = "../../../../primitives/core" }
+sp-io = { default-features = false, version = "4.0.0-dev", path = "../../../../primitives/io" }
+sp-runtime = { default-features = false, version = "4.0.0-dev", path = "../../../../primitives/runtime" }
 
 [features]
 default = ['std']
 std = [
 	'codec/std',
+	'scale-info/std',
 	'frame-support/std',
 	'frame-system/std',
 	'frame-benchmarking/std',
-	'pallet-ibc/std',
 ]
 
 runtime-benchmarks = ["frame-benchmarking"]

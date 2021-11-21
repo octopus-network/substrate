@@ -3,9 +3,6 @@
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://substrate.dev/docs/en/knowledgebase/runtime/frame>
-
-extern crate alloc;
-
 pub use pallet::*;
 
 #[cfg(test)]
@@ -21,11 +18,6 @@ mod benchmarking;
 pub mod pallet {
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
-	use pallet_ibc::event::primitive::{PortId, ChannelId, Height, Timestamp};
-	// use ibc::signer::Signer;
-	// use ibc::application::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-	use alloc::string::String;
-	// use ibc::tx_msg::Msg;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -49,7 +41,6 @@ pub mod pallet {
 	// Pallets use events to inform users when important changes are made.
 	// https://substrate.dev/docs/en/knowledgebase/runtime/events
 	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
@@ -70,7 +61,7 @@ pub mod pallet {
 	// These functions materialize as "extrinsics", which are often compared to transactions.
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
-	impl<T:Config> Pallet<T> {
+	impl<T: Config> Pallet<T> {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
@@ -107,43 +98,5 @@ pub mod pallet {
 				},
 			}
 		}
-
-		// #[pallet::weight(0)]
-		// pub fn send_trc20_token(
-		// 	origin: OriginFor<T>,
-		// 	source_port: PortId,
-		// 	source_channel: ChannelId,
-		// 	denom: Vec<u8>,
-		// 	amount: Vec<u8>,
-		// 	sender: Vec<u8>,
-		// 	receiver: Vec<u8>,
-		// 	// timeout_height: Height,
-		// 	// timeout_timestamp: Timestamp
-		// ) -> DispatchResult {
-		// 	let _who = ensure_signed(origin.clone())?;
-		//
-		//
-		// 	// construct MsgTransfer Msg
-		// 	let msg = MsgTransfer {
-		// 		source_port: source_port.to_ibc_port_id(),
-		// 		source_channel: source_channel.to_ibc_channel_id(),
-		// 		token: Some(ibc_proto::cosmos::base::v1beta1::Coin {
-		// 			denom: String::from_utf8(denom).unwrap(),
-		// 			amount: String::from_utf8(amount).unwrap(),
-		// 		}),
-		// 		sender: Signer::from(String::from_utf8(sender).unwrap()),
-		// 		receiver: Signer::from(String::from_utf8(receiver).unwrap()),
-		// 		timeout_height: ibc::Height::zero(),
-		// 		timeout_timestamp: ibc::timestamp::Timestamp::now(),
-		// 	};
-		// 	let raw_msg = msg.to_any();
-		// 	let msgs = vec![raw_msg];
-		//
-		// 	let msgs = msgs.into_iter()
-		// 		.map(|message| message.into())
-		// 		.collect();
-		//
-		// 	<pallet_ibc::Pallet<T>>::deliver(origin, msgs, 0)
-		// }
 	}
 }

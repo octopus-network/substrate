@@ -23,16 +23,9 @@
 /.github/ @paritytech/ci
 /.gitlab-ci.yml @paritytech/ci
 
-# Block production
-/client/basic-authorship/ @NikVolf
-
 # Sandboxing capability of Substrate Runtime
 /primitives/sr-sandbox/ @pepyakin
 /primitives/core/src/sandbox.rs @pepyakin
-
-# Transaction pool
-/client/transaction-pool/ @NikVolf
-/primitives/transaction-pool/ @NikVolf
 
 # Offchain
 /client/offchain/ @tomusdrw
@@ -46,6 +39,12 @@
 /client/consensus/slots/ @andresilva
 /client/consensus/pow/ @sorpaas
 /primitives/consensus/pow/ @sorpaas
+
+# BEEFY
+/client/beefy/ @adoerr
+/frame/beefy/ @adoerr
+/frame/beefy-mmr/ @adoerr
+/primitives/beefy/ @adoerr
 
 # Contracts
 /frame/contracts/ @athei
