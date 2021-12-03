@@ -89,7 +89,7 @@ func StringToInts(s string) []int {
 }
 
 func ProduceNewResponseForValidatorSets(simulationSequence [][]int) Ret {
-	var innerResult interface{}
+	innerResult := []interface{}{}
 
 	if len(simulationSequence) != 1 {
 		panic("Should 1")

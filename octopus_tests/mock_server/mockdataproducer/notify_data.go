@@ -2,8 +2,11 @@ package mockdataproducer
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
+
+type MockDataType int32
 
 type LockTokenData struct {
 	Symbol   string `json:"symbol"`
@@ -18,21 +21,27 @@ type TokenBurntData struct {
 	Amount   string `json:"amount"`
 }
 
+type WrappedAppchainTokenBurnt struct {
+	Data TokenBurntData `json:"WrappedAppchainTokenBurnt"`
+}
+
+type NearFungibleTokenLocked struct {
+	Data LockTokenData `json:"NearFungibleTokenLocke"`
+}
+
 type AppchainNotificationHistory struct {
 	Notification interface{} `json:"appchain_notification"`
 	BlockHeight  uint64      `json:"block_height"`
 	TimeStamp    uint64      `json:"timestamp"`
-	Index        uint32      `json:"index"`
+	Index        string      `json:"index"`
 }
-
-type MockDataType int32
 
 const (
 	LockToken MockDataType = iota
 	BurntToken
 )
 
-func ProduceLockTokenData(receiver string, amount string) LockTokenData {
+func ProduceLockTokenData(receiver string, amount string) NearFungibleTokenLocked {
 	data := LockTokenData{
 		Symbol:   "mock.token",
 		SenderId: "mock-sender.testnet",
@@ -40,17 +49,19 @@ func ProduceLockTokenData(receiver string, amount string) LockTokenData {
 		Amount:   amount,
 	}
 
-	return data
+	notify := NearFungibleTokenLocked{data}
+	return notify
 }
 
-func ProduceTokenBurntData(receiver string, amount string) TokenBurntData {
+func ProduceTokenBurntData(receiver string, amount string) WrappedAppchainTokenBurnt {
 	data := TokenBurntData{
 		SenderId: "mock-sender.testnet",
 		Receiver: receiver,
 		Amount:   amount,
 	}
+	notify := WrappedAppchainTokenBurnt{data}
 
-	return data
+	return notify
 }
 
 type MockInfo struct {
@@ -58,7 +69,7 @@ type MockInfo struct {
 	Amount      string
 	BlockHeight uint64
 	TimeStamp   uint64
-	Index       uint32
+	Index       string
 }
 
 func ProduceNotificationHistory(mockInfo MockInfo, dataType MockDataType) AppchainNotificationHistory {
@@ -88,7 +99,7 @@ type SimulationData struct {
 	DataType MockDataType
 }
 
-var Index uint32 = 0
+var Index int = 0
 
 func ProduceNotificationHistories(testData []SimulationData) []AppchainNotificationHistory {
 	histories := []AppchainNotificationHistory{}
@@ -96,12 +107,13 @@ func ProduceNotificationHistories(testData []SimulationData) []AppchainNotificat
 		ti := time.Now().Unix()
 		BlockHeight++
 		Index++
+		str := fmt.Sprintf("%d", Index)
 		mockInfo := MockInfo{
 			Receiver:    testData[i].Receiver,
 			Amount:      testData[i].Amount,
 			BlockHeight: BlockHeight,
 			TimeStamp:   uint64(ti),
-			Index:       Index,
+			Index:       str,
 		}
 		history := ProduceNotificationHistory(mockInfo, testData[i].DataType)
 		histories = append(histories, history)

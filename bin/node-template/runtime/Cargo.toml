@@ -126,5 +126,7 @@ runtime-benchmarks = [
 	"pallet-template/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-octopus-upward-messages/runtime-benchmarks", 
+	"pallet-octopus-appchain/runtime-benchmarks",
+	"pallet-octopus-lpos/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]

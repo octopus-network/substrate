@@ -579,6 +579,7 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
 	type RequestEventLimit = RequestEventLimit;
+	type WeightInfo = pallet_octopus_appchain::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
@@ -916,6 +917,8 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
 			list_benchmark!(list, extra, pallet_template, TemplateModule);
 			list_benchmark!(list, extra, pallet_octopus_upward_messages, OctopusUpwardMessages);
+			list_benchmark!(list, extra, pallet_octopus_appchain, OctopusAppchain);
+			list_benchmark!(list, extra, pallet_octopus_lpos, OctopusLpos);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -951,6 +954,8 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, pallet_template, TemplateModule);
 			add_benchmark!(params, batches, pallet_octopus_upward_messages, OctopusUpwardMessages);
+			add_benchmark!(params, batches, pallet_octopus_appchain, OctopusAppchain);
+			add_benchmark!(params, batches, pallet_octopus_lpos, OctopusLpos);
 
 			Ok(batches)
 		}
