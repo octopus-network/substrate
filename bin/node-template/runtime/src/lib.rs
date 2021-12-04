@@ -613,6 +613,7 @@ impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {}
 impl pallet_ibc::Config for Runtime {
 	type Event = Event;
 	type ModuleCallbacks = ModuleCallbacksImpl;
+	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
