@@ -55,8 +55,8 @@ use sp_runtime::{
 use static_assertions::const_assert;
 
 use beefy_primitives::crypto::AuthorityId as BeefyId;
-use pallet_mmr_primitives as mmr;
 use beefy_primitives::mmr::MmrLeafVersion;
+use pallet_mmr_primitives as mmr;
 use sp_runtime::traits::Keccak256;
 
 use frame_support::PalletId;
@@ -579,12 +579,13 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
 	type RequestEventLimit = RequestEventLimit;
+	type WeightInfo = pallet_octopus_appchain::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
 	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
-	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6 / (SECS_PER_BLOCK as u32);
+	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6;
 }
 
 impl pallet_octopus_lpos::Config for Runtime {
@@ -916,6 +917,8 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
 			list_benchmark!(list, extra, pallet_template, TemplateModule);
 			list_benchmark!(list, extra, pallet_octopus_upward_messages, OctopusUpwardMessages);
+			list_benchmark!(list, extra, pallet_octopus_appchain, OctopusAppchain);
+			list_benchmark!(list, extra, pallet_octopus_lpos, OctopusLpos);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -951,6 +954,8 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, pallet_template, TemplateModule);
 			add_benchmark!(params, batches, pallet_octopus_upward_messages, OctopusUpwardMessages);
+			add_benchmark!(params, batches, pallet_octopus_appchain, OctopusAppchain);
+			add_benchmark!(params, batches, pallet_octopus_lpos, OctopusLpos);
 
 			Ok(batches)
 		}
