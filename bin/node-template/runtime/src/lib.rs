@@ -55,8 +55,8 @@ use sp_runtime::{
 use static_assertions::const_assert;
 
 use beefy_primitives::crypto::AuthorityId as BeefyId;
-use pallet_mmr_primitives as mmr;
 use beefy_primitives::mmr::MmrLeafVersion;
+use pallet_mmr_primitives as mmr;
 use sp_runtime::traits::Keccak256;
 
 use frame_support::PalletId;
@@ -585,7 +585,7 @@ impl pallet_octopus_appchain::Config for Runtime {
 parameter_types! {
 	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
 	pub const BondingDuration: pallet_octopus_lpos::EraIndex = 24 * 28;
-	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6 / (SECS_PER_BLOCK as u32);
+	pub const BlocksPerEra: u32 = EPOCH_DURATION_IN_BLOCKS * 6;
 }
 
 impl pallet_octopus_lpos::Config for Runtime {
