@@ -106,7 +106,6 @@ func ProduceNotificationHistories(testData []SimulationData) []AppchainNotificat
 	for i := 0; i < len(testData); i++ {
 		ti := time.Now().Unix()
 		BlockHeight++
-		Index++
 		str := fmt.Sprintf("%d", Index)
 		mockInfo := MockInfo{
 			Receiver:    testData[i].Receiver,
@@ -117,6 +116,7 @@ func ProduceNotificationHistories(testData []SimulationData) []AppchainNotificat
 		}
 		history := ProduceNotificationHistory(mockInfo, testData[i].DataType)
 		histories = append(histories, history)
+		Index++
 	}
 
 	return histories

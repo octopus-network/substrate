@@ -564,6 +564,8 @@ parameter_types! {
 	   pub const GracePeriod: u32 = 10;
 	   pub const UnsignedPriority: u64 = 1 << 21;
 	   pub const RequestEventLimit: u32 = 10;
+	   pub const PruneStep: u32 = 1000;
+	   pub const ObservationsLimit: u32 = 5;
 	   pub const UpwardMessagesLimit: u32 = 10;
 }
 
@@ -579,6 +581,8 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
 	type RequestEventLimit = RequestEventLimit;
+	type PruneStep = PruneStep;
+	type ObservationsLimit = ObservationsLimit;
 	type WeightInfo = pallet_octopus_appchain::weights::SubstrateWeight<Runtime>;
 }
 

@@ -15,6 +15,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
+	"./mockdataproducer"
 	producer "./mockdataproducer"
 	"github.com/tidwall/gjson"
 )
@@ -75,6 +76,7 @@ var currRet producer.Ret
 var preTime int64 = 0
 var startLine int = 0
 var endLine int = 0
+var globalEraNumber = 0
 
 func ProduceValidatorResponse(eraNumber uint32) producer.Ret {
 	//test use case
@@ -85,7 +87,7 @@ func ProduceValidatorResponse(eraNumber uint32) producer.Ret {
 	//produce responce data
 	currTime := time.Now().Unix()
 	deltTime := currTime - preTime
-	if (preTime == 0) || (deltTime > 60*8 && endLine < len(testData)) {
+	if (preTime == 0) || (deltTime > 60*10 && endLine < len(testData)) {
 		rand.Seed(time.Now().UnixNano())
 		// delt := rand.Intn(len(testData))
 		delt := 1
@@ -95,15 +97,25 @@ func ProduceValidatorResponse(eraNumber uint32) producer.Ret {
 		}
 
 		currRet = producer.ProduceNewResponseForValidatorSets(testData[startLine:endLine])
+		globalEraNumber++
 		fmt.Printf("start: %v, end: %v\n", startLine, endLine)
 		startLine = endLine
 		preTime = currTime
 	}
 
-	return currRet
+	if eraNumber == uint32(globalEraNumber) {
+		return currRet
+	}
+
+	return producer.ProduceEmptyResponseForValidatorSets()
 }
 
+var currNotifyRet producer.Ret
+var preTimeForNotify int64 = 0
+
 func ProduceNotifyResponse(startIndex uint32, quantity uint32) producer.Ret {
+	fmt.Println("startIndex = ", startIndex, ", quantity = ", quantity)
+
 	//test use case
 	testData := []producer.SimulationData{}
 	s1 := producer.SimulationData{
@@ -111,10 +123,97 @@ func ProduceNotifyResponse(startIndex uint32, quantity uint32) producer.Ret {
 		Amount:   "10000",
 		DataType: producer.BurntToken,
 	}
-	testData = append(testData, s1)
+	s2 := producer.SimulationData{
+		Receiver: producer.PresetValidators[1].Id,
+		Amount:   "10000000",
+		DataType: producer.BurntToken,
+	}
+	s3 := producer.SimulationData{
+		Receiver: producer.PresetValidators[2].Id,
+		Amount:   "10000000",
+		DataType: producer.BurntToken,
+	}
+	s4 := producer.SimulationData{
+		Receiver: producer.PresetValidators[3].Id,
+		Amount:   "10000",
+		DataType: producer.BurntToken,
+	}
+	s5 := producer.SimulationData{
+		Receiver: producer.PresetValidators[1].Id,
+		Amount:   "20000",
+		DataType: producer.BurntToken,
+	}
 
-	ret := producer.ProduceNewResponseForNotifyHistories(testData)
-	return ret
+	currTime := time.Now().Unix()
+	deltTime := currTime - preTimeForNotify
+	if (preTimeForNotify == 0) || (deltTime > 60*1) {
+		rand.Seed(time.Now().UnixNano())
+		flag := rand.Intn(10000)
+
+		// if flag%3 == 0 {
+		// 	testData = append(testData, s1)
+		// 	testData = append(testData, s2)
+		// 	testData = append(testData, s3)
+		// } else if flag%5 == 0 {
+		// 	testData = append(testData, s3)
+		// 	testData = append(testData, s3)
+		// 	testData = append(testData, s3)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+
+		// } else if flag%7 == 0 {
+		// 	testData = append(testData, s1)
+		// 	testData = append(testData, s2)
+		// 	testData = append(testData, s3)
+		// 	testData = append(testData, s3)
+		// 	testData = append(testData, s3)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s5)
+
+		// } else if flag%2 == 0 {
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+		// 	testData = append(testData, s4)
+
+		// }
+
+		// if flag%2 == 0 {
+		testData = append(testData, s1)
+		testData = append(testData, s2)
+		testData = append(testData, s3)
+		testData = append(testData, s3)
+		testData = append(testData, s3)
+		testData = append(testData, s4)
+		testData = append(testData, s4)
+		testData = append(testData, s4)
+		testData = append(testData, s4)
+		testData = append(testData, s5)
+		fmt.Println("1 +++++++++++++++++++++++, flag = ", flag)
+		// } else if flag%3 != 0 {
+		// 	testData = append(testData, s1)
+		// 	testData = append(testData, s2)
+		// 	testData = append(testData, s3)
+		// 	fmt.Println("2 +++++++++++++++++++++++, flag = ", flag)
+		// }
+
+		currNotifyRet = producer.ProduceNewResponseForNotifyHistories(testData)
+		preTimeForNotify = currTime
+		fmt.Println("3 +++++++++++++++++++++++, flag = ", flag)
+	}
+
+	if (mockdataproducer.Index > 2) && ((startIndex > uint32(mockdataproducer.Index-1)) || (startIndex+quantity < uint32(mockdataproducer.Index-1))) {
+		fmt.Println("0 +++++++++++++++++++++++, innerIndex = ", mockdataproducer.Index)
+		emptyData := []producer.SimulationData{}
+		return producer.ProduceNewResponseForNotifyHistories(emptyData)
+	}
+
+	fmt.Println("4 +++++++++++++++++++++++")
+
+	return currNotifyRet
 }
 
 type ParamsData struct {
