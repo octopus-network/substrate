@@ -4586,7 +4586,7 @@ dependencies = [
  "sp-core",
  "sp-finality-grandpa",
  "sp-inherents",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-keystore",
  "sp-runtime",
  "sp-timestamp",
@@ -4771,7 +4771,7 @@ dependencies = [
  "sp-core",
  "sp-inherents",
  "sp-io",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-npos-elections",
  "sp-offchain",
  "sp-runtime",
@@ -4930,7 +4930,7 @@ dependencies = [
  "sp-core",
  "sp-inherents",
  "sp-io",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-runtime",
  "sp-timestamp",
  "substrate-test-client",
@@ -5628,7 +5628,7 @@ dependencies = [
  "sp-core",
  "sp-finality-grandpa",
  "sp-io",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-runtime",
  "sp-session",
  "sp-staking",
@@ -5684,7 +5684,7 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-runtime",
  "sp-std",
 ]
@@ -5846,7 +5846,7 @@ dependencies = [
  "sp-api",
  "sp-core",
  "sp-io",
- "sp-keyring 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12)",
+ "sp-keyring",
  "sp-keystore",
  "sp-runtime",
  "sp-staking",
@@ -5875,7 +5875,7 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-keyring 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12)",
+ "sp-keyring",
  "sp-runtime",
  "sp-staking",
  "sp-std",
@@ -5906,7 +5906,7 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-keyring 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12)",
+ "sp-keyring",
  "sp-runtime",
  "sp-std",
 ]
@@ -7728,7 +7728,7 @@ dependencies = [
  "serde_json",
  "sp-blockchain",
  "sp-core",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-keystore",
  "sp-panic-handler",
  "sp-runtime",
@@ -7850,7 +7850,7 @@ dependencies = [
  "sp-consensus-slots",
  "sp-core",
  "sp-inherents",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-keystore",
  "sp-runtime",
  "sp-timestamp",
@@ -7932,7 +7932,7 @@ dependencies = [
  "sp-consensus",
  "sp-consensus-babe",
  "sp-core",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-keystore",
  "sp-runtime",
  "substrate-test-runtime-client",
@@ -8172,7 +8172,7 @@ dependencies = [
  "sp-consensus",
  "sp-core",
  "sp-finality-grandpa",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-keystore",
  "sp-runtime",
  "sp-tracing",
@@ -8204,7 +8204,7 @@ dependencies = [
  "sp-blockchain",
  "sp-core",
  "sp-finality-grandpa",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-runtime",
  "substrate-test-runtime-client",
 ]
@@ -9557,17 +9557,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-keyring"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12#d76f39995315ec36980908e4b99709bd14927044"
-dependencies = [
- "lazy_static",
- "sp-core",
- "sp-runtime",
- "strum 0.20.0",
-]
-
-[[package]]
 name = "sp-keystore"
 version = "0.10.0-dev"
 dependencies = [
@@ -10211,7 +10200,7 @@ dependencies = [
  "sp-blockchain",
  "sp-consensus",
  "sp-core",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-keystore",
  "sp-runtime",
  "sp-state-machine",
@@ -10248,7 +10237,7 @@ dependencies = [
  "sp-finality-grandpa",
  "sp-inherents",
  "sp-io",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-offchain",
  "sp-runtime",
  "sp-runtime-interface",
@@ -10461,7 +10450,7 @@ dependencies = [
  "sp-externalities",
  "sp-finality-grandpa",
  "sp-inherents",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-offchain",
  "sp-runtime",
  "sp-runtime-interface",
@@ -10489,7 +10478,7 @@ dependencies = [
  "sc-finality-grandpa",
  "sc-service",
  "sp-consensus-babe",
- "sp-keyring 4.0.0-dev",
+ "sp-keyring",
  "sp-runtime",
  "test-runner",
 ]
