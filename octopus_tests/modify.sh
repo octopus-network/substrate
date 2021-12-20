@@ -13,6 +13,7 @@ sed -i 's/authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")/\
 				/g' ../bin/node-template/node/src/chain_spec.rs
 
 sed -i "s/https:\/\/rpc.testnet.near.org/http:\/\/127.0.0.1:8080\/handler/g" ../bin/node-template/octopus-pallets/appchain/src/lib.rs
+sed -i "s/https:\/\/rpc.mainnet.near.org/http:\/\/127.0.0.1:8080\/handler/g" ../bin/node-template/octopus-pallets/appchain/src/lib.rs
 #line=`sed -n "/url/p" ../bin/node-template/octopus-pallets/appchain/src/lib.rs`
 #echo "$line"
 

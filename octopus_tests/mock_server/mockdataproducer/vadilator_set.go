@@ -18,7 +18,7 @@ const PRESET_VALIDATORS_SIZE = 5
 var PresetValidators = [...]ValidatorInfo{
 	{"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d", "Alice-octopus.testnet", "10000000000"},
 	{"0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48", "Bob-octopus.testnet", "10000000000"},
-	{"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22", "Charlie-octopus.testnet", "100000000000"},
+	{"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22", "Charlie-octopus.testnet", "10000000000"},
 	{"0x306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20", "Dave-octopus.testnet", "10000000000"},
 	{"0xe659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e", "Eve-octopus.testnet", "10000000000"},
 }
@@ -103,6 +103,24 @@ func ProduceNewResponseForValidatorSets(simulationSequence [][]int) Ret {
 	}
 
 	result, _ := json.Marshal(innerResult)
+
+	retData := ResultData{
+		BlockHash:   "EczErquQLMpUvTQpKupoQp5yNkgNbniMSHq1gVvhAf84",
+		BlockHeight: BlockHeight2,
+		Logs:        []string{},
+		InnerResult: StringToInts(string(result)),
+	}
+
+	return Ret{
+		Jsonrpc: "2.0",
+		Id:      "dontcare",
+		Result:  retData,
+	}
+}
+
+func ProduceEmptyResponseForValidatorSets() Ret {
+	var validatorSet = []interface{}{}
+	result, _ := json.Marshal(validatorSet)
 
 	retData := ResultData{
 		BlockHash:   "EczErquQLMpUvTQpKupoQp5yNkgNbniMSHq1gVvhAf84",
