@@ -283,6 +283,8 @@ pallet-balances = { path = "./frame/balances" }
 pallet-session = { path = "./frame/session" }
 pallet-timestamp = { path = "./frame/timestamp" }
 sp-api = { path = "./primitives/api" }
+sp-blockchain = { path = "./primitives/blockchain"}
+sp-rpc = { path = "./primitives/rpc"}
 sp-api-proc-macro = { path = "./primitives/api/proc-macro" }
 sp-core = { path = "./primitives/core" }
 sp-externalities = { path = "./primitives/externalities" }
@@ -298,3 +300,19 @@ sp-storage = { path = "./primitives/storage" }
 sp-tracing = { path = "./primitives/tracing" }
 sp-version-proc-macro = { path = "./primitives/version/proc-macro" }
 substrate-test-utils = { path = "./test-utils" }
+
+[patch.crates-io]
+# for tendermint
+tendermint              = { git = "https://github.com/informalsystems/tendermint-rs", rev = "4f6ef3d6" }
+tendermint-rpc          = { git = "https://github.com/informalsystems/tendermint-rs", rev = "4f6ef3d6" }
+tendermint-proto        = { git = "https://github.com/informalsystems/tendermint-rs", rev = "4f6ef3d6" }
+tendermint-light-client = { git = "https://github.com/informalsystems/tendermint-rs", rev = "4f6ef3d6" }
+tendermint-testgen      = { git = "https://github.com/informalsystems/tendermint-rs", rev = "4f6ef3d6" }
+#ics23                   = { git = "https://github.com/informalsystems/ics23.git", branch = "master" }
+ics23                   = { git = "https://github.com/informalsystems/ics23.git", rev = "4461b673" }
+safe-regex          = { git = "https://github.com/informalsystems/safe-regex.git", rev = "842d31f5" }
+safe-regex-macro    = { git = "https://github.com/informalsystems/safe-regex.git", rev = "842d31f5" }
+safe-regex-compiler = { git = "https://github.com/informalsystems/safe-regex.git", rev = "842d31f5" }
+safe-quote          = { git = "https://github.com/informalsystems/safe-regex.git", rev = "842d31f5" }
+safe-proc-macro2    = { git = "https://github.com/informalsystems/safe-regex.git", rev = "842d31f5" }
+tonic = { package = "informalsystems-tonic", git = "https://github.com/informalsystems/tonic.git", rev = "99edfe23" } 

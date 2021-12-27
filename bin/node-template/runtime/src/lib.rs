@@ -61,6 +61,7 @@ use sp_runtime::traits::Keccak256;
 
 use frame_support::PalletId;
 use sp_runtime::traits::ConvertInto;
+use frame_system::weights::SubstrateWeight;
 
 /// Import the template pallet.
 pub use pallet_template;
@@ -578,8 +579,9 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type Assets = Assets;
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
-	type RequestEventLimit = RequestEventLimit;
-	type WeightInfo = pallet_octopus_appchain::weights::SubstrateWeight<Runtime>;
+	// type RequestEventLimit = RequestEventLimit;
+	// type WeightInfo = pallet_octopus_appchain::weights::SubstrateWeight<Runtime>;
+	// type WeightInfo = ();
 }
 
 parameter_types! {
@@ -597,7 +599,7 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type BondingDuration = BondingDuration;
 	type BlocksPerEra = BlocksPerEra;
 	type SessionInterface = Self;
-	type AppchainInterface = OctopusAppchain;
+	// type AppchainInterface = OctopusAppchain;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
 	type PalletId = OctopusAppchainPalletId;
 	type ValidatorsProvider = OctopusAppchain;
@@ -607,13 +609,29 @@ impl pallet_octopus_lpos::Config for Runtime {
 impl pallet_octopus_upward_messages::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
-	type UpwardMessagesLimit = UpwardMessagesLimit;
-	type WeightInfo = pallet_octopus_upward_messages::weights::SubstrateWeight<Runtime>;
+	// type UpwardMessagesLimit = UpwardMessagesLimit;
+	// type WeightInfo = pallet_octopus_upward_messages::weights::SubstrateWeight<Runtime>;
+	// type WeightInfo = ();
 }
 
 impl pallet_sudo::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
+}
+
+
+// The ModuleCallbacksImpl creates a static mapping of module index and callback functions of other modules.
+// The module index is determined at the time of construct_runtime. For example,
+// the index of TemplateModule is 8 in the current runtime.
+// In the future, we should find a more dynamic way to create this mapping.
+pub struct ModuleCallbacksImpl;
+
+impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {}
+
+impl pallet_ibc::Config for Runtime {
+    type Event = Event;
+    type ModuleCallbacks = ModuleCallbacksImpl;
+	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 }
 
 /// Configure the pallet-template in pallets/template.
@@ -647,6 +665,8 @@ construct_runtime!(
 		Beefy: pallet_beefy::{Pallet, Config<T>, Storage},
 		MmrLeaf: pallet_beefy_mmr::{Pallet, Storage},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
+		// pallet ibc
+		Ibc: pallet_ibc::{Pallet, Call, Storage, Event<T>},
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
 	}
@@ -897,6 +917,41 @@ impl_runtime_apis! {
 	impl beefy_primitives::BeefyApi<Block> for Runtime {
 		fn validator_set() -> beefy_primitives::ValidatorSet<BeefyId> {
 			Beefy::validator_set()
+		}
+	}
+
+	// Here we implement our custom runtime API.
+	impl  pallet_ibc_runtime_api::IbcApi<Block> for Runtime {
+		// get identifiedAnyClientState
+		fn get_identified_any_client_state() -> Vec<(Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_identified_any_client_state()
+		}
+
+		fn get_idenfitied_connection_end() -> Vec<(Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_idenfitied_connection_end()
+		}
+
+		fn get_idenfitied_channel_end() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_idenfitied_channel_end()
+		}
+
+		fn get_channel_end(port_id: Vec<u8>, channel_id: Vec<u8>) -> Vec<u8> {
+            Ibc::get_channel_end(port_id, channel_id)
+        }
+
+		// get_packet_commitment_state()
+		fn get_packet_commitment_state() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_packet_commitment_state()
+		}
+
+		// get_packet_acknowledge_state()
+		fn get_packet_acknowledge_state() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
+
+			Ibc::get_packet_acknowledge_state()
 		}
 	}
 
