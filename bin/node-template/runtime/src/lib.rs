@@ -920,41 +920,6 @@ impl_runtime_apis! {
 		}
 	}
 
-	// Here we implement our custom runtime API.
-	impl  pallet_ibc_runtime_api::IbcApi<Block> for Runtime {
-		// get identifiedAnyClientState
-		fn get_identified_any_client_state() -> Vec<(Vec<u8>, Vec<u8>)> {
-
-			Ibc::get_identified_any_client_state()
-		}
-
-		fn get_idenfitied_connection_end() -> Vec<(Vec<u8>, Vec<u8>)> {
-
-			Ibc::get_idenfitied_connection_end()
-		}
-
-		fn get_idenfitied_channel_end() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> {
-
-			Ibc::get_idenfitied_channel_end()
-		}
-
-		fn get_channel_end(port_id: Vec<u8>, channel_id: Vec<u8>) -> Vec<u8> {
-            Ibc::get_channel_end(port_id, channel_id)
-        }
-
-		// get_packet_commitment_state()
-		fn get_packet_commitment_state() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
-
-			Ibc::get_packet_commitment_state()
-		}
-
-		// get_packet_acknowledge_state()
-		fn get_packet_acknowledge_state() -> Vec<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
-
-			Ibc::get_packet_acknowledge_state()
-		}
-	}
-
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn benchmark_metadata(extra: bool) -> (

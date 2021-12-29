@@ -134,7 +134,6 @@ where
 	C::Api: pallet_mmr_rpc::MmrRuntimeApi<Block, <Block as sp_runtime::traits::Block>::Hash>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BabeApi<Block>,
-	C::Api: pallet_ibc_runtime_api::IbcApi<Block>,
 	C::Api: BlockBuilder<Block>,
 	P: TransactionPool + 'static,
 	SC: SelectChain<Block> + 'static,
@@ -195,10 +194,6 @@ where
 			beefy.beefy_commitment_stream,
 			beefy.subscription_executor,
 		),
-	));
-
-	io.extend_with(pallet_ibc_rpc::IbcApi::to_delegate(
-		pallet_ibc_rpc::IbcStorage::new(client),
 	));
 	
 
