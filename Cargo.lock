@@ -5939,6 +5939,7 @@ dependencies = [
 name = "pallet-octopus-appchain"
 version = "4.0.0-pre.0"
 dependencies = [
+ "base58",
  "base64 0.13.0",
  "borsh",
  "frame-benchmarking",

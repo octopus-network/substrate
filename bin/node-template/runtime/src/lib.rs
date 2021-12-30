@@ -557,6 +557,16 @@ impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
 	type GenericPublic = sp_core::sr25519::Public;
 }
 
+pub struct MainchainAuthorityId;
+
+impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
+	for MainchainAuthorityId
+{
+	type RuntimeAppPublic = pallet_octopus_appchain::ed25519::AuthorityId;
+	type GenericSignature = sp_core::ed25519::Signature;
+	type GenericPublic = sp_core::ed25519::Public;
+}
+
 parameter_types! {
 	pub const OctopusAppchainPalletId: PalletId = PalletId(*b"py/octps");
 	pub const GracePeriod: u32 = 10;
@@ -567,6 +577,7 @@ parameter_types! {
 
 impl pallet_octopus_appchain::Config for Runtime {
 	type AuthorityId = OctopusAppCrypto;
+	type MainchainAuthorityId = MainchainAuthorityId;
 	type Event = Event;
 	type Call = Call;
 	type PalletId = OctopusAppchainPalletId;
@@ -849,6 +860,8 @@ impl_runtime_apis! {
 			key_owner_proof: fg_primitives::OpaqueKeyOwnershipProof,
 		) -> Option<()> {
 			let key_owner_proof = key_owner_proof.decode()?;
+
+			OctopusAppchain::report_equivocation(equivocation_proof.clone().encode());
 
 			Grandpa::submit_unsigned_equivocation_report(
 				equivocation_proof,
