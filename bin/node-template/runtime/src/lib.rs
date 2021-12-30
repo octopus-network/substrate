@@ -48,6 +48,7 @@ use frame_system::{
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_mmr_primitives as mmr;
+use pallet_octopus_support::traits::GetMmrRootHash;
 use pallet_session::historical as pallet_session_historical;
 use pallet_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 use sp_runtime::{
@@ -557,6 +558,16 @@ impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
 	type GenericPublic = sp_core::sr25519::Public;
 }
 
+pub struct MainchainAuthorityId;
+
+impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
+	for MainchainAuthorityId
+{
+	type RuntimeAppPublic = pallet_octopus_appchain::ed25519::AuthorityId;
+	type GenericSignature = sp_core::ed25519::Signature;
+	type GenericPublic = sp_core::ed25519::Public;
+}
+
 parameter_types! {
 	pub const OctopusAppchainPalletId: PalletId = PalletId(*b"py/octps");
 	pub const GracePeriod: u32 = 10;
@@ -565,13 +576,26 @@ parameter_types! {
 	pub const UpwardMessagesLimit: u32 = 10;
 }
 
+pub struct MmrRootProvider<T>(sp_std::marker::PhantomData<T>);
+
+impl<T> GetMmrRootHash for MmrRootProvider<T>
+where
+	T: pallet_mmr::Config<Hash = beefy_primitives::MmrRootHash>,
+{
+	fn get_mmr_root_hash() -> sp_core::H256 {
+		<pallet_mmr::RootHash<T>>::get()
+	}
+}
+
 impl pallet_octopus_appchain::Config for Runtime {
 	type AuthorityId = OctopusAppCrypto;
+	type MainchainAuthorityId = MainchainAuthorityId;
 	type Event = Event;
 	type Call = Call;
 	type PalletId = OctopusAppchainPalletId;
 	type LposInterface = OctopusLpos;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
+	type GetRootHash = MmrRootProvider<Runtime>;
 	type Currency = Balances;
 	type Assets = OctopusAssets;
 	type AssetBalance = AssetBalance;
@@ -849,6 +873,8 @@ impl_runtime_apis! {
 			key_owner_proof: fg_primitives::OpaqueKeyOwnershipProof,
 		) -> Option<()> {
 			let key_owner_proof = key_owner_proof.decode()?;
+
+			OctopusAppchain::report_equivocation(equivocation_proof.clone().encode());
 
 			Grandpa::submit_unsigned_equivocation_report(
 				equivocation_proof,

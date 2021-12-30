@@ -58,6 +58,7 @@ pallet-mmr-primitives = { version = "4.0.0-dev", default-features = false, path 
 pallet-octopus-appchain = { path = "../octopus-pallets/appchain", default-features = false }
 pallet-octopus-lpos = { path = "../octopus-pallets/lpos", default-features = false }
 pallet-octopus-upward-messages = { path = "../octopus-pallets/upward-messages", default-features = false }
+pallet-octopus-support = { path = "../octopus-pallets/support", default-features = false }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
@@ -117,6 +118,7 @@ std = [
 	"pallet-octopus-appchain/std",
 	"pallet-octopus-lpos/std",
 	"pallet-octopus-upward-messages/std",
+	"pallet-octopus-support/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

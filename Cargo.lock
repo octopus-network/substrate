@@ -4906,6 +4906,7 @@ dependencies = [
  "pallet-mmr-primitives",
  "pallet-octopus-appchain",
  "pallet-octopus-lpos",
+ "pallet-octopus-support",
  "pallet-octopus-upward-messages",
  "pallet-randomness-collective-flip",
  "pallet-session",
@@ -5939,6 +5940,7 @@ dependencies = [
 name = "pallet-octopus-appchain"
 version = "4.0.0-pre.0"
 dependencies = [
+ "base58",
  "base64 0.13.0",
  "borsh",
  "frame-benchmarking",
@@ -6004,6 +6006,7 @@ dependencies = [
  "frame-support",
  "parity-scale-codec",
  "scale-info",
+ "sp-core",
  "sp-runtime",
  "sp-std",
 ]
