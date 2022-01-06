@@ -74,11 +74,6 @@ beefy-primitives = { version = "4.0.0-dev", path = "../../../primitives/beefy" }
 pallet-octopus-appchain = { path = "../octopus-pallets/appchain" }
 pallet-octopus-lpos = { path = "../octopus-pallets/lpos" }
 
-pallet-ibc-rpc = { git = "https://github.com/octopus-network/substrate-ibc", branch = "feature/beefy", default-features = false}
-pallet-ibc-runtime-api = { git = "https://github.com/octopus-network/substrate-ibc", branch = "feature/beefy", default-features = false}
-# pallet-ibc-rpc = {path  = "../../../../substrate-ibc/rpc", default-features = false }
-# pallet-ibc-runtime-api = { path = "../../../../substrate-ibc/runtime-api", default-features = false}
-
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "4.0.0-dev", path = "../../../frame/benchmarking" }
 frame-benchmarking-cli = { version = "4.0.0-dev", path = "../../../utils/frame/benchmarking-cli" }
