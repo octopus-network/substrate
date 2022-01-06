@@ -5807,7 +5807,7 @@ dependencies = [
 [[package]]
 name = "pallet-ibc"
 version = "3.0.0-pre.0"
-source = "git+https://github.com/octopus-network/substrate-ibc?branch=dv-remove-rpc#6780633ef46a6dfb2abb72d441a1fc8a50ffafab"
+source = "git+https://github.com/octopus-network/substrate-ibc?branch=master#3afddfbe30e285406b8e113511921fd3d2ac001a"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
