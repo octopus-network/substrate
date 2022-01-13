@@ -508,8 +508,8 @@ parameter_types! {
 
 impl pallet_assets::Config for Runtime {
 	type Event = Event;
-	type Balance = u128;
-	type AssetId = u32;
+	type Balance = AssetBalance;
+	type AssetId = AssetId;
 	type Currency = Balances;
 	type ForceOrigin = EnsureRoot<AccountId>;
 	type AssetDeposit = AssetDeposit;
@@ -567,7 +567,13 @@ parameter_types! {
 	   pub const UpwardMessagesLimit: u32 = 10;
 }
 
+pub type AssetId = u32;
+pub type AssetBalance = u128;
+
 impl pallet_octopus_appchain::Config for Runtime {
+	type AssetId = AssetId;
+	type AssetBalance = AssetBalance;
+	type AssetIdByName = OctopusAppchain;
 	type AuthorityId = OctopusAppCrypto;
 	type Event = Event;
 	type Call = Call;
