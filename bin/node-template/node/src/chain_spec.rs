@@ -1,24 +1,18 @@
+use beefy_primitives::crypto::AuthorityId as BeefyId;
 use node_template_runtime::{
-	AccountId, BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
-	SystemConfig, WASM_BINARY,
+	opaque::Block, opaque::SessionKeys, AccountId, BabeConfig, Balance, BalancesConfig,
+	GenesisConfig, GrandpaConfig, ImOnlineConfig, OctopusAppchainConfig, OctopusLposConfig,
+	SessionConfig, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
+use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
+use pallet_octopus_appchain::AuthorityId as OctopusId;
+use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
+use serde::{Deserialize, Serialize};
+use sp_consensus_babe::AuthorityId as BabeId;
 use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-
-use node_template_runtime::{
-	opaque::Block, opaque::SessionKeys, Balance, ImOnlineConfig, SessionConfig, DOLLARS,
-};
-use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
-use sc_chain_spec::ChainSpecExtension;
-use serde::{Deserialize, Serialize};
-use sp_consensus_babe::AuthorityId as BabeId;
-
-use beefy_primitives::crypto::AuthorityId as BeefyId;
-
-use node_template_runtime::{OctopusAppchainConfig, OctopusLposConfig};
-use pallet_octopus_appchain::AuthorityId as OctopusId;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -38,7 +32,7 @@ pub struct Extensions {
 	pub light_sync_state: sc_sync_state_rpc::LightSyncStateExtension,
 }
 
-/// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
+/// Specialized `ChainSpec`.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 fn session_keys(
@@ -68,17 +62,17 @@ where
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
-/// Generate an Aura authority key.
+/// Helper function to generate stash, controller and session key from seed
 pub fn authority_keys_from_seed(
-	s: &str,
+	seed: &str,
 ) -> (AccountId, BabeId, GrandpaId, ImOnlineId, BeefyId, OctopusId) {
 	(
-		get_account_id_from_seed::<sr25519::Public>(s),
-		get_from_seed::<BabeId>(s),
-		get_from_seed::<GrandpaId>(s),
-		get_from_seed::<ImOnlineId>(s),
-		get_from_seed::<BeefyId>(s),
-		get_from_seed::<OctopusId>(s),
+		get_account_id_from_seed::<sr25519::Public>(seed),
+		get_from_seed::<BabeId>(seed),
+		get_from_seed::<GrandpaId>(seed),
+		get_from_seed::<ImOnlineId>(seed),
+		get_from_seed::<BeefyId>(seed),
+		get_from_seed::<OctopusId>(seed),
 	)
 }
 
@@ -194,7 +188,6 @@ fn testnet_genesis(
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
-			changes_trie_config: Default::default(),
 		},
 		balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|x| (x, ENDOWMENT)).collect(),
@@ -217,14 +210,13 @@ fn testnet_genesis(
 				})
 				.collect::<Vec<_>>(),
 		},
-		sudo: SudoConfig { key: root_key },
 		babe: BabeConfig {
 			authorities: vec![],
 			epoch_config: Some(node_template_runtime::BABE_GENESIS_EPOCH_CONFIG),
 		},
 		im_online: ImOnlineConfig { keys: vec![] },
 		grandpa: GrandpaConfig { authorities: vec![] },
-		assets: Default::default(),
+		transaction_payment: Default::default(),
 		beefy: Default::default(),
 		octopus_appchain: OctopusAppchainConfig {
 			anchor_contract: "".to_string(),
@@ -233,5 +225,10 @@ fn testnet_genesis(
 			premined_amount: 1024 * DOLLARS,
 		},
 		octopus_lpos: OctopusLposConfig { era_payout: 2 * DOLLARS, ..Default::default() },
+		octopus_assets: Default::default(),
+		sudo: SudoConfig {
+			// Assign network admin rights.
+			key: root_key,
+		},
 	}
 }
