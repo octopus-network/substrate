@@ -47,6 +47,7 @@ pallet-mmr = { version = "4.0.0-dev", default-features = false, path = "../../..
 pallet-session = { version = "4.0.0-dev", features = [
 	"historical",
 ], path = "../../../frame/session", default-features = false }
+pallet-uniques = { version = "4.0.0-dev", default-features = false, path = "../../../frame/uniques" }
 sp-staking = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/staking" }
 
 beefy-primitives = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/beefy" }
@@ -107,6 +108,7 @@ std = [
 	"pallet-im-online/std",
 	"pallet-mmr/std",
 	"pallet-session/std",
+	"pallet-uniques/std",
 	"sp-staking/std",
 	"beefy-primitives/std",
 	"pallet-beefy/std",
