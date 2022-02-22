@@ -108,9 +108,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.54"
+version = "1.0.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a99269dff3bc004caa411f38845c20303f1e393ca2bd6581576fa3a7f59577d"
+checksum = "159bb86af3a200e19a068f4224eae4c8bb2d0fa054c7e5d1cacd5cef95e684cd"
 
 [[package]]
 name = "approx"
@@ -252,9 +252,9 @@ dependencies = [
 
 [[package]]
 name = "async-lock"
-version = "2.4.0"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6a8ea61bf9947a1007c5cada31e647dbc77b103c679858150003ba697ea798b"
+checksum = "e97a171d191782fba31bb902b14ad94e24a68145032b7eedf871ab0bc0d077b6"
 dependencies = [
  "event-listener",
 ]
@@ -2963,7 +2963,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.11.1"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=feature/merge-upstream-ibc-rs#19f2bc8776239bc80e5fa444998e7b30b39368fb"
+source = "git+https://github.com/octopus-network/ibc-rs.git?branch=feature/beefy#ba3de8e9c2107a8a310153763a7c68ec245e65f1"
 dependencies = [
  "beefy-light-client",
  "beefy-merkle-tree 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12)",
@@ -3000,7 +3000,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.15.0"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=feature/merge-upstream-ibc-rs#19f2bc8776239bc80e5fa444998e7b30b39368fb"
+source = "git+https://github.com/octopus-network/ibc-rs.git?branch=feature/beefy#ba3de8e9c2107a8a310153763a7c68ec245e65f1"
 dependencies = [
  "bytes 1.1.0",
  "prost 0.9.0",
@@ -3530,9 +3530,9 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 
 [[package]]
 name = "libc"
-version = "0.2.118"
+version = "0.2.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06e509672465a0504304aa87f9f176f2b2b716ed8fb105ebe5c02dc6dce96a94"
+checksum = "1bf2e165bb3457c8e098ea76f3e3bc9db55f87aa90d52d0e6be741470916aaa4"
 
 [[package]]
 name = "libgit2-sys"
@@ -5839,7 +5839,7 @@ dependencies = [
 [[package]]
 name = "pallet-ibc"
 version = "3.0.0-pre.0"
-source = "git+https://github.com/octopus-network/substrate-ibc?branch=feature/dep-ibc-rs#9378bbc7a824a114d16b47e6dc77d75726989445"
+source = "git+https://github.com/octopus-network/substrate-ibc?branch=master#a93a260838552d7ce4845c110f3a7bbb870c306b"
 dependencies = [
  "beefy-light-client",
  "frame-benchmarking",
@@ -5850,6 +5850,7 @@ dependencies = [
  "parity-scale-codec",
  "prost-types 0.9.0",
  "scale-info",
+ "serde_json",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -7743,7 +7744,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
- "semver 1.0.5",
+ "semver 1.0.6",
 ]
 
 [[package]]
@@ -9172,9 +9173,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0486718e92ec9a68fbed73bb5ef687d71103b142595b406835649bebd33f72c7"
+checksum = "a4a3381e03edd24287172047536f20cabde766e2cd3e65e6b00fb3af51c4f38d"
 
 [[package]]
 name = "semver-parser"
@@ -10300,9 +10301,9 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "ss58-registry"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8cb4b9ce18beb6cb16ecad62d936245cef5212ddc8e094d7417a75e8d0e85f5"
+checksum = "2f9799e6d412271cb2414597581128b03f3285f260ea49f5363d07df6a332b3e"
 dependencies = [
  "Inflector",
  "proc-macro2",

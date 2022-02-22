@@ -70,7 +70,7 @@ hex-literal = { version = "0.3.3", optional = true }
 pallet-template = { version = "3.0.0", default-features = false, path = "../pallets/template" }
 
 # palle ibc
-pallet-ibc = { git = "https://github.com/octopus-network/substrate-ibc", branch = "feature/dep-ibc-rs", default-features = false}
+pallet-ibc = { git = "https://github.com/octopus-network/substrate-ibc", branch = "master", default-features = false}
 # pallet-ibc = { path = "../../../../substrate-ibc", default-features = false }
 
 [build-dependencies]
