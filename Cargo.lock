@@ -4786,7 +4786,7 @@ dependencies = [
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-storage",
  "pallet-treasury",
- "pallet-uniques",
+ "pallet-uniques 4.0.0-dev",
  "pallet-utility",
  "pallet-vesting",
  "parity-scale-codec",
@@ -4905,6 +4905,7 @@ dependencies = [
  "pallet-mmr",
  "pallet-mmr-primitives",
  "pallet-octopus-appchain",
+ "pallet-octopus-appchain-benchmarking",
  "pallet-octopus-lpos",
  "pallet-octopus-upward-messages",
  "pallet-randomness-collective-flip",
@@ -4914,7 +4915,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "pallet-uniques",
+ "pallet-uniques 4.0.0-dev",
  "parity-scale-codec",
  "scale-info",
  "sp-api",
@@ -5953,6 +5954,7 @@ dependencies = [
  "pallet-octopus-upward-messages",
  "pallet-session",
  "pallet-timestamp",
+ "pallet-uniques 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.13)",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -5963,6 +5965,31 @@ dependencies = [
  "sp-io",
  "sp-keyring",
  "sp-keystore",
+ "sp-runtime",
+ "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-octopus-appchain-benchmarking"
+version = "4.0.0-pre.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-assets",
+ "pallet-balances",
+ "pallet-octopus-appchain",
+ "pallet-octopus-lpos",
+ "pallet-octopus-support",
+ "pallet-octopus-upward-messages",
+ "pallet-session",
+ "pallet-timestamp",
+ "pallet-uniques 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.13)",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-staking",
  "sp-std",
@@ -6418,6 +6445,20 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-uniques"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.13#afb74de23dfe2994e7ce38c0870efb9734e966f7"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
  "sp-runtime",
  "sp-std",
 ]
