@@ -195,16 +195,9 @@ pub trait Storage {
 		self.storage_root()
 	}
 
-	/// "Commit" all existing operations and get the resulting storage change root.
-	/// `parent_hash` is a SCALE encoded hash.
-	///
-	/// The hashing algorithm is defined by the `Block`.
-	///
-	/// Returns `Some(Vec<u8>)` which holds the SCALE encoded hash or `None` when
-	/// changes trie is disabled.
-	fn changes_root(&mut self, parent_hash: &[u8]) -> Option<Vec<u8>> {
-		self.storage_changes_root(parent_hash)
-			.expect("Invalid `parent_hash` given to `changes_root`.")
+	/// Always returns `None`. This function exists for compatibility reasons.
+	fn changes_root(&mut self, _parent_hash: &[u8]) -> Option<Vec<u8>> {
+		None
 	}
 
 	/// Get the next key in storage after the given one in lexicographic order.
@@ -1484,7 +1477,7 @@ mod allocator_impl {
 pub fn panic(info: &core::panic::PanicInfo) -> ! {
 	let message = sp_std::alloc::format!("{}", info);
 	logging::log(LogLevel::Error, "runtime", message.as_bytes());
-	unsafe { core::arch::wasm32::unreachable() };
+	core::arch::wasm32::unreachable();
 }
 
 /// A default OOM handler for WASM environment.
@@ -1492,12 +1485,12 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 #[alloc_error_handler]
 pub fn oom(_: core::alloc::Layout) -> ! {
 	logging::log(LogLevel::Error, "runtime", b"Runtime memory exhausted. Aborting");
-	unsafe { core::arch::wasm32::unreachable() };
+	core::arch::wasm32::unreachable();
 }
 
 /// Type alias for Externalities implementation used in tests.
 #[cfg(feature = "std")]
-pub type TestExternalities = sp_state_machine::TestExternalities<sp_core::Blake2Hasher, u64>;
+pub type TestExternalities = sp_state_machine::TestExternalities<sp_core::Blake2Hasher>;
 
 /// The host functions Substrate provides for the Wasm runtime environment.
 ///

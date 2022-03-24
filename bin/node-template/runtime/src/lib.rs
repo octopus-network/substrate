@@ -39,29 +39,24 @@ use pallet_transaction_payment::CurrencyAdapter;
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+use beefy_primitives::{crypto::AuthorityId as BeefyId, mmr::MmrLeafVersion};
 use codec::Encode;
-use frame_support::weights::DispatchClass;
+use frame_support::{weights::DispatchClass, PalletId};
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
+use pallet_mmr_primitives as mmr;
 use pallet_session::historical as pallet_session_historical;
+use pallet_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 use sp_runtime::{
 	generic::Era,
-	traits::{self, OpaqueKeys, SaturatedConversion, StaticLookup},
+	traits::{self, ConvertInto, Keccak256, OpaqueKeys, SaturatedConversion, StaticLookup},
 	transaction_validity::TransactionPriority,
+	FixedPointNumber, Perquintill,
 };
 use static_assertions::const_assert;
-
-use beefy_primitives::crypto::AuthorityId as BeefyId;
-use beefy_primitives::mmr::MmrLeafVersion;
-use pallet_mmr_primitives as mmr;
-use sp_runtime::traits::Keccak256;
-
-use frame_support::PalletId;
-use sp_runtime::traits::ConvertInto;
-use frame_system::weights::SubstrateWeight;
 
 /// Import the template pallet.
 pub use pallet_template;
@@ -133,7 +128,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	transaction_version: 1,
 };
 
-pub const MILLICENTS: Balance = 10_000_000_000;
+pub const MILLICENTS: Balance = 10_000_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
 pub const DOLLARS: Balance = 100 * CENTS;
 
@@ -281,8 +276,6 @@ impl frame_system::Config for Runtime {
 	type OnSetCode = ();
 }
 
-impl pallet_randomness_collective_flip::Config for Runtime {}
-
 parameter_types! {
 	// NOTE: Currently it is not possible to change the epoch duration after the chain has started.
 	//       Attempting to do so will brick block production.
@@ -374,7 +367,10 @@ impl pallet_balances::Config for Runtime {
 
 parameter_types! {
 	pub const TransactionByteFee: Balance = 10 * MILLICENTS;
-	pub OperationalFeeMultiplier: u8 = 5;
+	pub const OperationalFeeMultiplier: u8 = 5;
+	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
+	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
+	pub MinimumMultiplier: Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000u128);
 }
 
 impl pallet_transaction_payment::Config for Runtime {
@@ -382,7 +378,8 @@ impl pallet_transaction_payment::Config for Runtime {
 	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
-	type FeeMultiplierUpdate = ();
+	type FeeMultiplierUpdate =
+		TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
 }
 
 parameter_types! {
@@ -500,27 +497,27 @@ impl pallet_mmr::Config for Runtime {
 }
 
 parameter_types! {
-	pub const AssetDeposit: Balance = 100 * DOLLARS;
-	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
-	pub const StringLimit: u32 = 50;
-	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
-	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+	pub const ClassDeposit: Balance = 100 * DOLLARS;
+	pub const InstanceDeposit: Balance = 1 * DOLLARS;
+	pub const KeyLimit: u32 = 32;
+	pub const ValueLimit: u32 = 256;
 }
 
-impl pallet_assets::Config for Runtime {
+impl pallet_uniques::Config for Runtime {
 	type Event = Event;
-	type Balance = u128;
-	type AssetId = u32;
+	type ClassId = u32;
+	type InstanceId = u32;
 	type Currency = Balances;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type AssetDeposit = AssetDeposit;
+	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+	type ClassDeposit = ClassDeposit;
+	type InstanceDeposit = InstanceDeposit;
 	type MetadataDepositBase = MetadataDepositBase;
-	type MetadataDepositPerByte = MetadataDepositPerByte;
-	type ApprovalDeposit = ApprovalDeposit;
+	type AttributeDepositBase = MetadataDepositBase;
+	type DepositPerByte = MetadataDepositPerByte;
 	type StringLimit = StringLimit;
-	type Freezer = ();
-	type Extra = ();
-	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
+	type KeyLimit = KeyLimit;
+	type ValueLimit = ValueLimit;
+	type WeightInfo = pallet_uniques::weights::SubstrateWeight<Runtime>;
 }
 
 impl pallet_beefy::Config for Runtime {
@@ -561,11 +558,11 @@ impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
 }
 
 parameter_types! {
-	   pub const OctopusAppchainPalletId: PalletId = PalletId(*b"py/octps");
-	   pub const GracePeriod: u32 = 10;
-	   pub const UnsignedPriority: u64 = 1 << 21;
-	   pub const RequestEventLimit: u32 = 10;
-	   pub const UpwardMessagesLimit: u32 = 10;
+	pub const OctopusAppchainPalletId: PalletId = PalletId(*b"py/octps");
+	pub const GracePeriod: u32 = 10;
+	pub const UnsignedPriority: u64 = 1 << 21;
+	pub const RequestEventLimit: u32 = 10;
+	pub const UpwardMessagesLimit: u32 = 10;
 }
 
 impl pallet_octopus_appchain::Config for Runtime {
@@ -576,12 +573,14 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type LposInterface = OctopusLpos;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
 	type Currency = Balances;
-	type Assets = Assets;
+	type Assets = OctopusAssets;
+	type AssetBalance = AssetBalance;
+	type AssetId = AssetId;
+	type AssetIdByName = OctopusAppchain;
 	type GracePeriod = GracePeriod;
 	type UnsignedPriority = UnsignedPriority;
-	// type RequestEventLimit = RequestEventLimit;
-	// type WeightInfo = pallet_octopus_appchain::weights::SubstrateWeight<Runtime>;
-	// type WeightInfo = ();
+	type RequestEventLimit = RequestEventLimit;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -599,19 +598,45 @@ impl pallet_octopus_lpos::Config for Runtime {
 	type BondingDuration = BondingDuration;
 	type BlocksPerEra = BlocksPerEra;
 	type SessionInterface = Self;
-	// type AppchainInterface = OctopusAppchain;
+	type AppchainInterface = OctopusAppchain;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
 	type PalletId = OctopusAppchainPalletId;
 	type ValidatorsProvider = OctopusAppchain;
-	type WeightInfo = pallet_octopus_lpos::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = ();
 }
 
 impl pallet_octopus_upward_messages::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
-	// type UpwardMessagesLimit = UpwardMessagesLimit;
-	// type WeightInfo = pallet_octopus_upward_messages::weights::SubstrateWeight<Runtime>;
-	// type WeightInfo = ();
+	type UpwardMessagesLimit = UpwardMessagesLimit;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const AssetDeposit: Balance = 100 * DOLLARS;
+	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
+	pub const StringLimit: u32 = 50;
+	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
+	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
+}
+
+pub type AssetBalance = u128;
+pub type AssetId = u32;
+
+impl pallet_assets::Config<pallet_assets::Instance1> for Runtime {
+	type Event = Event;
+	type Balance = AssetBalance;
+	type AssetId = AssetId;
+	type Currency = Balances;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AssetDeposit = AssetDeposit;
+	type MetadataDepositBase = MetadataDepositBase;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
+	type ApprovalDeposit = ApprovalDeposit;
+	type StringLimit = StringLimit;
+	type Freezer = ();
+	type Extra = ();
+	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
 }
 
 impl pallet_sudo::Config for Runtime {
@@ -646,29 +671,28 @@ construct_runtime!(
 		NodeBlock = opaque::Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
-		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
-		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
-		Babe: pallet_babe::{Pallet, Call, Storage, Config, ValidateUnsigned},
-		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned},
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
-		OctopusAppchain: pallet_octopus_appchain::{Pallet, Call, Storage, Config<T>, Event<T>, ValidateUnsigned}, // must before session
-		OctopusLpos: pallet_octopus_lpos::{Pallet, Call, Config, Storage, Event<T>},
-		OctopusUpwardMessages: pallet_octopus_upward_messages::{Pallet, Call, Storage, Event<T>},
-		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
-		ImOnline: pallet_im_online::{Pallet, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
+		System: frame_system,
+		Babe: pallet_babe,
+		Timestamp: pallet_timestamp,
+		Authorship: pallet_authorship,
+		Balances: pallet_balances,
+		TransactionPayment: pallet_transaction_payment,
+		OctopusAppchain: pallet_octopus_appchain, // must before session
+		OctopusLpos: pallet_octopus_lpos,
+		OctopusUpwardMessages: pallet_octopus_upward_messages,
+		OctopusAssets: pallet_assets::<Instance1>,
+		Session: pallet_session,
+		Grandpa: pallet_grandpa,
+		ImOnline: pallet_im_online,
 		Historical: pallet_session_historical::{Pallet},
-		Assets: pallet_assets::{Pallet, Call, Storage, Event<T>, Config<T>},
-		Mmr: pallet_mmr::{Pallet, Storage},
-		Beefy: pallet_beefy::{Pallet, Config<T>, Storage},
-		MmrLeaf: pallet_beefy_mmr::{Pallet, Storage},
-		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
-		// pallet ibc
-		Ibc: pallet_ibc::{Pallet, Call, Storage, Event<T>},
+		Mmr: pallet_mmr,
+		Beefy: pallet_beefy,
+		MmrLeaf: pallet_beefy_mmr,
+		Uniques: pallet_uniques,
+		Sudo: pallet_sudo,
+		Ibc: pallet_ibc,
 		// Include the custom logic from the pallet-template in the runtime.
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		TemplateModule: pallet_template,
 	}
 );
 
@@ -881,6 +905,12 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl beefy_primitives::BeefyApi<Block> for Runtime {
+		fn validator_set() -> beefy_primitives::ValidatorSet<BeefyId> {
+			Beefy::validator_set()
+		}
+	}
+
 	impl pallet_mmr_primitives::MmrApi<Block, Hash> for Runtime {
 		fn generate_proof(leaf_index: u64)
 			-> Result<(mmr::EncodableOpaqueLeaf, mmr::Proof<Hash>), mmr::Error>
@@ -914,24 +944,20 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl beefy_primitives::BeefyApi<Block> for Runtime {
-		fn validator_set() -> beefy_primitives::ValidatorSet<BeefyId> {
-			Beefy::validator_set()
-		}
-	}
-
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn benchmark_metadata(extra: bool) -> (
 			Vec<frame_benchmarking::BenchmarkList>,
 			Vec<frame_support::traits::StorageInfo>,
 		) {
-			use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
+			use frame_benchmarking::{list_benchmark, baseline, Benchmarking, BenchmarkList};
 			use frame_support::traits::StorageInfoTrait;
 			use frame_system_benchmarking::Pallet as SystemBench;
+			use baseline::Pallet as BaselineBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
 
+			list_benchmark!(list, extra, frame_benchmarking, BaselineBench::<Runtime>);
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 			list_benchmark!(list, extra, pallet_balances, Balances);
 			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
@@ -948,10 +974,13 @@ impl_runtime_apis! {
 		fn dispatch_benchmark(
 			config: frame_benchmarking::BenchmarkConfig
 		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
-			use frame_benchmarking::{Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
+			use frame_benchmarking::{baseline, Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
 
 			use frame_system_benchmarking::Pallet as SystemBench;
+			use baseline::Pallet as BaselineBench;
+
 			impl frame_system_benchmarking::Config for Runtime {}
+			impl baseline::Config for Runtime {}
 
 			let whitelist: Vec<TrackedStorageKey> = vec![
 				// Block Number
@@ -969,6 +998,7 @@ impl_runtime_apis! {
 			let mut batches = Vec::<BenchmarkBatch>::new();
 			let params = (&config, &whitelist);
 
+			add_benchmark!(params, batches, frame_benchmarking, BaselineBench::<Runtime>);
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_balances, Balances);
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
