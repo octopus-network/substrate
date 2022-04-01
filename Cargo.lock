@@ -5846,7 +5846,7 @@ dependencies = [
 [[package]]
 name = "pallet-ibc"
 version = "3.0.0-pre.0"
-source = "git+https://github.com/octopus-network/substrate-ibc?branch=master#2ef973f704351f7e6f297d5387408ca8ca22c472"
+source = "git+https://github.com/octopus-network/substrate-ibc?branch=master#83b097fb9114d231e9c0b9c9129fa9e0e4e2b6c3"
 dependencies = [
  "beefy-light-client",
  "frame-benchmarking",
@@ -10754,7 +10754,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#8a1be63b3a82e1276f40070b0bce4b650e677fec"
+source = "git+https://github.com/informalsystems/tendermint-rs?rev=8a1be63#8a1be63b3a82e1276f40070b0bce4b650e677fec"
 dependencies = [
  "async-trait",
  "bytes 1.1.0",
@@ -10782,7 +10782,7 @@ dependencies = [
 [[package]]
 name = "tendermint-light-client-verifier"
 version = "0.23.5"
-source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#8a1be63b3a82e1276f40070b0bce4b650e677fec"
+source = "git+https://github.com/informalsystems/tendermint-rs?rev=8a1be63#8a1be63b3a82e1276f40070b0bce4b650e677fec"
 dependencies = [
  "derive_more",
  "flex-error",
@@ -10794,7 +10794,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.23.5"
-source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#8a1be63b3a82e1276f40070b0bce4b650e677fec"
+source = "git+https://github.com/informalsystems/tendermint-rs?rev=8a1be63#8a1be63b3a82e1276f40070b0bce4b650e677fec"
 dependencies = [
  "bytes 1.1.0",
  "flex-error",
