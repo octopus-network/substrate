@@ -552,9 +552,9 @@ dependencies = [
 [[package]]
 name = "beefy-light-client"
 version = "0.1.0"
-source = "git+https://github.com/octopus-network/beefy-light-client.git#1c1d9bf910c4333b72e5bba51b8b7ac7aac5072c"
+source = "git+https://github.com/octopus-network/beefy-light-client.git?branch=feature/v0.9.13#8f6282aaf665d96c32c39e69d7c90ba656f55d56"
 dependencies = [
- "beefy-merkle-tree 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12)",
+ "beefy-merkle-tree 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.13)",
  "blake2-rfc",
  "borsh 0.8.2",
  "byteorder",
@@ -572,14 +572,6 @@ dependencies = [
  "hex",
  "hex-literal",
  "log 0.4.16",
- "tiny-keccak",
-]
-
-[[package]]
-name = "beefy-merkle-tree"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.12#d76f39995315ec36980908e4b99709bd14927044"
-dependencies = [
  "tiny-keccak",
 ]
 
@@ -2992,7 +2984,6 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.12.0"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=feature/beefy-v0.9.13#01f06d37cbc75ac01bdad12eb3a5cd9937747543"
 dependencies = [
  "beefy-light-client",
  "beefy-merkle-tree 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.13)",
@@ -3020,7 +3011,7 @@ dependencies = [
  "sp-std 4.0.0-dev",
  "sp-trie",
  "subtle-encoding",
- "tendermint",
+ "tendermint 0.23.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tendermint-light-client-verifier",
  "tendermint-proto",
  "time 0.3.9",
@@ -3030,7 +3021,6 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.16.0"
-source = "git+https://github.com/octopus-network/ibc-rs.git?branch=feature/beefy-v0.9.13#01f06d37cbc75ac01bdad12eb3a5cd9937747543"
 dependencies = [
  "bytes 1.1.0",
  "prost",
@@ -5964,10 +5954,13 @@ dependencies = [
  "frame-support",
  "frame-system",
  "ibc",
+ "ibc-proto",
  "log 0.4.16",
  "parity-scale-codec",
+ "prost",
  "prost-types",
  "scale-info",
+ "serde",
  "serde_json",
  "sp-core",
  "sp-io",
@@ -10884,8 +10877,37 @@ dependencies = [
 
 [[package]]
 name = "tendermint"
-version = "0.23.5"
-source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#592bfda625e4422f7f5f1308462fd5e36d2cc823"
+version = "0.23.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16a3d617db287955b07e4bf1523b831bf5055e7d3ceab8504174181df40cb143"
+dependencies = [
+ "async-trait",
+ "bytes 1.1.0",
+ "ed25519",
+ "ed25519-dalek",
+ "flex-error",
+ "futures 0.3.21",
+ "num-traits",
+ "once_cell",
+ "prost",
+ "prost-types",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "serde_repr",
+ "sha2 0.9.9",
+ "signature",
+ "subtle",
+ "subtle-encoding",
+ "tendermint-proto",
+ "time 0.3.9",
+ "zeroize",
+]
+
+[[package]]
+name = "tendermint"
+version = "0.23.6"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#543b989bcbff40685bcd19a502df3f9b582794a7"
 dependencies = [
  "async-trait",
  "bytes 1.1.0",
@@ -10912,20 +10934,20 @@ dependencies = [
 
 [[package]]
 name = "tendermint-light-client-verifier"
-version = "0.23.5"
-source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#592bfda625e4422f7f5f1308462fd5e36d2cc823"
+version = "0.23.6"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#543b989bcbff40685bcd19a502df3f9b582794a7"
 dependencies = [
  "derive_more",
  "flex-error",
  "serde",
- "tendermint",
+ "tendermint 0.23.6 (git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x)",
  "time 0.3.9",
 ]
 
 [[package]]
 name = "tendermint-proto"
-version = "0.23.5"
-source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#592bfda625e4422f7f5f1308462fd5e36d2cc823"
+version = "0.23.6"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#543b989bcbff40685bcd19a502df3f9b582794a7"
 dependencies = [
  "bytes 1.1.0",
  "flex-error",
@@ -11650,7 +11672,7 @@ version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ee73e6e4924fe940354b8d4d98cad5231175d615cd855b758adc658c0aac6a0"
 dependencies = [
- "cfg-if 1.0.0",
+ "cfg-if 0.1.10",
  "rand 0.8.5",
  "static_assertions",
 ]
@@ -12686,3 +12708,23 @@ dependencies = [
  "cc",
  "libc",
 ]
+
+[[patch.unused]]
+name = "tendermint"
+version = "0.23.5"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#592bfda625e4422f7f5f1308462fd5e36d2cc823"
+
+[[patch.unused]]
+name = "tendermint-light-client"
+version = "0.23.6"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#543b989bcbff40685bcd19a502df3f9b582794a7"
+
+[[patch.unused]]
+name = "tendermint-rpc"
+version = "0.23.6"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#543b989bcbff40685bcd19a502df3f9b582794a7"
+
+[[patch.unused]]
+name = "tendermint-testgen"
+version = "0.23.6"
+source = "git+https://github.com/informalsystems/tendermint-rs?branch=v0.23.x#543b989bcbff40685bcd19a502df3f9b582794a7"
