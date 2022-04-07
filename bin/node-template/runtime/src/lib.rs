@@ -657,6 +657,10 @@ impl pallet_ibc::Config for Runtime {
     type Event = Event;
     type ModuleCallbacks = ModuleCallbacksImpl;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
+	type Currency = Balances;
+	type AssetId = AssetId;
+	type AssetBalance = AssetBalance;
+	type Assets = OctopusAssets;
 }
 
 /// Configure the pallet-template in pallets/template.
