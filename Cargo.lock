@@ -5926,6 +5926,7 @@ dependencies = [
 [[package]]
 name = "pallet-ibc"
 version = "3.0.0-pre.0"
+source = "git+https://github.com/octopus-network/substrate-ibc?branch=feature/ics20#b9f69e1da25acfb1119e79ae199f8ad92778ace4"
 dependencies = [
  "beefy-light-client",
  "frame-benchmarking",
