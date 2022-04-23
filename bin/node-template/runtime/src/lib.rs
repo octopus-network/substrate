@@ -505,8 +505,8 @@ parameter_types! {
 
 impl pallet_uniques::Config for Runtime {
 	type Event = Event;
-	type ClassId = u32;
-	type InstanceId = u32;
+	type ClassId = ClassId;
+	type InstanceId = InstanceId;
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
 	type ClassDeposit = ClassDeposit;
@@ -565,6 +565,12 @@ parameter_types! {
 	pub const UpwardMessagesLimit: u32 = 10;
 }
 
+// If not there is no assets and nft cross chain, the code comments bellow should use.
+// use pallet_octopus_appchain::traits_default_impl::{UnImplementAssets, UnImplementUniques};
+// use pallet_octopus_appchain::traits_default_impl::ExampleConvertor;
+
+type ClassId = u128;
+type InstanceId = u128;
 impl pallet_octopus_appchain::Config for Runtime {
 	type AuthorityId = OctopusAppCrypto;
 	type Event = Event;
@@ -572,8 +578,17 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type PalletId = OctopusAppchainPalletId;
 	type LposInterface = OctopusLpos;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
+	type ClassId = ClassId;
+	type InstanceId = InstanceId;
+	type Uniques = Uniques;
+	type Convertor = ();
+	// type Convertor = ExampleConvertor<Runtime>;
+	// If not there is no assets and nft cross chain, the code comments bellow should use.
+	// type Uniques = UnImplementUniques<Runtime>;
 	type Currency = Balances;
 	type Assets = OctopusAssets;
+	// If not there is no assets and nft cross chain, the code comments bellow should use.
+	// type Assets = UnImplementAssets<Runtime>;
 	type AssetBalance = AssetBalance;
 	type AssetId = AssetId;
 	type AssetIdByName = OctopusAppchain;
@@ -938,6 +953,7 @@ impl_runtime_apis! {
 			use frame_support::traits::StorageInfoTrait;
 			use frame_system_benchmarking::Pallet as SystemBench;
 			use baseline::Pallet as BaselineBench;
+			use pallet_octopus_appchain_benchmarking::Pallet as AppchainBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
 
@@ -947,7 +963,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
 			list_benchmark!(list, extra, pallet_template, TemplateModule);
 			list_benchmark!(list, extra, pallet_octopus_upward_messages, OctopusUpwardMessages);
-			list_benchmark!(list, extra, pallet_octopus_appchain, OctopusAppchain);
+			list_benchmark!(list, extra, pallet_octopus_appchain, AppchainBench::<Runtime>);
 			list_benchmark!(list, extra, pallet_octopus_lpos, OctopusLpos);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
@@ -962,9 +978,11 @@ impl_runtime_apis! {
 
 			use frame_system_benchmarking::Pallet as SystemBench;
 			use baseline::Pallet as BaselineBench;
+			use pallet_octopus_appchain_benchmarking::Pallet as AppchainBench;
 
 			impl frame_system_benchmarking::Config for Runtime {}
 			impl baseline::Config for Runtime {}
+			impl pallet_octopus_appchain_benchmarking::Config for Runtime {}
 
 			let whitelist: Vec<TrackedStorageKey> = vec![
 				// Block Number
@@ -988,7 +1006,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, pallet_template, TemplateModule);
 			add_benchmark!(params, batches, pallet_octopus_upward_messages, OctopusUpwardMessages);
-			add_benchmark!(params, batches, pallet_octopus_appchain, OctopusAppchain);
+			add_benchmark!(params, batches, pallet_octopus_appchain, AppchainBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_octopus_lpos, OctopusLpos);
 
 			Ok(batches)
