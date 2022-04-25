@@ -16,7 +16,6 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 
-pallet-aura = { version = "4.0.0-dev", default-features = false, path = "../../../frame/aura" }
 pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../../../frame/balances" }
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/support" }
 pallet-grandpa = { version = "4.0.0-dev", default-features = false, path = "../../../frame/grandpa" }
@@ -29,7 +28,6 @@ pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, 
 frame-executive = { version = "4.0.0-dev", default-features = false, path = "../../../frame/executive" }
 sp-api = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/api" }
 sp-block-builder = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/block-builder"}
-sp-consensus-aura = { version = "0.10.0-dev", default-features = false, path = "../../../primitives/consensus/aura" }
 sp-core = { version = "6.0.0", default-features = false, path = "../../../primitives/core" }
 sp-inherents = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/inherents"}
 sp-offchain = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/offchain" }
@@ -38,6 +36,21 @@ sp-session = { version = "4.0.0-dev", default-features = false, path = "../../..
 sp-std = { version = "4.0.0", default-features = false, path = "../../../primitives/std" }
 sp-transaction-pool = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/transaction-pool" }
 sp-version = { version = "5.0.0", default-features = false, path = "../../../primitives/version" }
+
+static_assertions = "1.1.0"
+log = { version = "0.4.14", default-features = false }
+pallet-babe = { version = "4.0.0-dev", default-features = false, path = "../../../frame/babe" }
+sp-consensus-babe = { version = "0.10.0-dev", default-features = false, path = "../../../primitives/consensus/babe" }
+frame-election-provider-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/election-provider-support" }
+pallet-assets = { version = "4.0.0-dev", default-features = false, path = "../../../frame/assets" }
+pallet-authorship = { version = "4.0.0-dev", default-features = false, path = "../../../frame/authorship" }
+pallet-im-online = { version = "4.0.0-dev", default-features = false, path = "../../../frame/im-online" }
+pallet-mmr = { version = "4.0.0-dev", default-features = false, path = "../../../frame/merkle-mountain-range" }
+pallet-session = { version = "4.0.0-dev", features = [ "historical" ], path = "../../../frame/session", default-features = false }
+pallet-staking = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking" }
+pallet-staking-reward-curve = { version = "4.0.0-dev", default-features = false, path = "../../../frame/staking/reward-curve" }
+pallet-uniques = { version = "4.0.0-dev", default-features = false, path = "../../../frame/uniques" }
+sp-staking = { version = "4.0.0-dev", default-features = false, path = "../../../primitives/staking" }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system/rpc/runtime-api/" }
@@ -63,7 +76,6 @@ std = [
 	"frame-support/std",
 	"frame-system-rpc-runtime-api/std",
 	"frame-system/std",
-	"pallet-aura/std",
 	"pallet-balances/std",
 	"pallet-grandpa/std",
 	"pallet-randomness-collective-flip/std",
@@ -74,7 +86,6 @@ std = [
 	"pallet-transaction-payment/std",
 	"sp-api/std",
 	"sp-block-builder/std",
-	"sp-consensus-aura/std",
 	"sp-core/std",
 	"sp-inherents/std",
 	"sp-offchain/std",
@@ -83,6 +94,20 @@ std = [
 	"sp-std/std",
 	"sp-transaction-pool/std",
 	"sp-version/std",
+	"pallet-babe/std",
+	"sp-consensus-babe/std",
+	"log/std",
+	"pallet-babe/std",
+	"sp-consensus-babe/std",
+	"frame-election-provider-support/std",
+	"pallet-assets/std",
+	"pallet-authorship/std",
+	"pallet-im-online/std",
+	"pallet-mmr/std",
+	"pallet-session/std",
+	"pallet-staking/std",
+	"pallet-uniques/std",
+	"sp-staking/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
