@@ -7,6 +7,7 @@ use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
+use beefy_primitives::crypto::AuthorityId as BeefyId;
 use node_template_runtime::{
 	opaque::Block, opaque::SessionKeys, BabeConfig, Balance, ImOnlineConfig, SessionConfig,
 	StakingConfig, DOLLARS,
@@ -39,8 +40,13 @@ pub struct Extensions {
 /// Specialized `ChainSpec`.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
-fn session_keys(babe: BabeId, grandpa: GrandpaId, im_online: ImOnlineId) -> SessionKeys {
-	SessionKeys { babe, grandpa, im_online }
+fn session_keys(
+	babe: BabeId,
+	grandpa: GrandpaId,
+	im_online: ImOnlineId,
+	beefy: BeefyId,
+) -> SessionKeys {
+	SessionKeys { babe, grandpa, im_online, beefy }
 }
 
 /// Generate a crypto pair from seed.
@@ -63,13 +69,14 @@ where
 /// Helper function to generate stash, controller and session key from seed
 pub fn authority_keys_from_seed(
 	seed: &str,
-) -> (AccountId, AccountId, BabeId, GrandpaId, ImOnlineId) {
+) -> (AccountId, AccountId, BabeId, GrandpaId, ImOnlineId, BeefyId) {
 	(
 		get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", seed)),
 		get_account_id_from_seed::<sr25519::Public>(seed),
 		get_from_seed::<BabeId>(seed),
 		get_from_seed::<GrandpaId>(seed),
 		get_from_seed::<ImOnlineId>(seed),
+		get_from_seed::<BeefyId>(seed),
 	)
 }
 
@@ -166,7 +173,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
 	wasm_binary: &[u8],
-	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId, ImOnlineId)>,
+	initial_authorities: Vec<(AccountId, AccountId, BabeId, GrandpaId, ImOnlineId, BeefyId)>,
 	initial_nominators: Vec<AccountId>,
 	root_key: AccountId,
 	endowed_accounts: Option<Vec<AccountId>>,
@@ -233,7 +240,11 @@ fn testnet_genesis(
 			keys: initial_authorities
 				.iter()
 				.map(|x| {
-					(x.0.clone(), x.0.clone(), session_keys(x.2.clone(), x.3.clone(), x.4.clone()))
+					(
+						x.0.clone(),
+						x.0.clone(),
+						session_keys(x.2.clone(), x.3.clone(), x.4.clone(), x.5.clone()),
+					)
 				})
 				.collect::<Vec<_>>(),
 		},
@@ -254,5 +265,6 @@ fn testnet_genesis(
 		grandpa: GrandpaConfig { authorities: vec![] },
 		assets: Default::default(),
 		transaction_payment: Default::default(),
+		beefy: Default::default(),
 	}
 }

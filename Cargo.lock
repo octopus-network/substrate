@@ -5059,6 +5059,9 @@ dependencies = [
 name = "node-template"
 version = "4.0.0-dev"
 dependencies = [
+ "beefy-gadget",
+ "beefy-gadget-rpc",
+ "beefy-primitives",
  "clap 3.1.6",
  "frame-benchmarking",
  "frame-benchmarking-cli",
@@ -5116,6 +5119,7 @@ dependencies = [
 name = "node-template-runtime"
 version = "4.0.0-dev"
 dependencies = [
+ "beefy-primitives",
  "frame-benchmarking",
  "frame-election-provider-support",
  "frame-executive",
@@ -5130,9 +5134,12 @@ dependencies = [
  "pallet-authorship",
  "pallet-babe",
  "pallet-balances",
+ "pallet-beefy",
+ "pallet-beefy-mmr",
  "pallet-grandpa",
  "pallet-im-online",
  "pallet-mmr",
+ "pallet-mmr-primitives",
  "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-staking",
