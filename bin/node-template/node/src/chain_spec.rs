@@ -96,6 +96,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				Some(vec![
 					get_account_id_from_seed::<sr25519::Public>("Alice"),
 					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("IbcRelayerA"),
+					get_account_id_from_seed::<sr25519::Public>("IbcRelayerB"),
 				]),
 				true,
 			)
@@ -137,6 +139,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Dave"),
 					get_account_id_from_seed::<sr25519::Public>("Eve"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+					get_account_id_from_seed::<sr25519::Public>("IbcRelayerA"),
+					get_account_id_from_seed::<sr25519::Public>("IbcRelayerB"),
 				]),
 				true,
 			)
