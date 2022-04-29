@@ -645,22 +645,14 @@ impl pallet_sudo::Config for Runtime {
 }
 
 
-// The ModuleCallbacksImpl creates a static mapping of module index and callback functions of other modules.
-// The module index is determined at the time of construct_runtime. For example,
-// the index of TemplateModule is 8 in the current runtime.
-// In the future, we should find a more dynamic way to create this mapping.
-pub struct ModuleCallbacksImpl;
-
-impl pallet_ibc::ModuleCallbacks for ModuleCallbacksImpl {}
-
 impl pallet_ibc::Config for Runtime {
     type Event = Event;
-    type ModuleCallbacks = ModuleCallbacksImpl;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 	type Currency = Balances;
 	type AssetId = AssetId;
 	type AssetBalance = AssetBalance;
 	type Assets = OctopusAssets;
+	type AssetIdByName = Ibc;
 }
 
 /// Configure the pallet-template in pallets/template.

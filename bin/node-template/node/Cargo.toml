@@ -50,6 +50,7 @@ pallet-transaction-payment-rpc = { version = "4.0.0-dev", path = "../../../frame
 
 codec = { package = "parity-scale-codec", version = "2.0.0" }
 serde = { version = "1.0.126", features = ["derive"] }
+serde_json = { version = "1.0", default-features = false }
 frame-system = { version = "4.0.0-dev", path = "../../../frame/system" }
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", path = "../../../frame/system/rpc/runtime-api" }
 pallet-im-online = { version = "4.0.0-dev", path = "../../../frame/im-online" }

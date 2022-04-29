@@ -2,13 +2,14 @@ use beefy_primitives::crypto::AuthorityId as BeefyId;
 use node_template_runtime::{
 	opaque::Block, opaque::SessionKeys, AccountId, BabeConfig, Balance, BalancesConfig,
 	GenesisConfig, GrandpaConfig, ImOnlineConfig, OctopusAppchainConfig, OctopusLposConfig,
-	SessionConfig, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
+	SessionConfig, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY, IbcConfig,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_octopus_appchain::AuthorityId as OctopusId;
 use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use sp_consensus_babe::AuthorityId as BabeId;
 use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
@@ -79,6 +80,16 @@ pub fn authority_keys_from_seed(
 pub fn development_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
+	let properties = Some(
+		json!({
+			"tokenDecimals": 9,
+			"tokenSymbol": "OCT"
+		})
+		.as_object()
+		.expect("Map error")
+		.clone(),
+	);
+
 	Ok(ChainSpec::from_genesis(
 		// Name
 		"Development",
@@ -109,7 +120,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Protocol ID
 		None,
 		// Properties
-		None,
+		properties,
 		// Extensions
 		Default::default(),
 	))
@@ -233,6 +244,9 @@ fn testnet_genesis(
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: root_key,
+		},
+		ibc: IbcConfig {
+			asset_id_by_name: vec![("ATOM".to_string(), 1)],
 		},
 	}
 }
