@@ -298,6 +298,8 @@ frame-support = { path = "./frame/support" }
 frame-system = { path = "./frame/system" }
 pallet-authorship = { path = "./frame/authorship" }
 pallet-balances = { path = "./frame/balances" }
+pallet-assets= { path = "./frame/assets" }
+pallet-uniques = { path = "./frame/uniques" }
 pallet-session = { path = "./frame/session" }
 pallet-timestamp = { path = "./frame/timestamp" }
 sp-core = { path = "./primitives/core" }
