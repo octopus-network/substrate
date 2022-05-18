@@ -48,6 +48,7 @@ use frame_system::{
 pub use pallet_balances::Call as BalancesCall;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_mmr_primitives as mmr;
+use pallet_octopus_support::traits::GetMmrRootHash;
 use pallet_session::historical as pallet_session_historical;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::CurrencyAdapter;
@@ -522,7 +523,7 @@ parameter_types! {
 type ClassId = u128;
 type InstanceId = u128;
 
-impl pallet_uniques::Config<pallet_assets::Instance1> for Runtime {
+impl pallet_uniques::Config<pallet_uniques::Instance1> for Runtime {
 	type Event = Event;
 	type ClassId = ClassId;
 	type InstanceId = InstanceId;
@@ -585,6 +586,27 @@ impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
 	type GenericPublic = sp_core::sr25519::Public;
 }
 
+pub struct MainchainAuthorityId;
+
+impl frame_system::offchain::AppCrypto<<Signature as Verify>::Signer, Signature>
+	for MainchainAuthorityId
+{
+	type RuntimeAppPublic = pallet_octopus_appchain::ed25519::AuthorityId;
+	type GenericSignature = sp_core::ed25519::Signature;
+	type GenericPublic = sp_core::ed25519::Public;
+}
+
+pub struct MmrRootProvider<T>(sp_std::marker::PhantomData<T>);
+
+impl<T> GetMmrRootHash for MmrRootProvider<T>
+where
+	T: pallet_mmr::Config<Hash = beefy_primitives::MmrRootHash>,
+{
+	fn get_mmr_root_hash() -> sp_core::H256 {
+		<pallet_mmr::RootHash<T>>::get()
+	}
+}
+
 parameter_types! {
 	   pub const OctopusAppchainPalletId: PalletId = PalletId(*b"py/octps");
 	   pub const GracePeriod: u32 = 10;
@@ -595,11 +617,13 @@ parameter_types! {
 
 impl pallet_octopus_appchain::Config for Runtime {
 	type AuthorityId = OctopusAppCrypto;
+	type MainchainAuthorityId = MainchainAuthorityId;
 	type Event = Event;
 	type Call = Call;
 	type PalletId = OctopusAppchainPalletId;
 	type LposInterface = OctopusLpos;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
+	type GetRootHash = MmrRootProvider<Runtime>;
 	type ClassId = ClassId;
 	type InstanceId = InstanceId;
 	type Uniques = OctopusUniques;
@@ -877,6 +901,7 @@ impl_runtime_apis! {
 		) -> Option<()> {
 			let key_owner_proof = key_owner_proof.decode()?;
 
+			OctopusAppchain::report_equivocation(equivocation_proof.clone().encode());
 			Grandpa::submit_unsigned_equivocation_report(
 				equivocation_proof,
 				key_owner_proof,
