@@ -119,7 +119,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 100,
+	spec_version: 101,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -522,7 +522,7 @@ parameter_types! {
 type ClassId = u128;
 type InstanceId = u128;
 
-impl pallet_uniques::Config<pallet_assets::Instance1> for Runtime {
+impl pallet_uniques::Config<pallet_uniques::Instance1> for Runtime {
 	type Event = Event;
 	type ClassId = ClassId;
 	type InstanceId = InstanceId;
@@ -716,6 +716,7 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	pallet_octopus_appchain::migrations::v1::MigrateToV1<Runtime>,
 >;
 
 #[cfg(feature = "runtime-benchmarks")]
