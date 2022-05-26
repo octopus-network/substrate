@@ -83,7 +83,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	let properties = Some(
 		json!({
 			"tokenDecimals": 9,
-			"tokenSymbol": "OCT"
+			"tokenSymbol": "ATOM"
 		})
 		.as_object()
 		.expect("Map error")
