@@ -83,7 +83,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	let properties = Some(
 		json!({
 			"tokenDecimals": 9,
-			"tokenSymbol": "ATOM"
+			"tokenSymbol": "OCT"
 		})
 		.as_object()
 		.expect("Map error")
@@ -246,7 +246,7 @@ fn testnet_genesis(
 			key: root_key,
 		},
 		ibc: IbcConfig {
-			asset_id_by_name: vec![("OCT".to_string(), 1)],
+			asset_id_by_name: vec![("ATOM".to_string(), 1)],
 		},
 	}
 }
