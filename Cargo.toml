@@ -308,6 +308,7 @@ sp-keystore = { path = "./primitives/keystore" }
 sp-runtime = { path = "./primitives/runtime" }
 sp-staking = { path = "./primitives/staking" }
 sp-std = { path = "./primitives/std" }
+sp-trie = { path = "./primitives/trie" }
 sp-storage = { path = "./primitives/storage" }
 sp-tracing = { path = "./primitives/tracing" }
 substrate-test-utils = { path = "./test-utils" }

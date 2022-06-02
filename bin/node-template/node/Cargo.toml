@@ -38,6 +38,7 @@ sp-timestamp = { version = "4.0.0-dev", path = "../../../primitives/timestamp" }
 codec = { package = "parity-scale-codec", version = "3.0.0" }
 futures = "0.3.19"
 serde = { version = "1.0.136", features = ["derive"] }
+serde_json = { version = "1.0" }
 beefy-gadget = { version = "4.0.0-dev", path = "../../../client/beefy" }
 beefy-gadget-rpc = { version = "4.0.0-dev", path = "../../../client/beefy/rpc" }
 beefy-primitives = { version = "4.0.0-dev", path = "../../../primitives/beefy" }
