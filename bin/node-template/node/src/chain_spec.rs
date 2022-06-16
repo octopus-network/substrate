@@ -83,7 +83,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	let properties = Some(
 		json!({
 			"tokenDecimals": 9,
-			"tokenSymbol": "OCT"
+			"tokenSymbol": "ATOM"
 		})
 		.as_object()
 		.expect("Map error")
@@ -241,7 +241,7 @@ fn testnet_genesis(
 		octopus_lpos: OctopusLposConfig { era_payout: 2 * DOLLARS, ..Default::default() },
 		octopus_assets: Default::default(),
 		ibc: IbcConfig {
-			asset_id_by_name: vec![("ATOM".to_string(), 1)],
+			asset_id_by_name: vec![("OCT".to_string(), 1)],
 		},
 	}
 }
