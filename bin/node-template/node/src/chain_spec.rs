@@ -223,7 +223,7 @@ fn testnet_genesis(
 		beefy: Default::default(),
 		octopus_appchain: OctopusAppchainConfig {
 			anchor_contract: "octopus-anchor.testnet".to_string(),
-			asset_id_by_name: vec![("usdn.testnet".to_string(), 0)],
+			asset_id_by_token_id: vec![("usdn.testnet".to_string(), 0)],
 			validators,
 			premined_amount: 1024 * DOLLARS,
 		},
