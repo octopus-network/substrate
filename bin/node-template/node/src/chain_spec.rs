@@ -1,8 +1,8 @@
 use beefy_primitives::crypto::AuthorityId as BeefyId;
 use node_template_runtime::{
 	opaque::Block, opaque::SessionKeys, AccountId, BabeConfig, Balance, BalancesConfig,
-	GenesisConfig, GrandpaConfig, ImOnlineConfig, OctopusAppchainConfig, OctopusLposConfig,
-	SessionConfig, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY, IbcConfig,
+	GenesisConfig, GrandpaConfig, IbcConfig, ImOnlineConfig, OctopusAppchainConfig,
+	OctopusLposConfig, SessionConfig, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_octopus_appchain::AuthorityId as OctopusId;
@@ -83,7 +83,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	let properties = Some(
 		json!({
 			"tokenDecimals": 9,
-			"tokenSymbol": "ATOM"
+			"tokenSymbol": "OCT"
 		})
 		.as_object()
 		.expect("Map error")
@@ -245,8 +245,6 @@ fn testnet_genesis(
 			// Assign network admin rights.
 			key: root_key,
 		},
-		ibc: IbcConfig {
-			asset_id_by_name: vec![("OCT".to_string(), 1)],
-		},
+		ibc: IbcConfig { asset_id_by_name: vec![("ATOM".to_string(), 1)] },
 	}
 }
