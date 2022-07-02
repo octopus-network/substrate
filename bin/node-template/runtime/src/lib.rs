@@ -487,7 +487,7 @@ impl pallet_im_online::Config for Runtime {
 parameter_types! {
 	pub const AssetDeposit: Balance = 100 * DOLLARS;
 	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
-	pub const StringLimit: u32 = 50;
+	pub const StringLimit: u32 = 2048;
 	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
 	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
 }
@@ -517,6 +517,7 @@ parameter_types! {
 	pub const InstanceDeposit: Balance = 1 * DOLLARS;
 	pub const KeyLimit: u32 = 32;
 	pub const ValueLimit: u32 = 256;
+	// pub const StringLimitForUniques: u32 = 2048;
 }
 
 type ClassId = u128;
@@ -593,6 +594,7 @@ parameter_types! {
 	   pub const UpwardMessagesLimit: u32 = 10;
 }
 
+use pallet_octopus_appchain::traits_default_impl::RmrkBaseMetadataConvertor;
 impl pallet_octopus_appchain::Config for Runtime {
 	type AuthorityId = OctopusAppCrypto;
 	type Event = Event;
@@ -603,7 +605,7 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type ClassId = ClassId;
 	type InstanceId = InstanceId;
 	type Uniques = OctopusUniques;
-	type Convertor = ();
+	type Convertor = RmrkBaseMetadataConvertor<Runtime>;
 	type Currency = Balances;
 	type Assets = OctopusAssets;
 	type AssetBalance = AssetBalance;
