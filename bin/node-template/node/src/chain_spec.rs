@@ -5,7 +5,7 @@ use node_template_runtime::{
 	SessionConfig, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
-use pallet_octopus_appchain::AuthorityId as OctopusId;
+use pallet_octopus_appchain::sr25519::AuthorityId as OctopusId;
 use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
