@@ -657,6 +657,8 @@ impl pallet_ibc::Config for Runtime {
 	type AssetBalance = AssetBalance;
 	type Assets = OctopusAssets;
 	type AssetIdByName = Ibc;
+	type AccountIdConversion = pallet_ibc::module::applications::transfer::IbcAccount;
+	const NATIVE_TOKEN_NAME: &'static [u8] = b"ATOM";
 }
 
 /// Configure the pallet-template in pallets/template.
