@@ -5206,6 +5206,7 @@ dependencies = [
  "pallet-octopus-appchain-benchmarking",
  "pallet-octopus-lpos",
  "pallet-octopus-upward-messages",
+ "pallet-offences",
  "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-sudo",

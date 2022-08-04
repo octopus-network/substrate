@@ -20,6 +20,7 @@ pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/support" }
 pallet-grandpa = { version = "4.0.0-dev", default-features = false, path = "../../../frame/grandpa" }
 pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, path = "../../../frame/randomness-collective-flip" }
+pallet-offences = { version = "4.0.0-dev", default-features = false, path = "../../../frame/offences" }
 pallet-sudo = { version = "4.0.0-dev", default-features = false, path = "../../../frame/sudo" }
 frame-system = { version = "4.0.0-dev", default-features = false, path = "../../../frame/system" }
 frame-try-runtime = { version = "0.10.0-dev", default-features = false, path = "../../../frame/try-runtime", optional = true }
@@ -84,6 +85,7 @@ std = [
 	"pallet-balances/std",
 	"pallet-grandpa/std",
 	"pallet-randomness-collective-flip/std",
+	"pallet-offences/std",
 	"pallet-sudo/std",
 	"pallet-template/std",
 	"pallet-timestamp/std",
