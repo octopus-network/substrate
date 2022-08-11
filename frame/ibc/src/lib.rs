@@ -1,0 +1,679 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+// todo need in future to remove
+#![allow(unreachable_code)]
+#![allow(unreachable_patterns)]
+#![allow(clippy::type_complexity)]
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+#![allow(unused_assignments)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(clippy::too_many_arguments)]
+
+//! # Overview
+//!
+//! The goal of this pallet is to allow the blockchains built on Substrate to gain the ability to
+//! interact with other chains in a trustees way via IBC protocol
+//!
+//! The pallet implements the chain specific logic of [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f),  
+//! and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs),
+//! which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f).
+
+extern crate alloc;
+extern crate core;
+
+pub use pallet::*;
+
+use alloc::{
+	format,
+	string::{String, ToString},
+};
+use core::{marker::PhantomData, str::FromStr};
+use scale_info::{prelude::vec, TypeInfo};
+use serde::{Deserialize, Serialize};
+
+use codec::{Codec, Decode, Encode};
+
+use frame_support::{
+	sp_runtime::traits::{AtLeast32BitUnsigned, CheckedConversion},
+	sp_std::fmt::Debug,
+	traits::{tokens::fungibles, Currency, ExistenceRequirement::AllowDeath},
+	PalletId,
+};
+use frame_system::ensure_signed;
+use sp_runtime::{traits::AccountIdConversion, DispatchError, RuntimeDebug, TypeId};
+use sp_std::prelude::*;
+
+use ibc::{
+	applications::transfer::msgs::transfer::MsgTransfer,
+	core::{
+		ics02_client::{client_state::AnyClientState, height},
+		ics04_channel::timeout::TimeoutHeight,
+		ics24_host::identifier::{self, ChainId as ICS24ChainId, ChannelId as IbcChannelId},
+		ics26_routing::msgs::Ics26Envelope,
+	},
+	timestamp,
+	tx_msg::Msg,
+};
+
+use tendermint_proto::Protobuf;
+
+pub mod context;
+pub mod events;
+pub mod module;
+pub mod traits;
+pub mod utils;
+
+use crate::{context::Context, traits::AssetIdAndNameProvider};
+
+use crate::module::{
+	core::ics24_host::{
+		ChannelId, ClientId, ClientType, ConnectionId, Height, Packet, PortId, Timestamp,
+	},
+};
+
+pub const LOG_TARGET: &str = "runtime::pallet-ibc";
+pub const REVISION_NUMBER: u64 = 8888;
+
+type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
+/// A struct corresponds to `Any` in crate "prost-types", used in ibc-rs.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct Any {
+	pub type_url: Vec<u8>,
+	pub value: Vec<u8>,
+}
+
+impl From<ibc_proto::google::protobuf::Any> for Any {
+	fn from(any: ibc_proto::google::protobuf::Any) -> Self {
+		Self { type_url: any.type_url.as_bytes().to_vec(), value: any.value }
+	}
+}
+
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
+#[frame_support::pallet]
+pub mod pallet {
+	use super::*;
+	use crate::{
+		events::ModuleEvent,
+		module::{
+			core::ics24_host::{
+				ChannelId, ClientId, ClientType, ConnectionId, Height, Packet, PortId, Sequence,
+				Timestamp,
+			},
+		},
+	};
+	use frame_support::{
+		dispatch::DispatchResult,
+		pallet_prelude::*,
+		traits::{
+			fungibles::{Inspect, Mutate, Transfer},
+			UnixTime,
+		},
+	};
+	use frame_system::pallet_prelude::*;
+	use ibc::{
+		applications::transfer::context::Ics20Context,
+		core::{
+			ics02_client::client_consensus::AnyConsensusState,
+			ics04_channel::{
+				channel::{Counterparty, Order},
+				context::ChannelKeeper,
+				events::WriteAcknowledgement,
+				Version,
+			},
+			ics24_host::{
+				identifier::{ChannelId as IbcChannelId, PortId as IbcPortId},
+				path::{ClientConsensusStatePath, ClientStatePath},
+			},
+			ics26_routing::error::Error as Ics26Error,
+		},
+		events::IbcEvent,
+		handler::{HandlerOutput, HandlerOutputBuilder},
+		signer::Signer,
+	};
+	use sp_runtime::traits::IdentifyAccount;
+	use crate::module::applications::transfer::transfer_handle_callback::TransferModule;
+
+	/// Configure the pallet by specifying the parameters and types on which it depends.
+	#[pallet::config]
+	pub trait Config: frame_system::Config + Sync + Send + Debug {
+		/// The overarching event type.
+		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		type TimeProvider: UnixTime;
+
+		/// Currency type of the runtime
+		type Currency: Currency<Self::AccountId>;
+
+		type AssetId: Member
+			+ Parameter
+			+ AtLeast32BitUnsigned
+			+ Codec
+			+ Copy
+			+ Debug
+			+ Default
+			+ MaybeSerializeDeserialize;
+
+		type AssetBalance: Parameter
+			+ Member
+			+ AtLeast32BitUnsigned
+			+ Codec
+			+ Default
+			+ From<u128>
+			+ Into<u128>
+			+ Copy
+			+ MaybeSerializeDeserialize
+			+ Debug;
+
+		type Assets: Transfer<Self::AccountId, AssetId = Self::AssetId, Balance = Self::AssetBalance>
+			+ Mutate<Self::AccountId, AssetId = Self::AssetId, Balance = Self::AssetBalance>
+			+ Inspect<Self::AccountId, AssetId = Self::AssetId, Balance = Self::AssetBalance>;
+
+		type AssetIdByName: AssetIdAndNameProvider<Self::AssetId>;
+
+		/// Account Id Conversion from SS58 string or hex string
+		type AccountIdConversion: TryFrom<Signer>
+			+ IdentifyAccount<AccountId = Self::AccountId>
+			+ Clone
+			+ PartialEq
+			+ Debug;
+
+		// config native token name
+		const NATIVE_TOKEN_NAME: &'static [u8];
+	}
+
+	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+	#[pallet::without_storage_info]
+	pub struct Pallet<T>(_);
+
+	#[pallet::storage]
+	/// ClientStatePath(client_id) => ClientState
+	pub type ClientStates<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// (client_id, height) => timestamp
+	pub type ClientProcessedTimes<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		Vec<u8>,
+		Blake2_128Concat,
+		Vec<u8>,
+		Vec<u8>,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	/// (client_id, height) => host_height
+	pub type ClientProcessedHeights<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		Vec<u8>,
+		Blake2_128Concat,
+		Vec<u8>,
+		Vec<u8>,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	/// ClientConsensusStatePath(client_id, Height) => ConsensusState
+	pub type ConsensusStates<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// ConnectionsPath(connection_id) => ConnectionEnd
+	pub type Connections<T: Config> = StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// ChannelEndPath(port_id, channel_id) => ChannelEnd
+	pub type Channels<T: Config> = StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// ConnectionsPath(connection_id) => Vec<ChannelEndPath(port_id, channel_id)>
+	pub type ChannelsConnection<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<Vec<u8>>, ValueQuery>;
+
+	#[pallet::storage]
+	/// SeqSendsPath(port_id, channel_id) => sequence
+	pub type NextSequenceSend<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, u64, ValueQuery>;
+
+	#[pallet::storage]
+	/// SeqRecvsPath(port_id, channel_id) => sequence
+	pub type NextSequenceRecv<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, u64, ValueQuery>;
+
+	#[pallet::storage]
+	/// SeqAcksPath(port_id, channel_id) => sequence
+	pub type NextSequenceAck<T: Config> = StorageMap<_, Blake2_128Concat, Vec<u8>, u64, ValueQuery>;
+
+	#[pallet::storage]
+	/// AcksPath(port_id, channel_id, sequence) => hash of acknowledgement
+	pub type Acknowledgements<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// ClientTypePath(client_id) => client_type
+	pub type Clients<T: Config> = StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn client_counter)]
+	/// client counter
+	pub type ClientCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn connection_counter)]
+	/// connection counter
+	pub type ConnectionCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	/// channel counter
+	pub type ChannelCounter<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	/// ClientConnectionsPath(client_id) => connection_id
+	pub type ConnectionClient<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// ReceiptsPath(port_id, channel_id, sequence) => receipt
+	pub type PacketReceipt<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// CommitmentsPath(port_id, channel_id, sequence) => hash of (timestamp, height, packet)
+	pub type PacketCommitment<T: Config> =
+		StorageMap<_, Blake2_128Concat, Vec<u8>, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	/// (height, port_id, channel_id, sequence) => send-packet event
+	pub type SendPacketEvent<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, Vec<u8>>,
+			NMapKey<Blake2_128Concat, Vec<u8>>,
+			NMapKey<Blake2_128Concat, u64>,
+		),
+		Vec<u8>,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	/// (port_id, channel_id, sequence) => writ ack event
+	pub type WriteAckPacketEvent<T: Config> = StorageNMap<
+		_,
+		(
+			NMapKey<Blake2_128Concat, Vec<u8>>,
+			NMapKey<Blake2_128Concat, Vec<u8>>,
+			NMapKey<Blake2_128Concat, u64>,
+		),
+		Vec<u8>,
+		ValueQuery,
+	>;
+
+	#[pallet::storage]
+	/// store latest height
+	pub type LatestHeight<T: Config> = StorageValue<_, Vec<u8>, ValueQuery>;
+
+	#[pallet::storage]
+	pub type OldHeight<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	/// key-value asset id with asset name
+	pub type AssetIdByName<T: Config> =
+		StorageMap<_, Twox64Concat, Vec<u8>, T::AssetId, ValueQuery>;
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub asset_id_by_name: Vec<(String, T::AssetId)>,
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { asset_id_by_name: Vec::new() }
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			for (token_id, id) in self.asset_id_by_name.iter() {
+				<AssetIdByName<T>>::insert(token_id.as_bytes(), id);
+			}
+		}
+	}
+
+	/// Substrate IBC event list
+	#[pallet::event]
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		/// New block
+		NewBlock { height: Height },
+		/// Client Created
+		CreateClient {
+			height: Height,
+			client_id: ClientId,
+			client_type: ClientType,
+			consensus_height: Height,
+		},
+		/// Client updated
+		UpdateClient {
+			height: Height,
+			client_id: ClientId,
+			client_type: ClientType,
+			consensus_height: Height,
+		},
+		/// Client upgraded
+		UpgradeClient {
+			height: Height,
+			client_id: ClientId,
+			client_type: ClientType,
+			consensus_height: Height,
+		},
+		/// Client misbehaviour
+		ClientMisbehaviour {
+			height: Height,
+			client_id: ClientId,
+			client_type: ClientType,
+			consensus_height: Height,
+		},
+		/// Connection open init
+		OpenInitConnection {
+			height: Height,
+			connection_id: Option<ConnectionId>,
+			client_id: ClientId,
+			counterparty_connection_id: Option<ConnectionId>,
+			counterparty_client_id: ClientId,
+		},
+		/// Connection open try
+		OpenTryConnection {
+			height: Height,
+			connection_id: Option<ConnectionId>,
+			client_id: ClientId,
+			counterparty_connection_id: Option<ConnectionId>,
+			counterparty_client_id: ClientId,
+		},
+		/// Connection open acknowledgement
+		OpenAckConnection {
+			height: Height,
+			connection_id: Option<ConnectionId>,
+			client_id: ClientId,
+			counterparty_connection_id: Option<ConnectionId>,
+			counterparty_client_id: ClientId,
+		},
+		/// Connection open confirm
+		OpenConfirmConnection {
+			height: Height,
+			connection_id: Option<ConnectionId>,
+			client_id: ClientId,
+			counterparty_connection_id: Option<ConnectionId>,
+			counterparty_client_id: ClientId,
+		},
+		/// Channel open init
+		OpenInitChannel {
+			height: Height,
+			port_id: PortId,
+			channel_id: Option<ChannelId>,
+			connection_id: ConnectionId,
+			counterparty_port_id: PortId,
+			counterparty_channel_id: Option<ChannelId>,
+		},
+		/// Channel open try
+		OpenTryChannel {
+			height: Height,
+			port_id: PortId,
+			channel_id: Option<ChannelId>,
+			connection_id: ConnectionId,
+			counterparty_port_id: PortId,
+			counterparty_channel_id: Option<ChannelId>,
+		},
+		/// Channel open acknowledgement
+		OpenAckChannel {
+			height: Height,
+			port_id: PortId,
+			channel_id: Option<ChannelId>,
+			connection_id: ConnectionId,
+			counterparty_port_id: PortId,
+			counterparty_channel_id: Option<ChannelId>,
+		},
+		/// Channel open confirm
+		OpenConfirmChannel {
+			height: Height,
+			port_id: PortId,
+			channel_id: Option<ChannelId>,
+			connection_id: ConnectionId,
+			counterparty_port_id: PortId,
+			counterparty_channel_id: Option<ChannelId>,
+		},
+		/// Channel close init
+		CloseInitChannel {
+			height: Height,
+			port_id: PortId,
+			channel_id: Option<ChannelId>,
+			connection_id: ConnectionId,
+			counterparty_port_id: PortId,
+			counterparty_channel_id: Option<ChannelId>,
+		},
+		/// Channel close confirm
+		CloseConfirmChannel {
+			height: Height,
+			port_id: PortId,
+			channel_id: Option<ChannelId>,
+			connection_id: ConnectionId,
+			counterparty_port_id: PortId,
+			counterparty_channel_id: Option<ChannelId>,
+		},
+		/// Send packet
+		SendPacket { height: Height, packet: Packet },
+		/// Receive packet
+		ReceivePacket { height: Height, packet: Packet },
+		/// WriteAcknowledgement packet
+		WriteAcknowledgement{ height: Height, packet: Packet, ack: Vec<u8> },
+		/// Acknowledgements packet
+		AcknowledgePacket { height: Height, packet: Packet },
+		/// Timeout packet
+		TimeoutPacket { height: Height, packet: Packet },
+		/// TimoutOnClose packet
+		TimeoutOnClosePacket { height: Height, packet: Packet },
+		/// Empty
+		Empty(Vec<u8>),
+		/// Chain Error
+		ChainError(Vec<u8>),
+		/// App Module
+		AppModule(ModuleEvent),
+		/// transfer native token
+		TransferNativeToken(T::AccountIdConversion, T::AccountIdConversion, BalanceOf<T>),
+		/// transfer no native token
+		TransferNoNativeToken(
+			T::AccountIdConversion,
+			T::AccountIdConversion,
+			<T as Config>::AssetBalance,
+		),
+		/// Burn cross chain token
+		BurnToken(T::AssetId, T::AccountIdConversion, T::AssetBalance),
+		/// Mint chairperson  token
+		MintToken(T::AssetId, T::AccountIdConversion, T::AssetBalance),
+	}
+
+	/// Errors in MMR verification informing users that something went wrong.
+	#[pallet::error]
+	pub enum Error<T> {
+		/// update the beefy light client failure!
+		UpdateBeefyLightClientFailure,
+		/// receive mmr root block number less than client_state.latest_commitment.block_number
+		ReceiveMmrRootBlockNumberLessThanClientStateLatestCommitmentBlockNumber,
+		/// client id not found
+		ClientIdNotFound,
+		/// Encode error
+		InvalidEncode,
+		/// Decode Error
+		InvalidDecode,
+		/// FromUtf8Error
+		InvalidFromUtf8,
+		/// invalid signed_commitment
+		InvalidSignedCommitment,
+		/// empty latest_commitment
+		EmptyLatestCommitment,
+		/// invalid token id
+		InvalidTokenId,
+		/// wrong assert id
+		WrongAssetId,
+		// Parser Msg Transfer Error
+		ParserMsgTransferError,
+	}
+
+	/// Dispatchable functions allows users to interact with the pallet and invoke state changes.
+	/// These functions materialize as "extrinsic", which are often compared to transactions.
+	/// Dispatch able functions must be annotated with a weight and must return a DispatchResult.
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		/// This function acts as an entry for all of the IBC request(except MMR root update).
+		/// I.e., create clients, update clients, handshakes to create channels, ...etc
+		#[pallet::weight(0)]
+		pub fn deliver(origin: OriginFor<T>, messages: Vec<Any>) -> DispatchResultWithPostInfo {
+			sp_tracing::within_span!(
+			sp_tracing::Level::TRACE, "deliver";
+			{
+				let _sender = ensure_signed(origin)?;
+				let mut ctx = Context::<T>::new();
+
+				let messages: Vec<ibc_proto::google::protobuf::Any> = messages
+					.into_iter()
+					.map(|message| ibc_proto::google::protobuf::Any {
+						type_url: String::from_utf8(message.type_url.clone()).unwrap(),
+						value: message.value,
+					})
+					.collect();
+
+				log::trace!(target: LOG_TARGET, "received deliver : {:?} ", messages.iter().map(|message| message.type_url.clone()).collect::<Vec<_>>());
+
+				for (_, message) in messages.clone().into_iter().enumerate() {
+
+					match ibc::core::ics26_routing::handler::deliver(&mut ctx, message.clone()) {
+						Ok(ibc::core::ics26_routing::handler::MsgReceipt { events, log: _log}) => {
+							log::trace!(target: LOG_TARGET, "deliver events  : {:?} ", events);
+							// deposit events about send packet event and ics20 transfer event
+							for event in events {
+								Self::deposit_event(event.clone().into());
+							}
+						}
+						Err(error) => {
+							log::trace!(target: LOG_TARGET, "deliver error  : {:?} ", error);
+						}
+					};
+				}
+
+				Ok(().into())
+			})
+		}
+
+		#[pallet::weight(0)]
+		pub fn raw_transfer(
+			origin: OriginFor<T>,
+			messages: Vec<Any>,
+		) -> DispatchResultWithPostInfo {
+			let _sender = ensure_signed(origin)?;
+			let mut ctx = TransferModule(PhantomData::<T>);
+
+			let messages: Vec<ibc_proto::google::protobuf::Any> = messages
+				.into_iter()
+				.map(|message| ibc_proto::google::protobuf::Any {
+					type_url: String::from_utf8(message.type_url.clone()).unwrap(),
+					value: message.value,
+				})
+				.collect();
+
+			log::trace!(
+				target: LOG_TARGET,
+				"raw_transfer : {:?} ",
+				messages.iter().map(|message| message.type_url.clone()).collect::<Vec<_>>()
+			);
+
+			for message in messages {
+				let mut handle_out = HandlerOutputBuilder::new();
+				let msg_transfer = MsgTransfer::try_from(message).map_err(|_|Error::<T>::ParserMsgTransferError)?;
+				let result = ibc::applications::transfer::relay::send_transfer::send_transfer(
+					&mut ctx,
+					&mut handle_out,
+					msg_transfer,
+				);
+				match result {
+					Ok(_value) => {
+						log::trace!(target: LOG_TARGET, "raw_transfer Successful!");
+					}
+					Err(error) => {
+						log::trace!(target: LOG_TARGET, "raw_transfer Error : {:?} ", error);
+					}
+				}
+
+				let HandlerOutput::<()> { result, log, events } = handle_out.with_result(());
+
+				log::trace!(target: LOG_TARGET, "raw_transfer log : {:?} ", log);
+
+				// deposit events about send packet event and ics20 transfer event
+				for event in events {
+					Self::deposit_event(event.clone().into());
+				}
+			}
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(0)]
+		pub fn delete_send_packet_event(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			log::trace!(target: LOG_TARGET, "delete_send_packet_event");
+
+			let _who = ensure_signed(origin)?;
+			<SendPacketEvent<T>>::drain();
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(0)]
+		pub fn delete_ack_packet_event(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			log::trace!(target: LOG_TARGET, "delete_ack_packet_event");
+
+			let _who = ensure_signed(origin)?;
+			<WriteAckPacketEvent<T>>::drain();
+
+			Ok(().into())
+		}
+	}
+}
+
+
+impl<T: Config> AssetIdAndNameProvider<T::AssetId> for Pallet<T> {
+	type Err = Error<T>;
+
+	fn try_get_asset_id(name: impl AsRef<[u8]>) -> Result<<T as Config>::AssetId, Self::Err> {
+		let asset_id = <AssetIdByName<T>>::try_get(name.as_ref().to_vec());
+		match asset_id {
+			Ok(id) => Ok(id),
+			_ => Err(Error::<T>::InvalidTokenId),
+		}
+	}
+
+	fn try_get_asset_name(asset_id: T::AssetId) -> Result<Vec<u8>, Self::Err> {
+		let token_id = <AssetIdByName<T>>::iter().find(|p| p.1 == asset_id).map(|p| p.0);
+		match token_id {
+			Some(id) => Ok(id),
+			_ => Err(Error::<T>::WrongAssetId),
+		}
+	}
+}
+
+pub fn from_channel_id_to_vec(value: IbcChannelId) -> Vec<u8> {
+	value.to_string().as_bytes().to_vec()
+}
