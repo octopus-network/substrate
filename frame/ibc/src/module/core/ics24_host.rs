@@ -1,4 +1,4 @@
-use crate::{alloc::string::ToString, Config, Event, from_channel_id_to_vec, REVISION_NUMBER};
+use crate::{alloc::string::ToString, from_channel_id_to_vec, Config, Event, REVISION_NUMBER};
 use alloc::string::String;
 use ibc::{
 	core::{
@@ -157,7 +157,6 @@ impl From<IbcConnectionId> for ConnectionId {
 		Self(value)
 	}
 }
-
 
 impl From<ConnectionId> for IbcConnectionId {
 	fn from(value: ConnectionId) -> Self {

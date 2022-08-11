@@ -114,8 +114,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	) -> Result<AnyConsensusState, Ics04Error> {
 		trace!(target:"runtime::pallet-ibc","in channel : [client_consensus_state]");
 
-		let ret = ClientReader::consensus_state(self, client_id, height)
-		.unwrap();
+		let ret = ClientReader::consensus_state(self, client_id, height).unwrap();
 
 		Ok(ret)
 	}
@@ -324,15 +323,12 @@ impl<T: Config> ChannelReader for Context<T> {
 
 		if <ClientProcessedTimes<T>>::contains_key(
 			client_id.as_bytes(),
-			height.encode_vec().unwrap()
+			height.encode_vec().unwrap(),
 		) {
-			let time = <ClientProcessedTimes<T>>::get(
-				client_id.as_bytes(),
-				height.encode_vec().unwrap()
-			);
+			let time =
+				<ClientProcessedTimes<T>>::get(client_id.as_bytes(), height.encode_vec().unwrap());
 			let timestamp = String::from_utf8(time).unwrap();
-			let time: Timestamp =
-				serde_json::from_str(&timestamp).unwrap();
+			let time: Timestamp = serde_json::from_str(&timestamp).unwrap();
 			Ok(time)
 		} else {
 			error!(target:"runtime::pallet-ibc","in channel: [client_update_time] processed time not found");
@@ -349,14 +345,13 @@ impl<T: Config> ChannelReader for Context<T> {
 
 		if <ClientProcessedHeights<T>>::contains_key(
 			client_id.as_bytes(),
-			height.encode_vec().unwrap()
+			height.encode_vec().unwrap(),
 		) {
 			let host_height = <ClientProcessedHeights<T>>::get(
 				client_id.as_bytes(),
 				height.encode_vec().unwrap(),
 			);
-			let host_height =
-				Height::decode(&mut &host_height[..]).unwrap();
+			let host_height = Height::decode(&mut &host_height[..]).unwrap();
 			Ok(host_height)
 		} else {
 			error!(target:"runtime::pallet-ibc","in channel: [client_update_height] processed height not found");

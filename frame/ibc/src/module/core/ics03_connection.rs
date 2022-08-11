@@ -90,7 +90,6 @@ impl<T: Config> ConnectionReader for Context<T> {
 		let ret = ClientReader::consensus_state(self, client_id, height)
 			.map_err(Ics03Error::ics02_client);
 
-	
 		Ok(ret.unwrap())
 	}
 
@@ -144,8 +143,7 @@ impl<T: Config> ConnectionKeeper for Context<T> {
 		trace!(target:"runtime::pallet-ibc","in connection : [increase_connection_counter]");
 
 		let ret = <ConnectionCounter<T>>::try_mutate(|val| -> Result<(), Ics03Error> {
-			let new = val
-				.checked_add(1).unwrap();
+			let new = val.checked_add(1).unwrap();
 			*val = new;
 			Ok(())
 		});

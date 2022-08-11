@@ -1,5 +1,5 @@
-pub mod transfer_handle_callback;
 pub mod channel;
+pub mod transfer_handle_callback;
 
 use crate::{context::Context, *};
 use frame_support::traits::{
@@ -42,8 +42,8 @@ impl<T: Config> BankKeeper for TransferModule<T> {
 		// match is_native_asset {
 		// 	// transfer native token
 		// 	true => {
-		// 		let amount = amt.amount.as_u256().low_u128().checked_into().unwrap(); // TODO: FIX IN THE FUTURE
-		// 		let native_token_name = T::NATIVE_TOKEN_NAME;
+		// 		let amount = amt.amount.as_u256().low_u128().checked_into().unwrap(); // TODO: FIX IN THE
+		// FUTURE 		let native_token_name = T::NATIVE_TOKEN_NAME;
 		// 		let ibc_token_name = amt.denom.base_denom().as_str().as_bytes();
 
 		// 		// assert native token name equal want to send ibc token name
