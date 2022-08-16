@@ -565,10 +565,6 @@ parameter_types! {
 	pub const UpwardMessagesLimit: u32 = 10;
 }
 
-// If not there is no assets and nft cross chain, the code comments bellow should use.
-// use pallet_octopus_appchain::traits_default_impl::{UnImplementAssets, UnImplementUniques};
-// use pallet_octopus_appchain::traits_default_impl::ExampleConvertor;
-
 type ClassId = u128;
 type InstanceId = u128;
 impl pallet_octopus_appchain::Config for Runtime {
@@ -578,17 +574,8 @@ impl pallet_octopus_appchain::Config for Runtime {
 	type PalletId = OctopusAppchainPalletId;
 	type LposInterface = OctopusLpos;
 	type UpwardMessagesInterface = OctopusUpwardMessages;
-	type ClassId = ClassId;
-	type InstanceId = InstanceId;
-	type Uniques = Uniques;
-	type Convertor = ();
-	// type Convertor = ExampleConvertor<Runtime>;
-	// If not there is no assets and nft cross chain, the code comments bellow should use.
-	// type Uniques = UnImplementUniques<Runtime>;
 	type Currency = Balances;
 	type Assets = OctopusAssets;
-	// If not there is no assets and nft cross chain, the code comments bellow should use.
-	// type Assets = UnImplementAssets<Runtime>;
 	type AssetBalance = AssetBalance;
 	type AssetId = AssetId;
 	type AssetIdByName = OctopusAppchain;
