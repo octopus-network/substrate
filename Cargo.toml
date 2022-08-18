@@ -306,7 +306,7 @@ sp-version-proc-macro = { path = "./primitives/version/proc-macro" }
 substrate-test-utils = { path = "./test-utils" }
 sp-trie = { path = "./primitives/trie" }
 
-[patch.crates-io]
+#[patch.crates-io]
 # for tendermint
 # tendermint              = { git = "https://github.com/informalsystems/tendermint-rs", branch = "v0.23.x" }
 # tendermint-rpc          = { git = "https://github.com/informalsystems/tendermint-rs", branch = "v0.23.x" }
@@ -314,3 +314,7 @@ sp-trie = { path = "./primitives/trie" }
 # tendermint-light-client = { git = "https://github.com/informalsystems/tendermint-rs", branch = "v0.23.x" }
 # tendermint-light-client-verifier = { git = "https://github.com/informalsystems/tendermint-rs", branch = "v0.23.x" }
 # tendermint-testgen      = { git = "https://github.com/informalsystems/tendermint-rs", branch = "v0.23.x" }
+
+[patch.crates-io]
+syn =  { git = "https://github.com/DaviRain-Su/syn.git", branch = "branch-1.0.97" }
+

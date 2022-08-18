@@ -12583,3 +12583,8 @@ dependencies = [
  "cc",
  "libc",
 ]
+
+[[patch.unused]]
+name = "syn"
+version = "1.0.97"
+source = "git+https://github.com/DaviRain-Su/syn.git?branch=branch-1.0.97#17682c67bd1c4de8662fda06a3254231dfeed86c"
