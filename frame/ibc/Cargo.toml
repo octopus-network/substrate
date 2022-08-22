@@ -44,11 +44,17 @@ hex = '0.4.0'
 sha2 = '0.10.2'
 serde = { version = "1.0" }
 ibc = { version = "0.18.0",  features = ["mocks"] }
-sp-io = { version = "6.0.0", default-features = false, path = "../../primitives/io" }
-sp-runtime = { version = "6.0.0", default-features = false, path = "../../primitives/runtime" }
-sp-std = { version = "4.0.0", default-features = false, path = "../../primitives/std" }
-sp-keyring = { version = "6.0.0", default-features = false, path = "../../primitives/keyring" }
-frame-support = { version = "4.0.0-dev", default-features = false, path = "../support" }
+sp-io = { version = "6.0.0", path = "../../primitives/io" }
+sp-runtime = { version = "6.0.0", path = "../../primitives/runtime" }
+sp-std = { version = "4.0.0",  path = "../../primitives/std" }
+sp-keyring = { version = "6.0.0", path = "../../primitives/keyring" }
+frame-support = { version = "4.0.0-dev", path = "../support" }
+pallet-assets = { version = "4.0.0-dev", path = "../assets" }
+pallet-balances = { version = "4.0.0-dev", path = "../balances" }
+pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp" }
+pallet-babe = { version = "4.0.0-dev", path = "../babe" }
+sp-version = { version = "5.0.0", path = "../../primitives/version" }
+sp-core = { version = "6.0.0", path = "../../primitives/core" }
 chrono = "0.4.19"
 
 [features]
