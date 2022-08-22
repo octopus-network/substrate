@@ -33,7 +33,7 @@ impl<T: Config> Module for TransferModule<T> {
 		counterparty: &Counterparty,
 		version: &Version,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_chan_open_init(
+		ibc::applications::transfer::context::on_chan_open_init(
 			self,
 			output,
 			order,
@@ -42,8 +42,7 @@ impl<T: Config> Module for TransferModule<T> {
 			channel_id,
 			counterparty,
 			version,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
 	}
 
 	fn on_chan_open_try(
@@ -57,7 +56,7 @@ impl<T: Config> Module for TransferModule<T> {
 		version: &Version,
 		counterparty_version: &Version,
 	) -> Result<Version, Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_chan_open_try(
+		ibc::applications::transfer::context::on_chan_open_try(
 			self,
 			output,
 			order,
@@ -67,8 +66,7 @@ impl<T: Config> Module for TransferModule<T> {
 			counterparty,
 			version,
 			counterparty_version,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
 	}
 
 	fn on_chan_open_ack(
@@ -78,14 +76,14 @@ impl<T: Config> Module for TransferModule<T> {
 		channel_id: &IbcChannelId,
 		counterparty_version: &Version,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_chan_open_ack(
+		ibc::applications::transfer::context::on_chan_open_ack(
 			self,
 			output,
 			port_id,
 			channel_id,
 			counterparty_version,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
+		
 	}
 
 	fn on_chan_open_confirm(
@@ -94,10 +92,9 @@ impl<T: Config> Module for TransferModule<T> {
 		port_id: &PortId,
 		channel_id: &IbcChannelId,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_chan_open_confirm(
+		ibc::applications::transfer::context::on_chan_open_confirm(
 			self, output, port_id, channel_id,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
 	}
 
 	fn on_chan_close_init(
@@ -106,10 +103,9 @@ impl<T: Config> Module for TransferModule<T> {
 		port_id: &PortId,
 		channel_id: &IbcChannelId,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_chan_close_init(
+		ibc::applications::transfer::context::on_chan_close_init(
 			self, output, port_id, channel_id,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
 	}
 
 	fn on_chan_close_confirm(
@@ -118,10 +114,10 @@ impl<T: Config> Module for TransferModule<T> {
 		port_id: &PortId,
 		channel_id: &IbcChannelId,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_chan_close_confirm(
+		ibc::applications::transfer::context::on_chan_close_confirm(
 			self, output, port_id, channel_id,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
+		
 	}
 
 	fn on_recv_packet(
@@ -140,14 +136,14 @@ impl<T: Config> Module for TransferModule<T> {
 		acknowledgement: &GenericAcknowledgement,
 		relayer: &Signer,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_acknowledgement_packet(
+		ibc::applications::transfer::context::on_acknowledgement_packet(
 			self,
 			output,
 			packet,
 			acknowledgement,
 			relayer,
-		)
-		.unwrap())
+		).map_err(|value| Ics04Error::app_module(value.to_string()))
+		
 	}
 
 	fn on_timeout_packet(
@@ -156,7 +152,6 @@ impl<T: Config> Module for TransferModule<T> {
 		packet: &IbcPacket,
 		relayer: &Signer,
 	) -> Result<(), Ics04Error> {
-		Ok(ibc::applications::transfer::context::on_timeout_packet(self, output, packet, relayer)
-			.unwrap())
+		ibc::applications::transfer::context::on_timeout_packet(self, output, packet, relayer).map_err(|value| Ics04Error::app_module(value.to_string()))
 	}
 }

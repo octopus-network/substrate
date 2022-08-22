@@ -550,7 +550,7 @@ pub mod pallet {
 				let messages: Vec<ibc_proto::google::protobuf::Any> = messages
 					.into_iter()
 					.map(|message| ibc_proto::google::protobuf::Any {
-						type_url: String::from_utf8(message.type_url.clone()).unwrap(),
+						type_url: String::from_utf8(message.type_url.clone()).expect("Convert From UTF8 Never Faild"),
 						value: message.value,
 					})
 					.collect();
@@ -588,7 +588,7 @@ pub mod pallet {
 			let messages: Vec<ibc_proto::google::protobuf::Any> = messages
 				.into_iter()
 				.map(|message| ibc_proto::google::protobuf::Any {
-					type_url: String::from_utf8(message.type_url.clone()).unwrap(),
+					type_url: String::from_utf8(message.type_url.clone()).expect("Convert From UTF8 Never Faild"),
 					value: message.value,
 				})
 				.collect();

@@ -58,8 +58,8 @@ impl From<IbcPortId> for PortId {
 
 impl From<PortId> for IbcPortId {
 	fn from(value: PortId) -> Self {
-		let value = String::from_utf8(value.0).expect("convert from utf8 Error");
-		IbcPortId::from_str(&value).unwrap()
+		let value = String::from_utf8(value.0).expect("convert Never faild");
+		IbcPortId::from_str(&value).expect("convert Never faild")
 	}
 }
 
@@ -75,8 +75,8 @@ impl From<IbcChannelId> for ChannelId {
 
 impl From<ChannelId> for IbcChannelId {
 	fn from(value: ChannelId) -> Self {
-		let value = String::from_utf8(value.0).expect("convert from utf8 Error");
-		Self::from_str(&value).expect("convert channel id from str Error")
+		let value = String::from_utf8(value.0).expect("convert Never faild");
+		Self::from_str(&value).expect("convert Never faild")
 	}
 }
 
@@ -97,7 +97,7 @@ impl From<IbcHeight> for Height {
 
 impl From<Height> for IbcHeight {
 	fn from(height: Height) -> Self {
-		IbcHeight::new(REVISION_NUMBER, height.revision_height).expect("Contruct IbcHeight Error")
+		IbcHeight::new(REVISION_NUMBER, height.revision_height).expect("Contruct IbcHeight Never faild")
 	}
 }
 
@@ -143,8 +143,8 @@ impl From<IbcClientId> for ClientId {
 
 impl From<ClientId> for IbcClientId {
 	fn from(value: ClientId) -> Self {
-		let value = String::from_utf8(value.0).expect("convert from utf8 Error");
-		IbcClientId::from_str(&value).unwrap()
+		let value = String::from_utf8(value.0).expect("convert Never faild");
+		IbcClientId::from_str(&value).expect("convert Never faild")
 	}
 }
 
@@ -160,8 +160,8 @@ impl From<IbcConnectionId> for ConnectionId {
 
 impl From<ConnectionId> for IbcConnectionId {
 	fn from(value: ConnectionId) -> Self {
-		let value = String::from_utf8(value.0).expect("convert from utf8 Error");
-		IbcConnectionId::from_str(&value).unwrap()
+		let value = String::from_utf8(value.0).expect("convert Never faild");
+		IbcConnectionId::from_str(&value).expect("convert Never faild")
 	}
 }
 
@@ -179,8 +179,8 @@ impl From<IbcTimestamp> for Timestamp {
 
 impl From<Timestamp> for IbcTimestamp {
 	fn from(value: Timestamp) -> Self {
-		let value = String::from_utf8(value.time).expect("convert from utf8 Error");
-		Self::from_str(&value).expect("convert from str Error")
+		let value = String::from_utf8(value.time).expect("convert Never faild");
+		Self::from_str(&value).expect("convert Never faild")
 	}
 }
 

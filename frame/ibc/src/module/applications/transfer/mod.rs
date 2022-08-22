@@ -38,71 +38,79 @@ impl<T: Config> BankKeeper for TransferModule<T> {
 		to: &Self::AccountId,
 		amt: &PrefixedCoin,
 	) -> Result<(), Ics20Error> {
+		// TODO(davirain): trace_path now is private
 		// let is_native_asset = amt.denom.trace_path().is_empty();
-		// match is_native_asset {
-		// 	// transfer native token
-		// 	true => {
-		// 		let amount = amt.amount.as_u256().low_u128().checked_into().unwrap(); // TODO: FIX IN THE
-		// FUTURE 		let native_token_name = T::NATIVE_TOKEN_NAME;
-		// 		let ibc_token_name = amt.denom.base_denom().as_str().as_bytes();
+		let is_native_asset = true;
+		match is_native_asset {
+			// transfer native token
+			true => {
+				// TODO(davirain): amount now is private, and base_denom is private
+				// let amount = amt.amount.as_u256().low_u128().checked_into().expect("Convert MUST NOT Failed");
+				// let ibc_token_name = amt.denom.base_denom().as_str().as_bytes();
+				let amount = todo!();
+				let ibc_token_name = &[1, 1, 2, 3];
+				let native_token_name = T::NATIVE_TOKEN_NAME;
 
-		// 		// assert native token name equal want to send ibc token name
-		// 		assert_eq!(
-		// 			native_token_name, ibc_token_name,
-		// 			"send ibc token name is not native token name"
-		// 		);
+				// assert native token name equal want to send ibc token name
+				assert_eq!(
+					native_token_name, ibc_token_name,
+					"send ibc token name is not native token name"
+				);
 
-		// 		<T::Currency as Currency<T::AccountId>>::transfer(
-		// 			&from.clone().into_account(),
-		// 			&to.clone().into_account(),
-		// 			amount,
-		// 			AllowDeath,
-		// 		)
-		// 		.map_err(|error| {
-		// 			error!("❌ [send_coins] : Error: ({:?})", error);
-		// 			Ics20Error::invalid_token()
-		// 		})?;
+				<T::Currency as Currency<T::AccountId>>::transfer(
+					&from.clone().into_account(),
+					&to.clone().into_account(),
+					amount,
+					AllowDeath,
+				)
+				.map_err(|error| {
+					error!("❌ [send_coins] : Error: ({:?})", error);
+					Ics20Error::invalid_token()
+				})?;
 
-		// 		// add emit transfer native token event
-		// 		Pallet::<T>::deposit_event(Event::<T>::TransferNativeToken(
-		// 			from.clone(),
-		// 			to.clone(),
-		// 			amount,
-		// 		))
-		// 	},
-		// 	// transfer non-native token
-		// 	false => {
-		// 		let amount = amt.amount.as_u256().low_u128().into();
-		// 		let denom = amt.denom.base_denom().as_str();
-		// 		// look cross chain asset have register in host chain
-		// 		match T::AssetIdByName::try_get_asset_id(denom) {
-		// 			Ok(token_id) => {
-		// 				<T::Assets as Transfer<T::AccountId>>::transfer(
-		// 					token_id.into(),
-		// 					&from.clone().into_account(),
-		// 					&to.clone().into_account(),
-		// 					amount,
-		// 					true,
-		// 				)
-		// 				.map_err(|error| {
-		// 					error!("❌ [send_coins] : Error: ({:?})", error);
-		// 					Ics20Error::invalid_token()
-		// 				})?;
+				// add emit transfer native token event
+				Pallet::<T>::deposit_event(Event::<T>::TransferNativeToken(
+					from.clone(),
+					to.clone(),
+					amount,
+				))
+			},
+			// transfer non-native token
+			false => {
+				// TODO(davirain): amount now is private, and base_denom is private
+				// let amount = amt.amount.as_u256().low_u128().into();
+				// let denom = amt.denom.base_denom().as_str();
+				let amount = todo!();
+				let denom =  &[1, 1, 2, 3];
+				// look cross chain asset have register in host chain
+				match T::AssetIdByName::try_get_asset_id(denom) {
+					Ok(token_id) => {
+						<T::Assets as Transfer<T::AccountId>>::transfer(
+							token_id.into(),
+							&from.clone().into_account(),
+							&to.clone().into_account(),
+							amount,
+							true,
+						)
+						.map_err(|error| {
+							error!("❌ [send_coins] : Error: ({:?})", error);
+							Ics20Error::invalid_token()
+						})?;
 
-		// 				// add emit transfer no native token event
-		// 				Pallet::<T>::deposit_event(Event::<T>::TransferNoNativeToken(
-		// 					from.clone(),
-		// 					to.clone(),
-		// 					amount,
-		// 				));
-		// 			},
-		// 			Err(_error) => {
-		// 				error!("❌ [send_coins]: denom: ({:?})", denom);
-		// 				return Err(Ics20Error::invalid_token())
-		// 			},
-		// 		}
-		// 	},
-		// }
+						// add emit transfer no native token event
+						Pallet::<T>::deposit_event(Event::<T>::TransferNoNativeToken(
+							from.clone(),
+							to.clone(),
+							amount,
+						));
+					},
+					Err(_error) => {
+						error!("❌ [send_coins]: denom: ({:?})", denom);
+						return Err(Ics20Error::invalid_token())
+					},
+				}
+			},
+		}
 
 		Ok(())
 	}
@@ -112,33 +120,36 @@ impl<T: Config> BankKeeper for TransferModule<T> {
 		account: &Self::AccountId,
 		amt: &PrefixedCoin,
 	) -> Result<(), Ics20Error> {
+		// TODO(davirain): amount now is private, and base_denom is private
 		// let amount = amt.amount.as_u256().low_u128().into();
 		// let denom = amt.denom.base_denom().as_str();
-		// // look cross chain asset have register in host chain
-		// match T::AssetIdByName::try_get_asset_id(denom) {
-		// 	Ok(token_id) => {
-		// 		<T::Assets as Mutate<T::AccountId>>::mint_into(
-		// 			token_id.into(),
-		// 			&account.clone().into_account(),
-		// 			amount,
-		// 		)
-		// 		.map_err(|error| {
-		// 			error!("❌ [mint_coins] : Error: ({:?})", error);
-		// 			Ics20Error::invalid_token()
-		// 		})?;
+		let amount = todo!();
+		let denom = &[1, 1, 2, 3];
+		// look cross chain asset have register in host chain
+		match T::AssetIdByName::try_get_asset_id(denom) {
+			Ok(token_id) => {
+				<T::Assets as Mutate<T::AccountId>>::mint_into(
+					token_id.into(),
+					&account.clone().into_account(),
+					amount,
+				)
+				.map_err(|error| {
+					error!("❌ [mint_coins] : Error: ({:?})", error);
+					Ics20Error::invalid_token()
+				})?;
 
-		// 		// add mint token event
-		// 		Pallet::<T>::deposit_event(Event::<T>::MintToken(
-		// 			token_id,
-		// 			account.clone(),
-		// 			amount,
-		// 		));
-		// 	},
-		// 	Err(_error) => {
-		// 		error!("❌ [mint_coins]: denom: ({:?})", denom);
-		// 		return Err(Ics20Error::invalid_token())
-		// 	},
-		// }
+				// add mint token event
+				Pallet::<T>::deposit_event(Event::<T>::MintToken(
+					token_id,
+					account.clone(),
+					amount,
+				));
+			},
+			Err(_error) => {
+				error!("❌ [mint_coins]: denom: ({:?})", denom);
+				return Err(Ics20Error::invalid_token())
+			},
+		}
 		Ok(())
 	}
 
@@ -147,33 +158,36 @@ impl<T: Config> BankKeeper for TransferModule<T> {
 		account: &Self::AccountId,
 		amt: &PrefixedCoin,
 	) -> Result<(), Ics20Error> {
+		// TODO(davirain): amount now is private, and base_denom is private
 		// let amount = amt.amount.as_u256().low_u128().into();
 		// let denom = amt.denom.base_denom().as_str();
-		// // look cross chain asset have register in host chain
-		// match T::AssetIdByName::try_get_asset_id(denom) {
-		// 	Ok(token_id) => {
-		// 		<T::Assets as Mutate<T::AccountId>>::burn_from(
-		// 			token_id.into(),
-		// 			&account.clone().into_account(),
-		// 			amount,
-		// 		)
-		// 		.map_err(|error| {
-		// 			error!("❌ [burn_coins] : Error: ({:?})", error);
-		// 			Ics20Error::invalid_token()
-		// 		})?;
+		let amount = todo!();
+		let denom = &[1, 1, 2, 3];
+		// look cross chain asset have register in host chain
+		match T::AssetIdByName::try_get_asset_id(denom) {
+			Ok(token_id) => {
+				<T::Assets as Mutate<T::AccountId>>::burn_from(
+					token_id.into(),
+					&account.clone().into_account(),
+					amount,
+				)
+				.map_err(|error| {
+					error!("❌ [burn_coins] : Error: ({:?})", error);
+					Ics20Error::invalid_token()
+				})?;
 
-		// 		// add burn token event
-		// 		Pallet::<T>::deposit_event(Event::<T>::BurnToken(
-		// 			token_id,
-		// 			account.clone(),
-		// 			amount,
-		// 		));
-		// 	},
-		// 	Err(_error) => {
-		// 		error!("❌ [burn_coins]: denom: ({:?})", denom);
-		// 		return Err(Ics20Error::invalid_token())
-		// 	},
-		// }
+				// add burn token event
+				Pallet::<T>::deposit_event(Event::<T>::BurnToken(
+					token_id,
+					account.clone(),
+					amount,
+				));
+			},
+			Err(_error) => {
+				error!("❌ [burn_coins]: denom: ({:?})", denom);
+				return Err(Ics20Error::invalid_token())
+			},
+		}
 		Ok(())
 	}
 }

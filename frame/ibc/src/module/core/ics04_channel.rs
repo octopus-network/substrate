@@ -78,9 +78,9 @@ impl<T: Config> ChannelReader for Context<T> {
 			let mut result = vec![];
 
 			for item in channel_ends_paths.into_iter() {
-				let raw_path = String::from_utf8(item).unwrap();
+				let raw_path = String::from_utf8(item).map_err(|_| Ics04Error::implementation_specific())?;
 				// decode key
-				let path = Path::from_str(&raw_path).unwrap();
+				let path = Path::from_str(&raw_path).map_err(|_| Ics04Error::implementation_specific())?;
 				trace!(target:"runtime::pallet-ibc", "[get_channels] >> Path: {:?}", path);
 				match path {
 					Path::ChannelEnds(channel_ends_path) => {
@@ -104,7 +104,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	fn client_state(&self, client_id: &ClientId) -> Result<AnyClientState, Ics04Error> {
 		trace!(target:"runtime::pallet-ibc","in channel : [client_state]");
 
-		Ok(ClientReader::client_state(self, client_id).unwrap())
+		ClientReader::client_state(self, client_id).map_err(|_| Ics04Error::implementation_specific())
 	}
 
 	fn client_consensus_state(
@@ -114,9 +114,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	) -> Result<AnyConsensusState, Ics04Error> {
 		trace!(target:"runtime::pallet-ibc","in channel : [client_consensus_state]");
 
-		let ret = ClientReader::consensus_state(self, client_id, height).unwrap();
-
-		Ok(ret)
+		ClientReader::consensus_state(self, client_id, height).map_err(|_| Ics04Error::implementation_specific())
 	}
 
 	fn get_next_sequence_send(
@@ -221,7 +219,7 @@ impl<T: Config> ChannelReader for Context<T> {
 
 		if <PacketReceipt<T>>::contains_key(&packet_receipt_path) {
 			let data = <PacketReceipt<T>>::get(&packet_receipt_path);
-			let data = String::from_utf8(data).unwrap();
+			let data = String::from_utf8(data).map_err(|_| Ics04Error::implementation_specific())?;
 			let data = match data.as_ref() {
 				"Ok" => Receipt::Ok,
 				_ => unreachable!(),
@@ -283,7 +281,7 @@ impl<T: Config> ChannelReader for Context<T> {
 			"in channel: [host_height] >> host_height = {:?}",
 			Height::new(REVISION_NUMBER, current_height)
 		);
-		Height::new(REVISION_NUMBER, current_height).unwrap()
+		Height::new(REVISION_NUMBER, current_height).expect("Contruct Height Never Faild")
 	}
 
 	/// Returns the current timestamp of the local chain.
@@ -292,11 +290,9 @@ impl<T: Config> ChannelReader for Context<T> {
 
 		use frame_support::traits::UnixTime;
 		let time = T::TimeProvider::now();
-		let ts = Timestamp::from_nanoseconds(time.as_nanos() as u64)
-			.map_err(|e| panic!("{:?}, caused by {:?} from pallet timestamp_pallet", e, time));
-		trace!(target:"runtime::pallet-ibc","in channel: [host_timestamp] >> host_timestamp = {:?}", ts.unwrap());
 
-		ts.unwrap()
+		Timestamp::from_nanoseconds(time.as_nanos() as u64)
+			.expect("Convert Timestamp Never Faild")
 	}
 
 	/// Returns the `AnyConsensusState` for the given identifier `height`.
@@ -323,12 +319,12 @@ impl<T: Config> ChannelReader for Context<T> {
 
 		if <ClientProcessedTimes<T>>::contains_key(
 			client_id.as_bytes(),
-			height.encode_vec().unwrap(),
+			height.encode_vec().map_err(|_| Ics04Error::implementation_specific())?,
 		) {
 			let time =
-				<ClientProcessedTimes<T>>::get(client_id.as_bytes(), height.encode_vec().unwrap());
-			let timestamp = String::from_utf8(time).unwrap();
-			let time: Timestamp = serde_json::from_str(&timestamp).unwrap();
+				<ClientProcessedTimes<T>>::get(client_id.as_bytes(), height.encode_vec().map_err(|_| Ics04Error::implementation_specific())?);
+			let timestamp = String::from_utf8(time).map_err(|_| Ics04Error::implementation_specific())?;
+			let time: Timestamp = serde_json::from_str(&timestamp).map_err(|_| Ics04Error::implementation_specific())?;
 			Ok(time)
 		} else {
 			error!(target:"runtime::pallet-ibc","in channel: [client_update_time] processed time not found");
@@ -345,13 +341,13 @@ impl<T: Config> ChannelReader for Context<T> {
 
 		if <ClientProcessedHeights<T>>::contains_key(
 			client_id.as_bytes(),
-			height.encode_vec().unwrap(),
+			height.encode_vec().map_err(|_| Ics04Error::implementation_specific())?,
 		) {
 			let host_height = <ClientProcessedHeights<T>>::get(
 				client_id.as_bytes(),
-				height.encode_vec().unwrap(),
+				height.encode_vec().map_err(|_| Ics04Error::implementation_specific())?,
 			);
-			let host_height = Height::decode(&mut &host_height[..]).unwrap();
+			let host_height = Height::decode(&mut &host_height[..]).map_err(|_| Ics04Error::implementation_specific())?;
 			Ok(host_height)
 		} else {
 			error!(target:"runtime::pallet-ibc","in channel: [client_update_height] processed height not found");
@@ -502,14 +498,13 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		if <ChannelsConnection<T>>::contains_key(&connections_path) {
 			trace!(target:"runtime::pallet-ibc","in channel: [store_connection_channels] >> insert port_channel_id");
 			// if connection_id exist
-			let ret = <ChannelsConnection<T>>::try_mutate(
+			<ChannelsConnection<T>>::try_mutate(
 				&connections_path,
 				|val| -> Result<(), Ics04Error> {
 					val.push(channel_ends_path.clone());
 					Ok(())
 				},
-			)
-			.unwrap();
+			).expect("channels Connection mutate Error")
 		} else {
 			// if connection_id no exist
 			trace!(target:"runtime::pallet-ibc","in channel: [store_connection_channels] >> init ChannelsConnection");
@@ -532,7 +527,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 				.to_string()
 				.as_bytes()
 				.to_vec();
-		let channel_end = channel_end.encode_vec().unwrap();
+		let channel_end = channel_end.encode_vec().map_err(|_| Ics04Error::implementation_specific())?;
 
 		// store channels key-value
 		<Channels<T>>::insert(channel_end_path, channel_end);
@@ -602,7 +597,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		trace!(target:"runtime::pallet-ibc","in channel: [increase_channel_counter]");
 
 		let ret = <ChannelCounter<T>>::try_mutate(|val| -> Result<(), Ics04Error> {
-			let new = val.checked_add(1).unwrap();
+			let new = val.checked_add(1).expect("Never Overflow");
 			*val = new;
 			Ok(())
 		});

@@ -40,7 +40,7 @@ impl From<ics26_routing::context::ModuleId> for ModuleId {
 
 impl From<ModuleId> for ics26_routing::context::ModuleId {
 	fn from(module_id: ModuleId) -> Self {
-		ics26_routing::context::ModuleId::from_str(&String::from_utf8(module_id.0).unwrap())
+		ics26_routing::context::ModuleId::from_str(&String::from_utf8(module_id.0).expect("Convert From UTF8 Never Faild"))
 			.expect("should never fiaild")
 	}
 }
@@ -333,10 +333,3 @@ impl<T: Config> From<RawIbcEvent> for Event<T> {
 		}
 	}
 }
-
-// impl<T: Config> From<Vec<RawIbcEvent>> for Event<T> {
-// 	fn from(events: Vec<RawIbcEvent>) -> Self {
-// 		let events: Vec<Event::<T>> = events.into_iter().map(|ev| ev.into()).collect();
-// 		Self::IbcEvents { events }
-// 	}
-// }

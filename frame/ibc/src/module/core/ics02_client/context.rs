@@ -30,8 +30,8 @@ impl<T: Config> ClientReader for Context<T> {
 		if <Clients<T>>::contains_key(client_type_path.clone()) {
 			let data = <Clients<T>>::get(client_type_path);
 			let mut data: &[u8] = &data;
-			let data = Vec::<u8>::decode(&mut data).unwrap();
-			let data = String::from_utf8(data).unwrap();
+			let data = Vec::<u8>::decode(&mut data).map_err(|_| Ics02Error::implementation_specific())?;
+			let data = String::from_utf8(data).map_err(|_| Ics02Error::implementation_specific())?;
 			let client_type = ClientType::from_str(&data)
 				.map_err(|e| Ics02Error::unknown_client_type(e.to_string()))?;
 			Ok(client_type)
@@ -48,7 +48,7 @@ impl<T: Config> ClientReader for Context<T> {
 
 		if <ClientStates<T>>::contains_key(&client_state_path) {
 			let data = <ClientStates<T>>::get(&client_state_path);
-			let result = AnyClientState::decode_vec(&*data).unwrap();
+			let result = AnyClientState::decode_vec(&*data).map_err(|_| Ics02Error::implementation_specific())?;
 			trace!(target:"runtime::pallet-ibc","in client : [client_state] >> any client_state: {:?}", result);
 
 			Ok(result)
@@ -79,7 +79,7 @@ impl<T: Config> ClientReader for Context<T> {
 
 		if <ConsensusStates<T>>::contains_key(client_consensus_state_path.clone()) {
 			let values = <ConsensusStates<T>>::get(client_consensus_state_path.clone());
-			let any_consensus_state = AnyConsensusState::decode_vec(&*values).unwrap();
+			let any_consensus_state = AnyConsensusState::decode_vec(&*values).map_err(|_| Ics02Error::implementation_specific())?;
 			trace!(target:"runtime::pallet-ibc",
 				"in client : [consensus_state] >> any consensus state = {:?}",
 				any_consensus_state
@@ -109,7 +109,7 @@ impl<T: Config> ClientReader for Context<T> {
 
 		if <ConsensusStates<T>>::contains_key(client_consensus_state_path.clone()) {
 			let values = <ConsensusStates<T>>::get(client_consensus_state_path.clone());
-			let any_consensus_state = AnyConsensusState::decode_vec(&*values).unwrap();
+			let any_consensus_state = AnyConsensusState::decode_vec(&*values).map_err(|_| Ics02Error::implementation_specific())?;
 			trace!(target:"runtime::pallet-ibc",
 				"in client : [next_consensus_state] >> any consensus state = {:?}",
 				any_consensus_state
@@ -165,7 +165,7 @@ impl<T: Config> ClientReader for Context<T> {
 			"in channel: [host_height] >> host_height = {:?}",
 			Height::new(REVISION_NUMBER, current_height)
 		);
-		Height::new(REVISION_NUMBER, current_height).unwrap()
+		Height::new(REVISION_NUMBER, current_height).expect("Contruct Heigjt Never failed")
 	}
 
 	fn host_consensus_state(&self, _height: Height) -> Result<AnyConsensusState, Ics02Error> {
@@ -210,7 +210,7 @@ impl<T: Config> ClientKeeper for Context<T> {
 
 		let client_state_path = ClientStatePath(client_id.clone()).to_string().as_bytes().to_vec();
 
-		let data = client_state.encode_vec().unwrap();
+		let data = client_state.encode_vec().map_err(|_| Ics02Error::implementation_specific())?;
 		// store client states key-value
 		<ClientStates<T>>::insert(client_state_path.clone(), data);
 
@@ -236,7 +236,7 @@ impl<T: Config> ClientKeeper for Context<T> {
 		.to_vec();
 
 		// store value
-		let consensus_state = consensus_state.encode_vec().unwrap();
+		let consensus_state = consensus_state.encode_vec().map_err(|_| Ics02Error::implementation_specific())?;
 		// store client_consensus_state path as key, consensus_state as value
 		<ConsensusStates<T>>::insert(client_consensus_state_path, consensus_state);
 
@@ -247,7 +247,7 @@ impl<T: Config> ClientKeeper for Context<T> {
 		info!("in client : [increase_client_counter]");
 
 		let ret = <ClientCounter<T>>::try_mutate(|val| -> Result<(), Ics02Error> {
-			let new = val.checked_add(1).unwrap();
+			let new = val.checked_add(1).expect("Never Overflow");
 			*val = new;
 			Ok(())
 		});
@@ -261,11 +261,11 @@ impl<T: Config> ClientKeeper for Context<T> {
 	) -> Result<(), Ics02Error> {
 		trace!(target:"runtime::pallet-ibc","in client: [store_update_time]");
 
-		let encode_timestamp = serde_json::to_string(&timestamp).unwrap().as_bytes().to_vec();
+		let encode_timestamp = serde_json::to_string(&timestamp).map_err(|_| Ics02Error::implementation_specific())?.as_bytes().to_vec();
 
 		<ClientProcessedTimes<T>>::insert(
 			client_id.as_bytes(),
-			height.encode_vec().unwrap(),
+			height.encode_vec().map_err(|_| Ics02Error::implementation_specific())?,
 			encode_timestamp,
 		);
 
@@ -282,8 +282,8 @@ impl<T: Config> ClientKeeper for Context<T> {
 
 		<ClientProcessedHeights<T>>::insert(
 			client_id.as_bytes(),
-			height.encode_vec().unwrap(),
-			host_height.encode_vec().unwrap(),
+			height.encode_vec().map_err(|_| Ics02Error::implementation_specific())?,
+			host_height.encode_vec().map_err(|_| Ics02Error::implementation_specific())?,
 		);
 
 		Ok(())

@@ -31,10 +31,7 @@ impl<T: Config> ConnectionReader for Context<T> {
 
 		if <Connections<T>>::contains_key(&connections_path) {
 			let data = <Connections<T>>::get(&connections_path);
-			let ret = ConnectionEnd::decode_vec(&*data).unwrap();
-
-			trace!(target:"runtime::pallet-ibc","in connection : [connection_end] >>  connection_end = {:?}", ret);
-			Ok(ret)
+			ConnectionEnd::decode_vec(&*data).map_err(|_| Ics03Error::implementation_specific())
 		} else {
 			trace!(target:"runtime::pallet-ibc","in connection : [connection_end] >> read connection end returns None");
 			Err(Ics03Error::connection_mismatch(conn_id.clone()))
@@ -59,7 +56,7 @@ impl<T: Config> ConnectionReader for Context<T> {
 			"in connection : [host_current_height] >> Host current height = {:?}",
 			Height::new(REVISION_NUMBER, current_height)
 		);
-		Height::new(REVISION_NUMBER, current_height).unwrap()
+		Height::new(REVISION_NUMBER, current_height).expect("Contruct Height Never faild")
 	}
 
 	fn host_oldest_height(&self) -> Height {
@@ -71,7 +68,7 @@ impl<T: Config> ConnectionReader for Context<T> {
 			"in connection : [host_oldest_height] >> Host oldest height = {:?}",
 			Height::new(0, height)
 		);
-		Height::new(REVISION_NUMBER, height).unwrap()
+		Height::new(REVISION_NUMBER, height).expect("get host oldest height Never faild")
 	}
 
 	fn commitment_prefix(&self) -> CommitmentPrefix {
@@ -87,10 +84,8 @@ impl<T: Config> ConnectionReader for Context<T> {
 	) -> Result<AnyConsensusState, Ics03Error> {
 		trace!(target:"runtime::pallet-ibc","in connection : [client_consensus_state]");
 
-		let ret = ClientReader::consensus_state(self, client_id, height)
-			.map_err(Ics03Error::ics02_client);
-
-		Ok(ret.unwrap())
+		ClientReader::consensus_state(self, client_id, height)
+			.map_err(Ics03Error::ics02_client)
 	}
 
 	fn host_consensus_state(&self, _height: Height) -> Result<AnyConsensusState, Ics03Error> {
@@ -117,7 +112,7 @@ impl<T: Config> ConnectionKeeper for Context<T> {
 
 		let connections_path =
 			ConnectionsPath(connection_id.clone()).to_string().as_bytes().to_vec();
-		let data = connection_end.encode_vec().unwrap();
+		let data = connection_end.encode_vec().map_err(|_| Ics03Error::implementation_specific())?;
 
 		// store connection end
 		<Connections<T>>::insert(connections_path, data);
@@ -143,7 +138,7 @@ impl<T: Config> ConnectionKeeper for Context<T> {
 		trace!(target:"runtime::pallet-ibc","in connection : [increase_connection_counter]");
 
 		let ret = <ConnectionCounter<T>>::try_mutate(|val| -> Result<(), Ics03Error> {
-			let new = val.checked_add(1).unwrap();
+			let new = val.checked_add(1).expect("Never Overflow");
 			*val = new;
 			Ok(())
 		});
