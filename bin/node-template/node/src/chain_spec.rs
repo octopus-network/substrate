@@ -1,8 +1,9 @@
 use beefy_primitives::crypto::AuthorityId as BeefyId;
 use node_template_runtime::{
-	opaque::Block, opaque::SessionKeys, AccountId, BabeConfig, Balance, BalancesConfig,
-	GenesisConfig, GrandpaConfig, ImOnlineConfig, OctopusAppchainConfig, OctopusLposConfig,
-	SessionConfig, Signature, SudoConfig, SystemConfig, IbcConfig, DOLLARS, WASM_BINARY, 
+	opaque::{Block, SessionKeys},
+	AccountId, BabeConfig, Balance, BalancesConfig, GenesisConfig, GrandpaConfig, IbcConfig,
+	ImOnlineConfig, OctopusAppchainConfig, OctopusLposConfig, SessionConfig, Signature, SudoConfig,
+	SystemConfig, DOLLARS, WASM_BINARY,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_octopus_appchain::AuthorityId as OctopusId;
@@ -240,8 +241,6 @@ fn testnet_genesis(
 		},
 		octopus_lpos: OctopusLposConfig { era_payout: 2 * DOLLARS, ..Default::default() },
 		octopus_assets: Default::default(),
-		ibc: IbcConfig {
-			asset_id_by_name: vec![("ATOM".to_string(), 1)],
-		},
+		ibc: IbcConfig { asset_id_by_name: vec![("ATOM".to_string(), 1)] },
 	}
 }

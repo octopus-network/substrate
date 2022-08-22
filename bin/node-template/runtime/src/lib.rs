@@ -650,7 +650,7 @@ impl pallet_sudo::Config for Runtime {
 }
 
 impl pallet_ibc::Config for Runtime {
-    type Event = Event;
+	type Event = Event;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 	type Currency = Balances;
 	type AssetId = AssetId;
