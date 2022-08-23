@@ -102,6 +102,7 @@ impl From<Height> for IbcHeight {
 	fn from(height: Height) -> Self {
 		IbcHeight::new(REVISION_NUMBER, height.revision_height)
 			.expect("Contruct IbcHeight Never faild")
+
 	}
 }
 
@@ -192,6 +193,7 @@ impl From<Timestamp> for IbcTimestamp {
 }
 
 /// ibc-rs' `Sequence` representation in substrate
+
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct Sequence(u64);
 

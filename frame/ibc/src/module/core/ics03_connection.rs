@@ -83,6 +83,7 @@ impl<T: Config> ConnectionKeeper for Context<T> {
 		let data =
 			connection_end.encode_vec().map_err(|_| Ics03Error::implementation_specific())?;
 
+
 		// store connection end
 		<Connections<T>>::insert(connections_path, data);
 

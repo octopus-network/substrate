@@ -49,7 +49,6 @@ impl From<ModuleId> for ics26_routing::context::ModuleId {
 	}
 }
 
-/// ibc-rs' `ModuleEventAttribute` representation in substrate
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct ModuleEventAttribute {
 	pub key: Vec<u8>,

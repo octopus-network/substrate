@@ -62,7 +62,6 @@ fn test_read_client_type_failed_by_supply_error_client_id() {
 		assert_eq!(ret, ICS02Error::client_not_found(gp_client_id_failed).to_string());
 	})
 }
-
 #[test]
 fn test_get_packet_commitment_state_ok() {
 	use ibc::core::ics04_channel::commitment::PacketCommitment;

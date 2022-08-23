@@ -587,7 +587,6 @@ pub mod pallet {
 					value: message.value,
 				})
 				.collect();
-
 			for message in messages {
 				let mut handle_out = HandlerOutputBuilder::new();
 				let msg_transfer = MsgTransfer::try_from(message)
@@ -607,9 +606,7 @@ pub mod pallet {
 				}
 
 				let HandlerOutput::<()> { result, log, events } = handle_out.with_result(());
-
-				log::trace!("raw_transfer log : {:?} ", log);
-
+				
 				// deposit events about send packet event and ics20 transfer event
 				for event in events {
 					Self::deposit_event(event.clone().into());
