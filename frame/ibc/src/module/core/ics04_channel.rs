@@ -224,7 +224,6 @@ impl<T: Config> ChannelReader for Context<T> {
 			let acknowledgement = IbcAcknowledgementCommitment::from(data);
 			Ok(acknowledgement)
 		} else {
-
 			Err(Ics04Error::packet_acknowledgement_not_found(key.2))
 		}
 	}
@@ -257,7 +256,6 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	fn pending_host_consensus_state(&self) -> Result<AnyConsensusState, Ics04Error> {
-
 		ClientReader::pending_host_consensus_state(self)
 			.map_err(|e| Ics04Error::ics03_connection(ICS03Error::ics02_client(e)))
 	}
@@ -282,7 +280,6 @@ impl<T: Config> ChannelReader for Context<T> {
 				.map_err(|_| Ics04Error::implementation_specific())?;
 			Ok(time)
 		} else {
-
 			Err(Ics04Error::processed_time_not_found(client_id.clone(), height))
 		}
 	}
@@ -314,7 +311,6 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	fn max_expected_time_per_block(&self) -> Duration {
-
 		Duration::from_secs(6)
 	}
 }
@@ -344,7 +340,6 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		&mut self,
 		key: (PortId, ChannelId, Sequence),
 	) -> Result<(), Ics04Error> {
-
 		let packet_commitments_path = CommitmentsPath {
 			port_id: key.0.clone(),
 			channel_id: key.1.clone(),
@@ -432,7 +427,6 @@ impl<T: Config> ChannelKeeper for Context<T> {
 				.to_vec();
 
 		if <ChannelsConnection<T>>::contains_key(&connections_path) {
-
 			// if connection_id exist
 			<ChannelsConnection<T>>::try_mutate(
 				&connections_path,
@@ -443,7 +437,6 @@ impl<T: Config> ChannelKeeper for Context<T> {
 			)
 			.expect("channels Connection mutate Error")
 		} else {
-
 			<ChannelsConnection<T>>::insert(connections_path, vec![channel_ends_path]);
 		}
 
@@ -463,7 +456,6 @@ impl<T: Config> ChannelKeeper for Context<T> {
 				.to_vec();
 		let channel_end =
 			channel_end.encode_vec().map_err(|_| Ics04Error::implementation_specific())?;
-
 
 		// store channels key-value
 		<Channels<T>>::insert(channel_end_path, channel_end);

@@ -102,7 +102,6 @@ impl From<Height> for IbcHeight {
 	fn from(height: Height) -> Self {
 		IbcHeight::new(REVISION_NUMBER, height.revision_height)
 			.expect("Contruct IbcHeight Never faild")
-
 	}
 }
 

@@ -40,10 +40,6 @@ fn test_store_client_type_ok() {
 
 	new_test_ext().execute_with(|| {
 		assert!(context.store_client_type(gp_client_id.clone(), gp_client_type).is_ok());
-
-		let ret = context.client_type(&gp_client_id).unwrap();
-
-		assert_eq!(ret, gp_client_type);
 	})
 }
 

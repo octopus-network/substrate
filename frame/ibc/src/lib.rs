@@ -606,7 +606,7 @@ pub mod pallet {
 				}
 
 				let HandlerOutput::<()> { result, log, events } = handle_out.with_result(());
-				
+
 				// deposit events about send packet event and ics20 transfer event
 				for event in events {
 					Self::deposit_event(event.clone().into());

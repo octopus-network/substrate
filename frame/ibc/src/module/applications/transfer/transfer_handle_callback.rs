@@ -45,7 +45,6 @@ impl<T: Config> Module for TransferModule<T> {
 			version,
 		)
 		.map_err(|value| Ics04Error::app_module(value.to_string()))
-
 	}
 
 	fn on_chan_open_try(
@@ -69,7 +68,8 @@ impl<T: Config> Module for TransferModule<T> {
 			counterparty,
 			version,
 			counterparty_version,
-		).map_err(|value| Ics04Error::app_module(value.to_string()))
+		)
+		.map_err(|value| Ics04Error::app_module(value.to_string()))
 	}
 
 	fn on_chan_open_ack(
