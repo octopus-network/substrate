@@ -1,3 +1,38 @@
+// This file is part of Substrate.
+
+// Copyright (C) 2022 Parity Technologies (UK) Ltd.
+// SPDX-License-Identifier: Apache-2.0
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//! # Substrate IBC Pallet (work in progress)
+//!
+//! This project is [funded by Interchain Foundation](https://interchain-io.medium.com/ibc-on-substrate-with-cdot-a7025e521028).
+//!
+//! ## Overview
+//! 
+//! This pallet implements the standard [IBC protocol](https://github.com/cosmos/ics).
+//!
+//! The goal of this pallet is to allow the blockchains built on Substrate to gain the ability to interact with other chains in a trustless way via IBC protocol.
+//!
+//! The pallet implements the chain specific logic of [ICS spec](https://github.com/cosmos/ibc/tree/51f0c9e8d8ebcbe6f7f023a8b80f65a8fab705e3/spec),  and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs), which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/51f0c9e8d8ebcbe6f7f023a8b80f65a8fab705e3/spec).
+//!
+//! ## Interface
+//!
+//! ### Dispatchable Functions
+//! - `deliver` - This function acts as an entry for most of the IBC request. I.e., create clients, update clients, handshakes to create channels, ...etc
+//! - `raw_transfer` - ICS20 fungible token transfer, Handling transfer request as sending chain or receiving chain.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 // todo need in future to remove
 #![allow(unreachable_code)]
@@ -9,15 +44,6 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(clippy::too_many_arguments)]
-
-//! # Overview
-//!
-//! The goal of this pallet is to allow the blockchains built on Substrate to gain the ability to
-//! interact with other chains in a trustees way via IBC protocol
-//!
-//! The pallet implements the chain specific logic of [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f),  
-//! and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs),
-//! which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f).
 
 extern crate alloc;
 extern crate core;
@@ -359,37 +385,37 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// New block event
+		/// New block
 		NewBlock { height: Height },
-		/// Client Create event
+		/// Client Create
 		CreateClient {
 			height: Height,
 			client_id: ClientId,
 			client_type: ClientType,
 			consensus_height: Height,
 		},
-		/// Client update event
+		/// Client update
 		UpdateClient {
 			height: Height,
 			client_id: ClientId,
 			client_type: ClientType,
 			consensus_height: Height,
 		},
-		/// Client upgrade event
+		/// Client upgraded
 		UpgradeClient {
 			height: Height,
 			client_id: ClientId,
 			client_type: ClientType,
 			consensus_height: Height,
 		},
-		/// Client misbehaviour event
+		/// Client misbehaviour
 		ClientMisbehaviour {
 			height: Height,
 			client_id: ClientId,
 			client_type: ClientType,
 			consensus_height: Height,
 		},
-		/// Connection open init event
+		/// Connection open init
 		OpenInitConnection {
 			height: Height,
 			connection_id: Option<ConnectionId>,
@@ -397,7 +423,7 @@ pub mod pallet {
 			counterparty_connection_id: Option<ConnectionId>,
 			counterparty_client_id: ClientId,
 		},
-		/// Connection open try event
+		/// Connection open try
 		OpenTryConnection {
 			height: Height,
 			connection_id: Option<ConnectionId>,
@@ -405,7 +431,7 @@ pub mod pallet {
 			counterparty_connection_id: Option<ConnectionId>,
 			counterparty_client_id: ClientId,
 		},
-		/// Connection open acknowledgement event
+		/// Connection open ack
 		OpenAckConnection {
 			height: Height,
 			connection_id: Option<ConnectionId>,
@@ -413,7 +439,7 @@ pub mod pallet {
 			counterparty_connection_id: Option<ConnectionId>,
 			counterparty_client_id: ClientId,
 		},
-		/// Connection open confirm event
+		/// Connection open confirm
 		OpenConfirmConnection {
 			height: Height,
 			connection_id: Option<ConnectionId>,
@@ -421,7 +447,7 @@ pub mod pallet {
 			counterparty_connection_id: Option<ConnectionId>,
 			counterparty_client_id: ClientId,
 		},
-		/// Channel open init event
+		/// Channel open init
 		OpenInitChannel {
 			height: Height,
 			port_id: PortId,
@@ -430,7 +456,7 @@ pub mod pallet {
 			counterparty_port_id: PortId,
 			counterparty_channel_id: Option<ChannelId>,
 		},
-		/// Channel open try event
+		/// Channel open try
 		OpenTryChannel {
 			height: Height,
 			port_id: PortId,
@@ -439,7 +465,7 @@ pub mod pallet {
 			counterparty_port_id: PortId,
 			counterparty_channel_id: Option<ChannelId>,
 		},
-		/// Channel open acknowledgement event
+		/// Channel open ack
 		OpenAckChannel {
 			height: Height,
 			port_id: PortId,
@@ -448,7 +474,7 @@ pub mod pallet {
 			counterparty_port_id: PortId,
 			counterparty_channel_id: Option<ChannelId>,
 		},
-		/// Channel open confirm event
+		/// Channel open confirm
 		OpenConfirmChannel {
 			height: Height,
 			port_id: PortId,
@@ -457,7 +483,7 @@ pub mod pallet {
 			counterparty_port_id: PortId,
 			counterparty_channel_id: Option<ChannelId>,
 		},
-		/// Channel close init event
+		/// Channel close init
 		CloseInitChannel {
 			height: Height,
 			port_id: PortId,
@@ -466,7 +492,7 @@ pub mod pallet {
 			counterparty_port_id: PortId,
 			counterparty_channel_id: Option<ChannelId>,
 		},
-		/// Channel close confirm event
+		/// Channel close confirm
 		CloseConfirmChannel {
 			height: Height,
 			port_id: PortId,
@@ -475,33 +501,33 @@ pub mod pallet {
 			counterparty_port_id: PortId,
 			counterparty_channel_id: Option<ChannelId>,
 		},
-		/// Send packet event
+		/// Send packet
 		SendPacket { height: Height, packet: Packet },
-		/// Receive packet event
+		/// Receive packet
 		ReceivePacket { height: Height, packet: Packet },
-		/// WriteAcknowledgement packet event
+		/// WriteAcknowledgement packet
 		WriteAcknowledgement { height: Height, packet: Packet, ack: Vec<u8> },
-		/// Acknowledgements packet event
+		/// Acknowledgements packet
 		AcknowledgePacket { height: Height, packet: Packet },
-		/// Timeout packet event
+		/// Timeout packet
 		TimeoutPacket { height: Height, packet: Packet },
-		/// TimoutOnClose packet event
+		/// TimoutOnClose packet
 		TimeoutOnClosePacket { height: Height, packet: Packet },
-		/// Chain Error event
+		/// Chain error
 		ChainError(Vec<u8>),
-		/// App Module event
+		/// App Module
 		AppModule(ModuleEvent),
-		/// Transfer native token  event
+		/// Transfer native token
 		TransferNativeToken(T::AccountIdConversion, T::AccountIdConversion, BalanceOf<T>),
-		/// Transfer non-native token event
+		/// Transfer non-native token
 		TransferNoNativeToken(
 			T::AccountIdConversion,
 			T::AccountIdConversion,
 			<T as Config>::AssetBalance,
 		),
-		/// Burn cross chain token event
+		/// Burn cross chain token
 		BurnToken(T::AssetId, T::AccountIdConversion, T::AssetBalance),
-		/// Mint chairperson token event
+		/// Mint chairperson token
 		MintToken(T::AssetId, T::AccountIdConversion, T::AssetBalance),
 	}
 

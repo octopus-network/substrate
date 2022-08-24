@@ -4,7 +4,7 @@ version = "3.0.0-pre.0"
 authors = ['Octopus Network <hi@oct.network>']
 edition = '2021'
 license = "Apache-2.0"
-homepage = "https://oct.network"
+homepage = "https://docs.substrate.io/"
 repository 	= "https://github.com/octopus-network/substrate-ibc/"
 description = "An IBC implementation on Substrate."
 readme = "README.md"
@@ -35,7 +35,6 @@ time = { version = "0.3.11", features = ["macros","parsing"], default-features =
 ibc = { version = "0.18.0", default-features = false }
 ibc-proto = { version = "0.20.0", default-features = false }
 tendermint-proto = { version = "=0.23.9", default-features = false }
-# beefy-light-client = { git = "https://github.com/octopus-network/beefy-light-client.git", branch="main", default-features = false }
 
 frame-benchmarking = { version = "4.0.0-dev", default-features = false, path = "../benchmarking", optional = true }
 
@@ -75,7 +74,6 @@ std = [
 	'prost/std',
 	'ibc/std',
 	'ibc-proto/std',
-	# 'beefy-light-client/std',
 	'serde_json/std',
 	'serde/std',	
 	'flex-error/std',
