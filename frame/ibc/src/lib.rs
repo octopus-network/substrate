@@ -20,18 +20,21 @@
 //! This project is [funded by Interchain Foundation](https://interchain-io.medium.com/ibc-on-substrate-with-cdot-a7025e521028).
 //!
 //! ## Overview
-//! 
+//!
 //! This pallet implements the standard [IBC protocol](https://github.com/cosmos/ics).
 //!
-//! The goal of this pallet is to allow the blockchains built on Substrate to gain the ability to interact with other chains in a trustless way via IBC protocol.
+//! The goal of this pallet is to allow the blockchains built on Substrate to gain the ability to
+//! interact with other chains in a trustless way via IBC protocol.
 //!
 //! The pallet implements the chain specific logic of [ICS spec](https://github.com/cosmos/ibc/tree/51f0c9e8d8ebcbe6f7f023a8b80f65a8fab705e3/spec),  and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs), which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/51f0c9e8d8ebcbe6f7f023a8b80f65a8fab705e3/spec).
 //!
 //! ## Interface
 //!
 //! ### Dispatchable Functions
-//! - `deliver` - This function acts as an entry for most of the IBC request. I.e., create clients, update clients, handshakes to create channels, ...etc
-//! - `raw_transfer` - ICS20 fungible token transfer, Handling transfer request as sending chain or receiving chain.
+//! - `deliver` - This function acts as an entry for most of the IBC request. I.e., create clients,
+//!   update clients, handshakes to create channels, ...etc
+//! - `raw_transfer` - ICS20 fungible token transfer, Handling transfer request as sending chain or
+//!   receiving chain.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 // todo need in future to remove
