@@ -1,0 +1,6 @@
+[submodule "octopus/octopus-pallets"]
+	path = octopus/octopus-pallets
+	url = https://github.com/octopus-network/octopus-pallets.git
+[submodule "octopus/barnacle"]
+	path = octopus/barnacle
+	url = https://github.com/octopus-network/barnacle.git

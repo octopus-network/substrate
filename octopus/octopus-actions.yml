@@ -1,0 +1,98 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CheckForOctopus
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ octopus-dev ]
+  pull_request:
+    branches: [ octopus-dev ]
+# Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # checks-out substrate 
+      - uses: actions/checkout@v2
+        with: 
+            path: ./substrate
+            ref: octopus-dev
+
+      # rm empty octopus-pallet dir
+      - name: rm empty octopus-pallet dir
+        run:  |
+            cd ./substrate/bin/node-template
+            rm ./octopus-pallets -rf
+
+      # checks-out octopus-pallets
+      - name: Checkout tools repo
+        uses: actions/checkout@v2
+        with:
+            repository: octopus-network/octopus-pallets
+            path: ./substrate/bin/node-template/octopus-pallets 
+            ref: main 
+
+      # Set up Go enviroment
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+              go-version: '1.16.4' # The Go version to download (if necessary) and use.
+
+      # Install Rust
+      - name: Install Rust for Substrate
+        uses: digitalnativeinc/install-rust-substrate-action@0.4.0
+      
+      # Install node
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+              node-version: '14'     
+
+      # Remove cargo.toml 
+      - name: Remove cargo.toml
+        run: |
+            cd ./substrate/bin/node-template/octopus-pallets
+            rm Cargo.toml
+
+      # Modify code for test
+      - name: Modify code for test
+        run: |
+            cd ./substrate
+            sed -i "s/appchain_id: \"\".to_string()/appchain_id: \"oct-it-test\".to_string()/g" ./bin/node-template/node/src/chain_spec.rs
+            line=`sed -n "/appchain_id:/p" ./bin/node-template/node/src/chain_spec.rs`
+            echo "$line"
+            
+            sed -i "s/https:\/\/near-rpc.testnet.octopus.network/http:\/\/127.0.0.1:8080\/handler/g" ./bin/node-template/octopus-pallets/appchain/src/mainchain.rs
+            line=`sed -n "/url/p" ./bin/node-template/octopus-pallets/appchain/src/mainchain.rs`
+            echo "$line"
+            
+            sed -i "s/pub const EPOCH_DURATION_IN_BLOCKS\: BlockNumber = 10 \* MINUTES/pub const EPOCH_DURATION_IN_BLOCKS\: BlockNumber = 1 \* MINUTES/g" ./bin/node-template/runtime/src/lib.rs
+            line=`sed -n "/pub const EPOCH_DURATION_IN_BLOCKS\: BlockNumber =/p" ./bin/node-template/runtime/src/lib.rs `
+            echo "$line"
+
+      # Build node-template   
+      - name: Build node template 
+        run: |
+            cd ./substrate
+            cargo build -p node-template 
+
+      # yarn install 
+      - name: Run yarn 
+        run: |
+            cd ./substrate/octopus_tests/js_client
+            yarn add @polkadot/api
+
+      # Run mock server, node, js_client
+      - name: Run test 
+        run: |
+            cd ./substrate/octopus_tests/
+            ./action-all.sh
