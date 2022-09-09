@@ -32,14 +32,14 @@ async function getMockDataFromServer(filepath, number) {
           // console.log(validators[i]);
         }
 
-        // console.log("va: ", validators);
+        console.log("va: ", validators);
         resolve(validators);
       }
     });
   });
 
   const validators = await promise;
-  // console.log("va: ", validators);
+  console.log("va: ", validators);
   return validators;
 }
 

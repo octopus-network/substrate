@@ -85,6 +85,7 @@ async function monitAppChain(testDataPath) {
         events.forEach(async (record) => {
             const { event, phase } = record;
 
+            console.log( event )
             if (event.section == "grandpa" && event.method == "NewAuthorities") 
             {
                 cnt ++;

@@ -296,6 +296,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	//parse request
 	pb := ParseBody(body)
 	// fmt.Println("pb === ", pb)
+	println("Request body :" , pb )
 
 	//dealt the req
 	var response producer.Ret

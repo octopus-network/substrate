@@ -18,7 +18,7 @@ This directory is used for integration testing of octopus. The contents of each 
 2、build node-template
 
 ```
-cargo build -p node-template
+cargo build -p appchain-barnacle
 ```
 
 3、start mock server
