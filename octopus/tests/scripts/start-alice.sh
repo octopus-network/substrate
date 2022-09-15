@@ -1,7 +1,7 @@
 rm -rf /tmp/alice
 
 RUST_LOG="info,runtime::octopus-appchain=debug,runtime::octopus-lpos=debug,runtime::octopus-upward-messages=debug,runtime::octopus-support=debug" \
-../../target/debug/node-template \
+../../../target/debug/appchain-barnacle \
 --base-path /tmp/alice \
 --chain=local \
 --alice \
