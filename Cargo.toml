@@ -232,6 +232,9 @@ members = [
 	"utils/wasm-builder",
 	"octopus/barnacle/node",
 	"octopus/barnacle/runtime",
+	"octopus/octopus-pallets/appchain",
+	"octopus/octopus-pallets/lpos",
+	"octopus/octopus-pallets/upward-messages",
 ]
 
 # The list of dependencies below (which can be both direct and indirect dependencies) are crates
@@ -407,3 +410,4 @@ sp-application-crypto = { path = "./primitives/application-crypto" }
 pallet-octopus-appchain = { path = "./octopus/octopus-pallets/appchain" }
 pallet-octopus-lpos = { path = "./octopus/octopus-pallets/lpos" }
 pallet-octopus-upward-messages = { path = "./octopus/octopus-pallets/upward-messages" }
+pallet-octopus-appchain-benchmarking = { path = "./octopus/octopus-pallets/appchain/benchmarking" }
