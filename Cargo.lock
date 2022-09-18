@@ -115,6 +115,7 @@ dependencies = [
  "pallet-im-online",
  "pallet-mmr-rpc",
  "pallet-octopus-appchain",
+ "pallet-octopus-bridge",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
@@ -187,6 +188,8 @@ dependencies = [
  "pallet-im-online",
  "pallet-mmr",
  "pallet-octopus-appchain",
+ "pallet-octopus-appchain-benchmarking",
+ "pallet-octopus-bridge",
  "pallet-octopus-lpos",
  "pallet-octopus-upward-messages",
  "pallet-offences",
@@ -6124,6 +6127,54 @@ name = "pallet-octopus-appchain"
 version = "4.0.0-pre.0"
 dependencies = [
  "base64",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "hex",
+ "log",
+ "pallet-assets",
+ "pallet-balances",
+ "pallet-octopus-lpos",
+ "pallet-octopus-support",
+ "pallet-octopus-upward-messages",
+ "pallet-session",
+ "pallet-timestamp",
+ "pallet-uniques",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-io",
+ "sp-keyring",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-octopus-appchain-benchmarking"
+version = "4.0.0-pre.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-assets",
+ "pallet-octopus-appchain",
+ "pallet-octopus-support",
+ "pallet-uniques",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+]
+
+[[package]]
+name = "pallet-octopus-bridge"
+version = "4.0.0-pre.0"
+dependencies = [
  "borsh",
  "frame-benchmarking",
  "frame-support",
@@ -6134,11 +6185,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "serde_bytes",
  "serde_json",
- "sp-application-crypto",
- "sp-core",
- "sp-io",
  "sp-runtime",
  "sp-std",
 ]
@@ -6153,12 +6200,20 @@ dependencies = [
  "frame-system",
  "hex",
  "log",
+ "pallet-assets",
  "pallet-authorship",
+ "pallet-balances",
+ "pallet-octopus-appchain",
  "pallet-octopus-support",
+ "pallet-octopus-upward-messages",
  "pallet-session",
+ "pallet-timestamp",
+ "pallet-uniques",
  "parity-scale-codec",
  "scale-info",
+ "sp-core",
  "sp-io",
+ "sp-keyring",
  "sp-runtime",
  "sp-staking",
  "sp-std",
@@ -6189,6 +6244,7 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
+ "sp-keyring",
  "sp-runtime",
  "sp-std",
 ]
