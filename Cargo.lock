@@ -4514,7 +4514,7 @@ dependencies = [
  "matrixmultiply",
  "nalgebra-macros",
  "num-complex",
- "num-rational 0.4.0",
+ "num-rational",
  "num-traits",
  "rand 0.8.5",
  "rand_distr",
@@ -5042,18 +5042,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
 dependencies = [
  "autocfg",
- "num-traits",
-]
-
-[[package]]
-name = "num-rational"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
-dependencies = [
- "autocfg",
- "num-bigint 0.2.6",
- "num-integer",
  "num-traits",
 ]
 
@@ -8063,7 +8051,7 @@ dependencies = [
  "log",
  "merlin",
  "num-bigint 0.2.6",
- "num-rational 0.2.4",
+ "num-rational",
  "num-traits",
  "parity-scale-codec",
  "parking_lot 0.12.1",
@@ -11842,7 +11830,7 @@ dependencies = [
  "downcast-rs",
  "libm",
  "memory_units",
- "num-rational 0.4.0",
+ "num-rational",
  "num-traits",
 ]
 
