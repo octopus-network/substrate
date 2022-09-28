@@ -413,3 +413,4 @@ pallet-octopus-bridge = { path = "./octopus/octopus-pallets/bridge" }
 pallet-octopus-lpos = { path = "./octopus/octopus-pallets/lpos" }
 pallet-octopus-upward-messages = { path = "./octopus/octopus-pallets/upward-messages" }
 pallet-octopus-appchain-benchmarking = { path = "./octopus/octopus-pallets/appchain/benchmarking" }
+pallet-octopus-bridge-benchmarking = { path = "./octopus/octopus-pallets/bridge/benchmarking" }
