@@ -1,0 +1,49 @@
+# Introduce
+This directory is used for integration testing of octopus. The contents of each part are as follows:
+
+* mock_server: It's a mock server which simulate mainchain' data.
+* scripts: Scripts start the appchain node.
+* js_client: Client monitor appchain's event and get the test result.
+* modify.sh: Modify the core code in manual operation.
+* action-all.sh: Used by github actions.
+
+# Manual operation steps
+
+1、modify code
+
+```
+./modify.sh
+```
+
+2、build node-template
+
+```
+cargo build -p appchain-barnacle
+```
+
+3、start mock server
+
+```
+cd mock_server
+go run mock_json_server.go
+```
+
+4、start node
+
+```
+cd scripts/
+./start-alice.sh
+./start-bob.sh
+./start-charlie.sh
+./start-dave.sh
+./start-eve.sh
+```
+
+5、start monitor
+
+```
+cd js_client
+yarn add @polkadot/api
+node appchain.js
+```
+
