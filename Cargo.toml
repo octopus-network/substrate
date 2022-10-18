@@ -233,7 +233,7 @@ members = [
 	"octopus/barnacle/node",
 	"octopus/barnacle/runtime",
 	"octopus/octopus-pallets/appchain",
-	"octopus/octopus-pallets/bridge",
+	#"octopus/octopus-pallets/bridge",
 	"octopus/octopus-pallets/lpos",
 	"octopus/octopus-pallets/upward-messages",
 ]
@@ -409,8 +409,8 @@ sp-application-crypto = { path = "./primitives/application-crypto" }
 
 [patch."https://github.com/octopus-network/octopus-pallets.git"]
 pallet-octopus-appchain = { path = "./octopus/octopus-pallets/appchain" }
-pallet-octopus-bridge = { path = "./octopus/octopus-pallets/bridge" }
+#pallet-octopus-bridge = { path = "./octopus/octopus-pallets/bridge" }
 pallet-octopus-lpos = { path = "./octopus/octopus-pallets/lpos" }
 pallet-octopus-upward-messages = { path = "./octopus/octopus-pallets/upward-messages" }
 pallet-octopus-appchain-benchmarking = { path = "./octopus/octopus-pallets/appchain/benchmarking" }
-pallet-octopus-bridge-benchmarking = { path = "./octopus/octopus-pallets/bridge/benchmarking" }
+#pallet-octopus-bridge-benchmarking = { path = "./octopus/octopus-pallets/bridge/benchmarking" }
