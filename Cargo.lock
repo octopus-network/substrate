@@ -598,7 +598,7 @@ version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9cf849ee05b2ee5fba5e36f97ff8ec2533916700fc0758d40d92136a42f3388"
 dependencies = [
- "digest 0.10.3",
+ "digest 0.10.5",
 ]
 
 [[package]]
@@ -1657,9 +1657,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.10.3"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2fb860ca6fafa5552fb6d0e816a69c8e49f0908bf524e30a90d97c85892d506"
+checksum = "adfbc57365a37acbd2ebf2b64d7e69bb766e2fea813521ed536f5d0520dcf86c"
 dependencies = [
  "block-buffer 0.10.0",
  "crypto-common",
@@ -1864,7 +1864,7 @@ dependencies = [
  "base16ct",
  "crypto-bigint",
  "der",
- "digest 0.10.3",
+ "digest 0.10.5",
  "ff",
  "generic-array 0.14.4",
  "group",
@@ -2911,7 +2911,7 @@ version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
- "digest 0.10.3",
+ "digest 0.10.5",
 ]
 
 [[package]]
@@ -4341,7 +4341,7 @@ dependencies = [
  "blake2s_simd",
  "blake3",
  "core2",
- "digest 0.10.3",
+ "digest 0.10.5",
  "multihash-derive",
  "sha2 0.10.2",
  "sha3",
@@ -9226,7 +9226,7 @@ checksum = "55deaec60f81eefe3cce0dc50bda92d6d8e88f2a27df7c5033b42afeb1ed2676"
 dependencies = [
  "cfg-if 1.0.0",
  "cpufeatures",
- "digest 0.10.3",
+ "digest 0.10.5",
 ]
 
 [[package]]
@@ -9235,7 +9235,7 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31f935e31cf406e8c0e96c2815a5516181b7004ae8c5f296293221e9b1e356bd"
 dependencies = [
- "digest 0.10.3",
+ "digest 0.10.5",
  "keccak",
 ]
 
@@ -9279,7 +9279,7 @@ version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "deb766570a2825fa972bceff0d195727876a9cdf2460ab2e52d455dc2de47fd9"
 dependencies = [
- "digest 0.10.3",
+ "digest 0.10.5",
  "rand_core 0.6.2",
 ]
 
@@ -9664,7 +9664,7 @@ version = "4.0.0"
 dependencies = [
  "blake2",
  "byteorder",
- "digest 0.10.3",
+ "digest 0.10.5",
  "sha2 0.10.2",
  "sha3",
  "sp-std",
@@ -11165,8 +11165,8 @@ version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
- "cfg-if 0.1.10",
- "digest 0.10.3",
+ "cfg-if 1.0.0",
+ "digest 0.10.5",
  "rand 0.8.5",
  "static_assertions",
 ]
