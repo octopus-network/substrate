@@ -24,7 +24,7 @@ The Hermes (IBC Relayer CLI) offers commands to send reqeusts to pallet ibc to t
 
 You can view the reference docs for this pallet by running:
 
-```
+```bash
 cargo doc --open
 ```
 
