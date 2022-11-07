@@ -1,14 +1,13 @@
 [package]
 name = 'pallet-ibc'
-version = "3.0.0"
+version = "4.0.0-dev"
 authors = ['Octopus Network <hi@oct.network>']
 edition = '2021'
-homepage = "https://oct.network"
+homepage = "https://substrate.io"
+repository = "https://github.com/paritytech/substrate/"
 license = "Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/octopus-network/substrate-ibc/"
 description = "An IBC implementation on Substrate."
-
+readme = "README.md"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
