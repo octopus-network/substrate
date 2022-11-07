@@ -12,7 +12,6 @@ pub use frame_support::{
 	StorageValue,
 };
 use frame_system as system;
-use frame_system::EnsureRoot;
 use sp_runtime::{
 	generic,
 	traits::{AccountIdLookup, BlakeTwo256, IdentifyAccount, Verify},
@@ -33,10 +32,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-		Assets: pallet_assets::<Instance1>,
-		Balances: pallet_balances,
 		Ibc: pallet_ibc,
-		Ics20Transfer: pallet_ics20_transfer,
 	}
 );
 
@@ -109,56 +105,12 @@ pub type Balance = u128;
 /// Type used for expressing timestamp.
 pub type Moment = u64;
 
-pub const MILLICENTS: Balance = 10_000_000_000_000;
-pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
-pub const DOLLARS: Balance = 100 * CENTS;
 
-parameter_types! {
-	pub const AssetDeposit: Balance = 100 * DOLLARS;
-	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
-	pub const StringLimit: u32 = 50;
-	pub const MetadataDepositBase: Balance = 10 * DOLLARS;
-	pub const MetadataDepositPerByte: Balance = 1 * DOLLARS;
-}
+pub const MILLISECS_PER_BLOCK: Moment = 6000;
 
-impl pallet_assets::Config<pallet_assets::Instance1> for Test {
-	type RuntimeEvent = RuntimeEvent;
-	type Balance = AssetBalance;
-	type AssetId = AssetId;
-	type Currency = Balances;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type AssetDeposit = AssetDeposit;
-	type AssetAccountDeposit = ConstU128<DOLLARS>;
-	type MetadataDepositBase = MetadataDepositBase;
-	type MetadataDepositPerByte = MetadataDepositPerByte;
-	type ApprovalDeposit = ApprovalDeposit;
-	type StringLimit = StringLimit;
-	type Freezer = ();
-	type Extra = ();
-	type WeightInfo = pallet_assets::weights::SubstrateWeight<Test>;
-}
-
-parameter_types! {
-	pub const ExistentialDeposit: Balance = 1 * DOLLARS;
-	// For weight estimation, we assume that the most locks on an individual account will be 50.
-	// This number may need to be adjusted in the future if this assumption no longer holds true.
-	pub const MaxLocks: u32 = 50;
-	pub const MaxReserves: u32 = 50;
-}
-
-impl pallet_balances::Config for Test {
-	type MaxLocks = MaxLocks;
-	type MaxReserves = MaxReserves;
-	type ReserveIdentifier = [u8; 8];
-	/// The type for recording an account's balance.
-	type Balance = Balance;
-	/// The ubiquitous event type.
-	type RuntimeEvent = RuntimeEvent;
-	type DustRemoval = ();
-	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = frame_system::Pallet<Test>;
-	type WeightInfo = pallet_balances::weights::SubstrateWeight<Test>;
-}
+// NOTE: Currently it is not possible to change the slot duration after the chain has started.
+//       Attempting to do so will brick block production.
+pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
 
 parameter_types! {
 	pub const MinimumPeriod: Moment = SLOT_DURATION / 2;
@@ -178,27 +130,6 @@ parameter_types! {
 	pub const MaxPeerInHeartbeats: u32 = 10_000;
 	pub const MaxPeerDataEncodingSize: u32 = 1_000;
 }
-
-pub const MILLISECS_PER_BLOCK: Moment = 6000;
-
-// NOTE: Currently it is not possible to change the slot duration after the chain has started.
-//       Attempting to do so will brick block production.
-pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
-
-impl pallet_ics20_transfer::Config for Test {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = Balances;
-	type AssetId = AssetId;
-	type AssetBalance = AssetBalance;
-	type Fungibles = Assets;
-	type AssetIdByName = Ics20Transfer;
-	type AccountIdConversion = pallet_ics20_transfer::ics20_impl::IbcAccount;
-	const NATIVE_TOKEN_NAME: &'static [u8] = b"DEMO";
-	type IbcContext = pallet_ibc::context::Context<Test>;
-}
-
-pub type AssetBalance = u128;
-pub type AssetId = u32;
 
 impl pallet::Config for Test {
 	type RuntimeEvent = RuntimeEvent;

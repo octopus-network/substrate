@@ -20,7 +20,6 @@ frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../support" }
 frame-system = { version = "4.0.0-dev", default-features = false, path = "../system" }
 ibc-support = { version = "0.1.0", default-features = false, path = "./ibc-support" }
-pallet-ics20-transfer = { version = "0.1.0", default-features = false, path = "./ibc-applications/ics20-transfer" }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
 sp-core = { version = "6.0.0", default-features = false, path = "../../primitives/core" }
 sp-io = { version = "6.0.0", default-features = false, path = "../../primitives/io" }
@@ -50,10 +49,7 @@ frame-support = { version = "4.0.0-dev", path = "../support" }
 hex = '0.4.0'
 # ibc protocol crates
 ibc = { version = "0.21.1", features = ["mocks"] }
-pallet-assets = { version = "4.0.0-dev", path = "../assets" }
-pallet-babe = { version = "4.0.0-dev", path = "../babe" }
 pallet-balances = { version = "4.0.0-dev", path = "../balances" }
-pallet-ics20-transfer = { version = "0.1.0", path = "./ibc-applications/ics20-transfer" }
 pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp" }
 serde = "1.0"
 sha2 = '0.10.2'
@@ -89,7 +85,6 @@ std = [
   "flex-error/std",
   "hex/std",
   "time/std",
-  "pallet-ics20-transfer/std",
 ]
 runtime-benchmarks = ["frame-benchmarking"]
 try-runtime = ["frame-support/try-runtime"]

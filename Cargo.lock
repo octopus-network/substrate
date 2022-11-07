@@ -5721,10 +5721,7 @@ dependencies = [
  "ibc-proto",
  "ibc-support",
  "log",
- "pallet-assets",
- "pallet-babe",
  "pallet-balances",
- "pallet-ics20-transfer",
  "pallet-timestamp",
  "parity-scale-codec",
  "prost",
@@ -5742,27 +5739,6 @@ dependencies = [
  "sp-version",
  "tendermint-proto",
  "time 0.3.11",
-]
-
-[[package]]
-name = "pallet-ics20-transfer"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "hex",
- "ibc",
- "ibc-proto",
- "ibc-support",
- "log",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "tendermint-proto",
 ]
 
 [[package]]
