@@ -1607,6 +1607,11 @@ impl pallet_alliance::Config for Runtime {
 	type RetirementPeriod = RetirementPeriod;
 }
 
+impl pallet_ibc::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -1670,6 +1675,7 @@ construct_runtime!(
 		RankedPolls: pallet_referenda::<Instance2>,
 		RankedCollective: pallet_ranked_collective,
 		FastUnstake: pallet_fast_unstake,
+		Ibc: pallet_ibc,
 	}
 );
 

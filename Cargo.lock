@@ -3468,6 +3468,7 @@ dependencies = [
  "pallet-fast-unstake",
  "pallet-gilt",
  "pallet-grandpa",
+ "pallet-ibc",
  "pallet-identity",
  "pallet-im-online",
  "pallet-indices",
