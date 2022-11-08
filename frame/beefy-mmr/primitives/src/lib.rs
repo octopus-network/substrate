@@ -36,8 +36,6 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use beefy_primitives::mmr::{BeefyAuthoritySet, BeefyNextAuthoritySet};
-
 /// Supported hashing output size.
 ///
 /// The size is restricted to 32 bytes to allow for a more optimised implementation.
@@ -289,7 +287,7 @@ where
 	L: Into<Leaf<'a>>,
 {
 	if leaf_index >= number_of_leaves {
-		return false
+		return false;
 	}
 
 	let leaf_hash = match leaf.into() {
@@ -379,24 +377,9 @@ where
 					"[merkelize_row] Next: {:?}",
 					next.iter().map(|s| array_bytes::bytes2hex("", s)).collect::<Vec<_>>()
 				);
-				return Err(next)
+				return Err(next);
 			},
 		}
-	}
-}
-
-sp_api::decl_runtime_apis! {
-	/// API useful for BEEFY light clients.
-	pub trait BeefyMmrApi<H>
-	where
-		H: From<Hash> + Into<Hash>,
-		BeefyAuthoritySet<H>: sp_api::Decode,
-	{
-		/// Return the currently active BEEFY authority set proof.
-		fn authority_set_proof() -> BeefyAuthoritySet<H>;
-
-		/// Return the next/queued BEEFY authority set proof.
-		fn next_authority_set_proof() -> BeefyNextAuthoritySet<H>;
 	}
 }
 

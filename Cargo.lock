@@ -521,10 +521,8 @@ name = "beefy-merkle-tree"
 version = "4.0.0-dev"
 dependencies = [
  "array-bytes",
- "beefy-primitives",
  "env_logger",
  "log",
- "sp-api",
  "tiny-keccak",
 ]
 
