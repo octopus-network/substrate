@@ -39,7 +39,7 @@ use ibc::{
 	Height,
 };
 use ibc_proto::protobuf::Protobuf;
-use ibc_support::ibc_trait::{IbcSupportChannelKeeper, IbcSupportChannelReader};
+use crate::traits::{IbcSupportChannelKeeper, IbcSupportChannelReader};
 
 impl<T: Config> ChannelReader for Context<T> {
 	fn channel_end(
