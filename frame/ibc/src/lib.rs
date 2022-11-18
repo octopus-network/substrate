@@ -24,6 +24,7 @@ pub mod errors;
 pub mod events;
 pub mod module;
 pub mod prelude;
+pub mod traits;
 pub mod utils;
 
 pub use crate::{
@@ -32,6 +33,9 @@ pub use crate::{
 		ChannelId, ClientId, ClientType, ConnectionId, Height, Packet, PortId,
 	},
 };
+use codec::{Decode, Encode};
+use scale_info::TypeInfo;
+use sp_runtime::RuntimeDebug;
 
 pub const LOG_TARGET: &str = "runtime::pallet-ibc";
 pub const REVISION_NUMBER: u64 = 0;
@@ -41,6 +45,19 @@ mod mock;
 
 #[cfg(test)]
 mod tests;
+
+/// A struct corresponds to `Any` in crate "prost-types", used in ibc-rs.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct Any {
+	pub type_url: Vec<u8>,
+	pub value: Vec<u8>,
+}
+
+impl From<ibc_proto::google::protobuf::Any> for Any {
+	fn from(any: ibc_proto::google::protobuf::Any) -> Self {
+		Self { type_url: any.type_url.as_bytes().to_vec(), value: any.value }
+	}
+}
 
 mod type_define {
 	use sp_std::vec::Vec;
@@ -81,7 +98,6 @@ pub mod pallet {
 	use frame_support::{pallet_prelude::*, traits::UnixTime};
 	use frame_system::pallet_prelude::*;
 	use ibc::core::ics26_routing::handler::MsgReceipt;
-	use ibc_support::Any;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
@@ -366,7 +382,7 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn deliver(
 			origin: OriginFor<T>,
-			messages: Vec<ibc_support::Any>,
+			messages: Vec<Any>,
 		) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 			let mut ctx = Context::<T>::new();
