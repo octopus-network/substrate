@@ -41,7 +41,11 @@ use ibc::{
 use ibc_proto::protobuf::Protobuf;
 
 impl<T: Config> ChannelReader for Context<T> {
-	fn channel_end(&self, port_id: &PortId, channel_id: &ChannelId) -> Result<ChannelEnd, Ics04Error> {
+	fn channel_end(
+		&self,
+		port_id: &PortId,
+		channel_id: &ChannelId,
+	) -> Result<ChannelEnd, Ics04Error> {
 		let channel_end_path = ChannelEndsPath(port_id.clone(), channel_id.clone())
 			.to_string()
 			.as_bytes()
@@ -66,7 +70,10 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	/// Returns the `ChannelsConnection` for the given identifier `conn_id`.
-	fn connection_channels(&self, conn_id: &ConnectionId) -> Result<Vec<(PortId, ChannelId)>, Ics04Error> {
+	fn connection_channels(
+		&self,
+		conn_id: &ConnectionId,
+	) -> Result<Vec<(PortId, ChannelId)>, Ics04Error> {
 		let connections_path = ConnectionsPath(conn_id.clone()).to_string().as_bytes().to_vec();
 
 		if <ChannelsConnection<T>>::contains_key(&connections_path) {
@@ -270,7 +277,11 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	/// Returns the `ClientProcessedTimes` for the given identifier `client_id` & `height`.
-	fn client_update_time(&self, client_id: &ClientId, height: Height) -> Result<Timestamp, Ics04Error> {
+	fn client_update_time(
+		&self,
+		client_id: &ClientId,
+		height: Height,
+	) -> Result<Timestamp, Ics04Error> {
 		if <ClientProcessedTimes<T>>::contains_key(
 			client_id.as_bytes(),
 			height
@@ -294,7 +305,11 @@ impl<T: Config> ChannelReader for Context<T> {
 		}
 	}
 
-	fn client_update_height(&self, client_id: &ClientId, height: Height) -> Result<Height, Ics04Error> {
+	fn client_update_height(
+		&self,
+		client_id: &ClientId,
+		height: Height,
+	) -> Result<Height, Ics04Error> {
 		if <ClientProcessedHeights<T>>::contains_key(
 			client_id.as_bytes(),
 			height
@@ -329,7 +344,7 @@ impl<T: Config> ChannelReader for Context<T> {
 
 impl<T: Config> ChannelKeeper for Context<T> {
 	fn store_packet_commitment(
-		&mut self, 
+		&mut self,
 		port_id: PortId,
 		channel_id: ChannelId,
 		seq: Sequence,

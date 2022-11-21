@@ -105,7 +105,6 @@ pub type Balance = u128;
 /// Type used for expressing timestamp.
 pub type Moment = u64;
 
-
 pub const MILLISECS_PER_BLOCK: Moment = 6000;
 
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.

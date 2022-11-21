@@ -2,9 +2,7 @@ use crate::Config;
 use alloc::sync::Arc;
 use sp_std::marker::PhantomData;
 
-use ibc::{
-	core::ics26_routing::context::{Module, ModuleId, RouterBuilder},
-};
+use ibc::core::ics26_routing::context::{Module, ModuleId, RouterBuilder};
 
 /// A struct capturing all the functional dependencies (i.e., context)
 /// which the ICS26 module requires to be able to dispatch and process IBC messages.
@@ -32,9 +30,8 @@ pub struct Context<T: Config> {
 
 impl<T: Config> Context<T> {
 	pub fn new() -> Self {
-		let r = SubstrateRouterBuilder::default()
-			.build();
-			
+		let r = SubstrateRouterBuilder::default().build();
+
 		Self { _pd: PhantomData::default(), router: r }
 	}
 
