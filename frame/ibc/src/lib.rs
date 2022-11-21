@@ -32,7 +32,8 @@ pub mod utils;
 pub use crate::{
 	context::Context,
 	module::core::ics24_host::{
-		ChannelId, ClientId, ClientType, ConnectionId, Height, Packet, PortId, Order, TimeoutHeight, Sequence, Timestamp, Version
+		ChannelId, ClientId, ClientType, ConnectionId, Height, Order, Packet, PortId, Sequence,
+		TimeoutHeight, Timestamp, Version,
 	},
 };
 use codec::{Decode, Encode};
@@ -102,9 +103,7 @@ pub mod pallet {
 	use ibc::core::ics26_routing::handler::MsgReceipt;
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config:
-		frame_system::Config + Sync + Send + Debug
-	{
+	pub trait Config: frame_system::Config + Sync + Send + Debug {
 		/// The aggregated event type of the runtime.
 		type RuntimeEvent: Parameter
 			+ Member
@@ -247,179 +246,179 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-			/// Client created event
-			CreateClient {
-				client_id: ClientId<T>,
-				client_type: ClientType<T>,
-				consensus_height: Height<T>,
-			},
-			/// Client updated event
-			UpdateClient {
-				client_id: ClientId<T>,
-				client_type: ClientType<T>,
-				consensus_height: Height<T>,
-				consensus_heights: Vec<Height<T>>,
-				header: Any,
-			},
-			/// Client upgraded event
-			UpgradeClient {
-				client_id: ClientId<T>,
-				client_type: ClientType<T>,
-				consensus_height: Height<T>,
-			},
-			/// Client misbehaviour event
-			ClientMisbehaviour { client_id: ClientId<T>, client_type: ClientType<T> },
-			/// Connection open init event
-			OpenInitConnection {
-				connection_id: ConnectionId<T>,
-				client_id: ClientId<T>,
-				counterparty_connection_id: Option<ConnectionId<T>>,
-				counterparty_client_id: ClientId<T>,
-			},
-			/// Connection open try event
-			OpenTryConnection {
-				connection_id: ConnectionId<T>,
-				client_id: ClientId<T>,
-				counterparty_connection_id: Option<ConnectionId<T>>,
-				counterparty_client_id: ClientId<T>,
-			},
-			/// Connection open acknowledgement event
-			OpenAckConnection {
-				connection_id: ConnectionId<T>,
-				client_id: ClientId<T>,
-				counterparty_connection_id: Option<ConnectionId<T>>,
-				counterparty_client_id: ClientId<T>,
-			},
-			/// Connection open confirm event
-			OpenConfirmConnection {
-				connection_id: ConnectionId<T>,
-				client_id: ClientId<T>,
-				counterparty_connection_id: Option<ConnectionId<T>>,
-				counterparty_client_id: ClientId<T>,
-			},
-			/// Channel open init event
-			OpenInitChannel {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				connection_id: ConnectionId<T>,
-				version: Version<T>,
-			},
-			/// Channel open try event
-			OpenTryChannel {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				counterparty_channel_id: ChannelId<T>,
-				connection_id: ConnectionId<T>,
-				version: Version<T>,
-			},
-			/// Channel open acknowledgement event
-			OpenAckChannel {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				counterparty_channel_id: ChannelId<T>,
-				connection_id: ConnectionId<T>,
-			},
-			/// Channel open confirm event
-			OpenConfirmChannel {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				counterparty_channel_id: ChannelId<T>,
-				connection_id: ConnectionId<T>,
-			},
-			/// Channel close init event
-			CloseInitChannel {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				counterparty_channel_id: ChannelId<T>,
-				connection_id: ConnectionId<T>,
-			},
-			/// Channel close confirm event
-			CloseConfirmChannel {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				counterparty_channel_id: ChannelId<T>,
-				connection_id: ConnectionId<T>,
-			},
-			/// Send packet event
-			SendPacket {
-				packet_data: Vec<u8>,
-				timeout_height: TimeoutHeight<T>,
-				timeout_timestamp: Timestamp<T>,
-				sequence: Sequence,
-				src_port_id: PortId<T>,
-				src_channel_id: ChannelId<T>,
-				dst_port_id: PortId<T>,
-				dst_channel_id: ChannelId<T>,
-				channel_ordering: Order,
-				src_connection_id: ConnectionId<T>,
-			},
-			/// Receive packet event
-			ReceivePacket {
-				packet_data: Vec<u8>,
-				timeout_height: TimeoutHeight<T>,
-				timeout_timestamp: Timestamp<T>,
-				sequence: Sequence,
-				src_port_id: PortId<T>,
-				src_channel_id: ChannelId<T>,
-				dst_port_id: PortId<T>,
-				dst_channel_id: ChannelId<T>,
-				channel_ordering: Order,
-				dst_connection_id: ConnectionId<T>,
-			},
-			/// WriteAcknowledgement packet event
-			WriteAcknowledgement {
-				packet_data: Vec<u8>,
-				timeout_height: TimeoutHeight<T>,
-				timeout_timestamp: Timestamp<T>,
-				sequence: Sequence,
-				src_port_id: PortId<T>,
-				src_channel_id: ChannelId<T>,
-				dst_port_id: PortId<T>,
-				dst_channel_id: ChannelId<T>,
-				acknowledgement: Vec<u8>,
-				dst_connection_id: ConnectionId<T>,
-			},
-			/// Acknowledgements packet event
-			AcknowledgePacket {
-				timeout_height: TimeoutHeight<T>,
-				timeout_timestamp: Timestamp<T>,
-				sequence: Sequence,
-				src_port_id: PortId<T>,
-				src_channel_id: ChannelId<T>,
-				dst_port_id: PortId<T>,
-				dst_channel_id: ChannelId<T>,
-				channel_ordering: Order,
-				src_connection_id: ConnectionId<T>,
-			},
-			/// Timeout packet event
-			TimeoutPacket {
-				timeout_height: TimeoutHeight<T>,
-				timeout_timestamp: Timestamp<T>,
-				sequence: Sequence,
-				src_port_id: PortId<T>,
-				src_channel_id: ChannelId<T>,
-				dst_port_id: PortId<T>,
-				dst_channel_id: ChannelId<T>,
-			},
-			/// TimoutOnClose packet event
-			ChannelClosed {
-				port_id: PortId<T>,
-				channel_id: ChannelId<T>,
-				counterparty_port_id: PortId<T>,
-				maybe_counterparty_channel_id: Option<ChannelId<T>>,
-				connection_id: ConnectionId<T>,
-				channel_ordering: Order,
-			},
-			/// App Module event
-			AppModule(ModuleEvent<T>),
-			/// Ibc errors
-			IbcErrors { errors: Vec<errors::IbcError> },
+		/// Client created event
+		CreateClient {
+			client_id: ClientId<T>,
+			client_type: ClientType<T>,
+			consensus_height: Height<T>,
+		},
+		/// Client updated event
+		UpdateClient {
+			client_id: ClientId<T>,
+			client_type: ClientType<T>,
+			consensus_height: Height<T>,
+			consensus_heights: Vec<Height<T>>,
+			header: Any,
+		},
+		/// Client upgraded event
+		UpgradeClient {
+			client_id: ClientId<T>,
+			client_type: ClientType<T>,
+			consensus_height: Height<T>,
+		},
+		/// Client misbehaviour event
+		ClientMisbehaviour { client_id: ClientId<T>, client_type: ClientType<T> },
+		/// Connection open init event
+		OpenInitConnection {
+			connection_id: ConnectionId<T>,
+			client_id: ClientId<T>,
+			counterparty_connection_id: Option<ConnectionId<T>>,
+			counterparty_client_id: ClientId<T>,
+		},
+		/// Connection open try event
+		OpenTryConnection {
+			connection_id: ConnectionId<T>,
+			client_id: ClientId<T>,
+			counterparty_connection_id: Option<ConnectionId<T>>,
+			counterparty_client_id: ClientId<T>,
+		},
+		/// Connection open acknowledgement event
+		OpenAckConnection {
+			connection_id: ConnectionId<T>,
+			client_id: ClientId<T>,
+			counterparty_connection_id: Option<ConnectionId<T>>,
+			counterparty_client_id: ClientId<T>,
+		},
+		/// Connection open confirm event
+		OpenConfirmConnection {
+			connection_id: ConnectionId<T>,
+			client_id: ClientId<T>,
+			counterparty_connection_id: Option<ConnectionId<T>>,
+			counterparty_client_id: ClientId<T>,
+		},
+		/// Channel open init event
+		OpenInitChannel {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			connection_id: ConnectionId<T>,
+			version: Version<T>,
+		},
+		/// Channel open try event
+		OpenTryChannel {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			counterparty_channel_id: ChannelId<T>,
+			connection_id: ConnectionId<T>,
+			version: Version<T>,
+		},
+		/// Channel open acknowledgement event
+		OpenAckChannel {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			counterparty_channel_id: ChannelId<T>,
+			connection_id: ConnectionId<T>,
+		},
+		/// Channel open confirm event
+		OpenConfirmChannel {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			counterparty_channel_id: ChannelId<T>,
+			connection_id: ConnectionId<T>,
+		},
+		/// Channel close init event
+		CloseInitChannel {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			counterparty_channel_id: ChannelId<T>,
+			connection_id: ConnectionId<T>,
+		},
+		/// Channel close confirm event
+		CloseConfirmChannel {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			counterparty_channel_id: ChannelId<T>,
+			connection_id: ConnectionId<T>,
+		},
+		/// Send packet event
+		SendPacket {
+			packet_data: Vec<u8>,
+			timeout_height: TimeoutHeight<T>,
+			timeout_timestamp: Timestamp<T>,
+			sequence: Sequence,
+			src_port_id: PortId<T>,
+			src_channel_id: ChannelId<T>,
+			dst_port_id: PortId<T>,
+			dst_channel_id: ChannelId<T>,
+			channel_ordering: Order,
+			src_connection_id: ConnectionId<T>,
+		},
+		/// Receive packet event
+		ReceivePacket {
+			packet_data: Vec<u8>,
+			timeout_height: TimeoutHeight<T>,
+			timeout_timestamp: Timestamp<T>,
+			sequence: Sequence,
+			src_port_id: PortId<T>,
+			src_channel_id: ChannelId<T>,
+			dst_port_id: PortId<T>,
+			dst_channel_id: ChannelId<T>,
+			channel_ordering: Order,
+			dst_connection_id: ConnectionId<T>,
+		},
+		/// WriteAcknowledgement packet event
+		WriteAcknowledgement {
+			packet_data: Vec<u8>,
+			timeout_height: TimeoutHeight<T>,
+			timeout_timestamp: Timestamp<T>,
+			sequence: Sequence,
+			src_port_id: PortId<T>,
+			src_channel_id: ChannelId<T>,
+			dst_port_id: PortId<T>,
+			dst_channel_id: ChannelId<T>,
+			acknowledgement: Vec<u8>,
+			dst_connection_id: ConnectionId<T>,
+		},
+		/// Acknowledgements packet event
+		AcknowledgePacket {
+			timeout_height: TimeoutHeight<T>,
+			timeout_timestamp: Timestamp<T>,
+			sequence: Sequence,
+			src_port_id: PortId<T>,
+			src_channel_id: ChannelId<T>,
+			dst_port_id: PortId<T>,
+			dst_channel_id: ChannelId<T>,
+			channel_ordering: Order,
+			src_connection_id: ConnectionId<T>,
+		},
+		/// Timeout packet event
+		TimeoutPacket {
+			timeout_height: TimeoutHeight<T>,
+			timeout_timestamp: Timestamp<T>,
+			sequence: Sequence,
+			src_port_id: PortId<T>,
+			src_channel_id: ChannelId<T>,
+			dst_port_id: PortId<T>,
+			dst_channel_id: ChannelId<T>,
+		},
+		/// TimoutOnClose packet event
+		ChannelClosed {
+			port_id: PortId<T>,
+			channel_id: ChannelId<T>,
+			counterparty_port_id: PortId<T>,
+			maybe_counterparty_channel_id: Option<ChannelId<T>>,
+			connection_id: ConnectionId<T>,
+			channel_ordering: Order,
+		},
+		/// App Module event
+		AppModule(ModuleEvent<T>),
+		/// Ibc errors
+		IbcErrors { errors: Vec<errors::IbcError> },
 	}
 
 	/// Errors in MMR verification informing users that something went wrong.
@@ -465,10 +464,7 @@ pub mod pallet {
 		///
 		/// The relevant events are emitted when successful.
 		#[pallet::weight(0)]
-		pub fn deliver(
-			origin: OriginFor<T>,
-			messages: Vec<Any>,
-		) -> DispatchResultWithPostInfo {
+		pub fn deliver(origin: OriginFor<T>, messages: Vec<Any>) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 			let mut ctx = Context::<T>::new();
 

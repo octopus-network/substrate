@@ -6,10 +6,7 @@ use crate::{
 };
 use ibc::{
 	core::{
-		ics02_client::{
-			client_type::ClientType as IbcClientType,
-			height::Height as IbcHeight,
-		},
+		ics02_client::{client_type::ClientType as IbcClientType, height::Height as IbcHeight},
 		ics04_channel::{
 			channel::Order as IbcOrder,
 			packet::{Packet as IbcPacket, Sequence as IbcSequence},
