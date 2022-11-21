@@ -30,7 +30,7 @@ pub mod utils;
 pub use crate::{
 	context::Context,
 	module::core::ics24_host::{
-		ChannelId, ClientId, ClientType, ConnectionId, Height, Packet, PortId,
+		ChannelId, ClientId, ClientType, ConnectionId, Height, Packet, PortId, Order, TimeoutHeight, Sequence, Timestamp, Version
 	},
 };
 use codec::{Decode, Encode};
@@ -245,114 +245,179 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Client created event
-		CreateClient { client_id: ClientId, client_type: ClientType, consensus_height: Height },
-		/// Client updated event
-		UpdateClient {
-			client_id: ClientId,
-			client_type: ClientType,
-			consensus_height: Height,
-			consensus_heights: Vec<Height>,
-			header: Any,
-		},
-		/// Client upgraded event
-		UpgradeClient { client_id: ClientId, client_type: ClientType, consensus_height: Height },
-		/// Client misbehaviour event
-		ClientMisbehaviour { client_id: ClientId, client_type: ClientType },
-		/// Connection open init event
-		OpenInitConnection {
-			connection_id: Option<ConnectionId>,
-			client_id: ClientId,
-			counterparty_connection_id: Option<ConnectionId>,
-			counterparty_client_id: ClientId,
-		},
-		/// Connection open try event
-		OpenTryConnection {
-			connection_id: Option<ConnectionId>,
-			client_id: ClientId,
-			counterparty_connection_id: Option<ConnectionId>,
-			counterparty_client_id: ClientId,
-		},
-		/// Connection open acknowledgement event
-		OpenAckConnection {
-			connection_id: Option<ConnectionId>,
-			client_id: ClientId,
-			counterparty_connection_id: Option<ConnectionId>,
-			counterparty_client_id: ClientId,
-		},
-		/// Connection open confirm event
-		OpenConfirmConnection {
-			connection_id: Option<ConnectionId>,
-			client_id: ClientId,
-			counterparty_connection_id: Option<ConnectionId>,
-			counterparty_client_id: ClientId,
-		},
-		/// Channel open init event
-		OpenInitChannel {
-			port_id: PortId,
-			channel_id: Option<ChannelId>,
-			connection_id: ConnectionId,
-			counterparty_port_id: PortId,
-			counterparty_channel_id: Option<ChannelId>,
-		},
-		/// Channel open try event
-		OpenTryChannel {
-			port_id: PortId,
-			channel_id: Option<ChannelId>,
-			connection_id: ConnectionId,
-			counterparty_port_id: PortId,
-			counterparty_channel_id: Option<ChannelId>,
-		},
-		/// Channel open acknowledgement event
-		OpenAckChannel {
-			port_id: PortId,
-			channel_id: Option<ChannelId>,
-			connection_id: ConnectionId,
-			counterparty_port_id: PortId,
-			counterparty_channel_id: Option<ChannelId>,
-		},
-		/// Channel open confirm event
-		OpenConfirmChannel {
-			port_id: PortId,
-			channel_id: Option<ChannelId>,
-			connection_id: ConnectionId,
-			counterparty_port_id: PortId,
-			counterparty_channel_id: Option<ChannelId>,
-		},
-		/// Channel close init event
-		CloseInitChannel {
-			port_id: PortId,
-			channel_id: Option<ChannelId>,
-			connection_id: ConnectionId,
-			counterparty_port_id: PortId,
-			counterparty_channel_id: Option<ChannelId>,
-		},
-		/// Channel close confirm event
-		CloseConfirmChannel {
-			port_id: PortId,
-			channel_id: Option<ChannelId>,
-			connection_id: ConnectionId,
-			counterparty_port_id: PortId,
-			counterparty_channel_id: Option<ChannelId>,
-		},
-		/// Send packet event
-		SendPacket { packet: Packet },
-		/// Receive packet event
-		ReceivePacket { packet: Packet },
-		/// WriteAcknowledgement packet event
-		WriteAcknowledgement { packet: Packet, ack: Vec<u8> },
-		/// Acknowledgements packet event
-		AcknowledgePacket { packet: Packet },
-		/// Timeout packet event
-		TimeoutPacket { packet: Packet },
-		/// TimoutOnClose packet event
-		TimeoutOnClosePacket { packet: Packet },
-		/// Empty event
-		Empty(Vec<u8>),
-		/// App Module event
-		AppModule(ModuleEvent),
-		/// Ibc errors
-		IbcErrors { errors: Vec<errors::IbcError> },
+			/// Client created event
+			CreateClient {
+				client_id: ClientId<T>,
+				client_type: ClientType<T>,
+				consensus_height: Height<T>,
+			},
+			/// Client updated event
+			UpdateClient {
+				client_id: ClientId<T>,
+				client_type: ClientType<T>,
+				consensus_height: Height<T>,
+				consensus_heights: Vec<Height<T>>,
+				header: Any,
+			},
+			/// Client upgraded event
+			UpgradeClient {
+				client_id: ClientId<T>,
+				client_type: ClientType<T>,
+				consensus_height: Height<T>,
+			},
+			/// Client misbehaviour event
+			ClientMisbehaviour { client_id: ClientId<T>, client_type: ClientType<T> },
+			/// Connection open init event
+			OpenInitConnection {
+				connection_id: ConnectionId<T>,
+				client_id: ClientId<T>,
+				counterparty_connection_id: Option<ConnectionId<T>>,
+				counterparty_client_id: ClientId<T>,
+			},
+			/// Connection open try event
+			OpenTryConnection {
+				connection_id: ConnectionId<T>,
+				client_id: ClientId<T>,
+				counterparty_connection_id: Option<ConnectionId<T>>,
+				counterparty_client_id: ClientId<T>,
+			},
+			/// Connection open acknowledgement event
+			OpenAckConnection {
+				connection_id: ConnectionId<T>,
+				client_id: ClientId<T>,
+				counterparty_connection_id: Option<ConnectionId<T>>,
+				counterparty_client_id: ClientId<T>,
+			},
+			/// Connection open confirm event
+			OpenConfirmConnection {
+				connection_id: ConnectionId<T>,
+				client_id: ClientId<T>,
+				counterparty_connection_id: Option<ConnectionId<T>>,
+				counterparty_client_id: ClientId<T>,
+			},
+			/// Channel open init event
+			OpenInitChannel {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				connection_id: ConnectionId<T>,
+				version: Version<T>,
+			},
+			/// Channel open try event
+			OpenTryChannel {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				counterparty_channel_id: ChannelId<T>,
+				connection_id: ConnectionId<T>,
+				version: Version<T>,
+			},
+			/// Channel open acknowledgement event
+			OpenAckChannel {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				counterparty_channel_id: ChannelId<T>,
+				connection_id: ConnectionId<T>,
+			},
+			/// Channel open confirm event
+			OpenConfirmChannel {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				counterparty_channel_id: ChannelId<T>,
+				connection_id: ConnectionId<T>,
+			},
+			/// Channel close init event
+			CloseInitChannel {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				counterparty_channel_id: ChannelId<T>,
+				connection_id: ConnectionId<T>,
+			},
+			/// Channel close confirm event
+			CloseConfirmChannel {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				counterparty_channel_id: ChannelId<T>,
+				connection_id: ConnectionId<T>,
+			},
+			/// Send packet event
+			SendPacket {
+				packet_data: Vec<u8>,
+				timeout_height: TimeoutHeight<T>,
+				timeout_timestamp: Timestamp<T>,
+				sequence: Sequence,
+				src_port_id: PortId<T>,
+				src_channel_id: ChannelId<T>,
+				dst_port_id: PortId<T>,
+				dst_channel_id: ChannelId<T>,
+				channel_ordering: Order,
+				src_connection_id: ConnectionId<T>,
+			},
+			/// Receive packet event
+			ReceivePacket {
+				packet_data: Vec<u8>,
+				timeout_height: TimeoutHeight<T>,
+				timeout_timestamp: Timestamp<T>,
+				sequence: Sequence,
+				src_port_id: PortId<T>,
+				src_channel_id: ChannelId<T>,
+				dst_port_id: PortId<T>,
+				dst_channel_id: ChannelId<T>,
+				channel_ordering: Order,
+				dst_connection_id: ConnectionId<T>,
+			},
+			/// WriteAcknowledgement packet event
+			WriteAcknowledgement {
+				packet_data: Vec<u8>,
+				timeout_height: TimeoutHeight<T>,
+				timeout_timestamp: Timestamp<T>,
+				sequence: Sequence,
+				src_port_id: PortId<T>,
+				src_channel_id: ChannelId<T>,
+				dst_port_id: PortId<T>,
+				dst_channel_id: ChannelId<T>,
+				acknowledgement: Vec<u8>,
+				dst_connection_id: ConnectionId<T>,
+			},
+			/// Acknowledgements packet event
+			AcknowledgePacket {
+				timeout_height: TimeoutHeight<T>,
+				timeout_timestamp: Timestamp<T>,
+				sequence: Sequence,
+				src_port_id: PortId<T>,
+				src_channel_id: ChannelId<T>,
+				dst_port_id: PortId<T>,
+				dst_channel_id: ChannelId<T>,
+				channel_ordering: Order,
+				src_connection_id: ConnectionId<T>,
+			},
+			/// Timeout packet event
+			TimeoutPacket {
+				timeout_height: TimeoutHeight<T>,
+				timeout_timestamp: Timestamp<T>,
+				sequence: Sequence,
+				src_port_id: PortId<T>,
+				src_channel_id: ChannelId<T>,
+				dst_port_id: PortId<T>,
+				dst_channel_id: ChannelId<T>,
+			},
+			/// TimoutOnClose packet event
+			ChannelClosed {
+				port_id: PortId<T>,
+				channel_id: ChannelId<T>,
+				counterparty_port_id: PortId<T>,
+				maybe_counterparty_channel_id: Option<ChannelId<T>>,
+				connection_id: ConnectionId<T>,
+				channel_ordering: Order,
+			},
+			/// App Module event
+			AppModule(ModuleEvent<T>),
+			/// Ibc errors
+			IbcErrors { errors: Vec<errors::IbcError> },
 	}
 
 	/// Errors in MMR verification informing users that something went wrong.
@@ -360,6 +425,24 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// decode String failed
 		DecodeStringFailed,
+		/// unknow Client type
+		UnknownClientType,
+		/// invalid portid
+		InvalidPortId,
+		/// invalid channel id
+		InvalidChannelId,
+		/// invalid height
+		InvalidHeight,
+		/// invalid client id
+		InvalidClientId,
+		/// invalid connection id
+		InvalidConnectionId,
+		/// invalid timestamp
+		InvalidTimestamp,
+		/// invalid version
+		InvalidVersion,
+		/// Invalid module id
+		InvalidModuleId,
 	}
 
 	/// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -412,9 +495,9 @@ pub mod pallet {
 			log::trace!(target: "pallet_ibc", "[pallet_ibc_deliver]: logs: {:?}", logs);
 			log::trace!(target: "pallet_ibc", "[pallet_ibc_deliver]: errors: {:?}", errors);
 
-			events.into_iter().for_each(|event| {
-				Self::deposit_event(event.into());
-			});
+			for event in events.into_iter() {
+				Self::deposit_event(event.try_into()?);
+			}
 			Self::deposit_event(errors.into());
 
 			Ok(().into())
