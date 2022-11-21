@@ -27,7 +27,6 @@ pub mod errors;
 pub mod events;
 pub mod module;
 pub mod prelude;
-pub mod traits;
 pub mod utils;
 
 pub use crate::{
