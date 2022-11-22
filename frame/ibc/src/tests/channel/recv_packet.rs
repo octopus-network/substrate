@@ -21,7 +21,7 @@ use ibc::{
 		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
 	},
 	events::IbcEvent,
-	relayer::ics18_relayer::context::Ics18Context,
+	relayer::ics18_relayer::context::RelayerContext,
 	test_utils::get_dummy_account_id,
 	timestamp::{Timestamp, ZERO_DURATION},
 };
