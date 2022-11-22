@@ -28,13 +28,13 @@ pub mod events;
 pub mod prelude;
 pub mod utils;
 // ibc protocol impl
+pub mod channel;
 pub mod client;
 pub mod connection;
-pub mod channel;
-pub mod port;
-pub mod routing;
-pub mod relayer;
 pub mod host;
+pub mod port;
+pub mod relayer;
+pub mod routing;
 
 pub use crate::{
 	context::Context,
