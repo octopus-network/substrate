@@ -6,7 +6,7 @@ use ibc::core::ics26_routing::context::{Module, ModuleId, RouterBuilder};
 
 /// A struct capturing all the functional dependencies (i.e., context)
 /// which the ICS26 module requires to be able to dispatch and process IBC messages.
-use crate::module::core::ics26_routing::{Router, SubstrateRouterBuilder};
+use crate::routing::{Router, SubstrateRouterBuilder};
 #[cfg(test)]
 use ibc::{
 	core::ics04_channel::commitment::PacketCommitment,
@@ -64,7 +64,7 @@ impl<T: Config> Context<T> {
 		client_type: Option<ClientType>,
 		consensus_state_height: Option<Height>,
 	) -> Self {
-		use crate::module::core::ics24_host::TENDERMINT_CLIENT_TYPE;
+		use crate::host::TENDERMINT_CLIENT_TYPE;
 		use ibc::{
 			clients::ics07_tendermint::client_state::test_util::get_dummy_tendermint_client_state,
 			core::{
