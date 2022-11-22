@@ -70,7 +70,7 @@ pallet-template = { version = "4.0.0-dev", default-features = false, path = "../
 pallet-octopus-appchain-benchmarking = { path = "../octopus-pallets/appchain/benchmarking", default-features = false, optional = true }
 
 # palle ibc
-pallet-ibc = { git = "https://github.com/octopus-network/substrate-ibc", branch = "feature/m4v2-hermes1.0", default-features = false}
+pallet-ibc = { git = "https://github.com/octopus-network/substrate-ibc", branch = "feature/m4v3-hermes1.0", default-features = false}
 #pallet-ibc = { path = "../../../../substrate-ibc", default-features = false }
 
 
