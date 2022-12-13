@@ -46,6 +46,7 @@ impl<T: Config> ChannelReader for Context<T> {
 		port_id: &PortId,
 		channel_id: &ChannelId,
 	) -> Result<ChannelEnd, Ics04Error> {
+		// julian-todo: try to avoid these type conversions.(using the new ibc-rs with serde/borsh/scale features)
 		let channel_end_path = ChannelEndsPath(port_id.clone(), channel_id.clone())
 			.to_string()
 			.as_bytes()
@@ -252,6 +253,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	/// A hashing function for packet commitments
+	// julian-todo: better to use the origin type, convert them when interacting with ibc-rs
 	fn hash(&self, value: Vec<u8>) -> Vec<u8> {
 		sp_io::hashing::sha2_256(&value).to_vec()
 	}
@@ -338,6 +340,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	fn max_expected_time_per_block(&self) -> Duration {
+		// julian-todo: try to use ExpectedBlockTime in runtime/lib.rs
 		Duration::from_secs(6)
 	}
 }

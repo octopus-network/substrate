@@ -14,6 +14,7 @@ use ibc_proto::google::protobuf::Any;
 use scale_info::prelude::{vec, vec::Vec};
 use sp_std::boxed::Box;
 
+// julian-todo: is this just for testing?
 impl<T: Config> RelayerContext for Context<T> {
 	fn query_latest_height(&self) -> Height {
 		let revision_height = host_height::<T>();

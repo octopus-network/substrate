@@ -48,6 +48,7 @@ use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
 
 pub const LOG_TARGET: &str = "runtime::pallet-ibc";
+// julian-todo: consider remove this, use u32 as Height.
 pub const REVISION_NUMBER: u64 = 0;
 
 #[cfg(test)]
@@ -72,6 +73,7 @@ impl From<ibc_proto::google::protobuf::Any> for Any {
 mod type_define {
 	use sp_std::vec::Vec;
 
+	// julian-todo: remove these type defines, use comments to explain the meaning of these fields.
 	pub type OctopusClientStatePath = Vec<u8>;
 	pub type OctopusClientState = Vec<u8>;
 	pub type OctopusClientId = Vec<u8>;
@@ -140,6 +142,7 @@ pub mod pallet {
 		OctopusClientId,
 		Blake2_128Concat,
 		OctopusIbcHeight,
+		// julian-todo: try to use u64
 		OctopusTimeStamp,
 		ValueQuery,
 	>;
@@ -470,6 +473,7 @@ pub mod pallet {
 		/// the serialized protocol buffer message.
 		///
 		/// The relevant events are emitted when successful.
+		// julian-todo: add weight for this function.
 		#[pallet::weight(0)]
 		pub fn deliver(origin: OriginFor<T>, messages: Vec<Any>) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
