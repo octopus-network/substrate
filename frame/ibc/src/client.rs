@@ -3,7 +3,7 @@ use crate::{
 	host::TENDERMINT_CLIENT_TYPE,
 	prelude::{format, String, ToString},
 	ClientCounter, ClientProcessedHeights, ClientProcessedTimes, ClientStates, Clients, Config,
-	ConsensusStates, REVISION_NUMBER,
+	ConsensusStates,
 };
 use sp_std::{boxed::Box, vec::Vec};
 
@@ -292,7 +292,7 @@ impl<T: Config> ClientReader for Context<T> {
 	fn host_height(&self) -> Height {
 		let block_number = format!("{:?}", <frame_system::Pallet<T>>::block_number());
 		let current_height: u64 = block_number.parse().unwrap_or_default();
-		Height::new(REVISION_NUMBER, current_height).unwrap()
+		Height::new(0, current_height).unwrap()
 	}
 
 	fn host_timestamp(&self) -> Timestamp {

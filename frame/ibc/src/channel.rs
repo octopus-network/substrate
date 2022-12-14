@@ -3,9 +3,10 @@ use crate::{
 	prelude::{format, String, ToString},
 	Acknowledgements, ChannelCounter, Channels, ChannelsConnection, ClientProcessedHeights,
 	ClientProcessedTimes, Config, IbcChannelId, NextSequenceAck, NextSequenceRecv,
-	NextSequenceSend, PacketCommitment, PacketReceipt, Pallet, Store, REVISION_NUMBER,
+	NextSequenceSend, PacketCommitment, PacketReceipt, Pallet, Store,
 };
 use sp_std::{boxed::Box, vec, vec::Vec};
+use sp_core::Get;
 
 use core::{str::FromStr, time::Duration};
 use ibc::{
@@ -253,7 +254,6 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	/// A hashing function for packet commitments
-	// julian-todo: better to use the origin type, convert them when interacting with ibc-rs
 	fn hash(&self, value: Vec<u8>) -> Vec<u8> {
 		sp_io::hashing::sha2_256(&value).to_vec()
 	}
@@ -262,7 +262,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	fn host_height(&self) -> Height {
 		let block_number = format!("{:?}", <frame_system::Pallet<T>>::block_number());
 		let current_height: u64 = block_number.parse().unwrap_or_default();
-		Height::new(REVISION_NUMBER, current_height).unwrap()
+		Height::new(0, current_height).unwrap()
 	}
 
 	/// Returns the `AnyConsensusState` for the given identifier `height`.
@@ -340,8 +340,7 @@ impl<T: Config> ChannelReader for Context<T> {
 	}
 
 	fn max_expected_time_per_block(&self) -> Duration {
-		// julian-todo: try to use ExpectedBlockTime in runtime/lib.rs
-		Duration::from_secs(6)
+		Duration::from_secs(T::ExpectedBlockTime::get())
 	}
 }
 

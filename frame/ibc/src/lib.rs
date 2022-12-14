@@ -33,7 +33,6 @@ pub mod client;
 pub mod connection;
 pub mod host;
 pub mod port;
-pub mod relayer;
 pub mod routing;
 
 pub use crate::{
@@ -48,8 +47,6 @@ use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
 
 pub const LOG_TARGET: &str = "runtime::pallet-ibc";
-// julian-todo: consider remove this, use u32 as Height.
-pub const REVISION_NUMBER: u64 = 0;
 
 #[cfg(test)]
 mod mock;
@@ -122,6 +119,9 @@ pub mod pallet {
 
 		/// The provider providing timestamp of host chain
 		type TimeProvider: UnixTime;
+
+		#[pallet::constant]
+		type ExpectedBlockTime: Get<u64>;
 	}
 
 	#[pallet::pallet]
