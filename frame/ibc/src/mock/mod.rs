@@ -130,9 +130,14 @@ parameter_types! {
 	pub const MaxPeerDataEncodingSize: u32 = 1_000;
 }
 
+parameter_types! {
+	pub const ExpectedBlockTime: u64 = 6;
+}
+
 impl pallet::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type TimeProvider = pallet_timestamp::Pallet<Test>;
+	type ExpectedBlockTime = ExpectedBlockTime;
 }
 
 // Build genesis storage according to the mock runtime.
