@@ -1,6 +1,9 @@
 use crate::{
-	alloc::string::ToString, context::Context, prelude::format, Config, ConnectionClient,
-	ConnectionCounter, Connections, OldHeight
+	context::Context, Config, ConnectionClient, ConnectionCounter, Connections, OldHeight,
+};
+use alloc::{
+	format,
+	string::{String, ToString},
 };
 use sp_std::boxed::Box;
 
