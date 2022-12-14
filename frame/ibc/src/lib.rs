@@ -17,7 +17,10 @@ extern crate core;
 
 pub use pallet::*;
 
-use crate::prelude::String;
+use alloc::{
+	format,
+	string::{String, ToString},
+};
 use frame_system::ensure_signed;
 use ibc::core::ics24_host::identifier::ChannelId as IbcChannelId;
 use sp_std::{fmt::Debug, vec, vec::Vec};
@@ -25,7 +28,6 @@ use sp_std::{fmt::Debug, vec, vec::Vec};
 pub mod context;
 pub mod errors;
 pub mod events;
-pub mod prelude;
 pub mod utils;
 // ibc protocol impl
 pub mod channel;

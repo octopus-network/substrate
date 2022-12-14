@@ -1,4 +1,8 @@
-use crate::{prelude::ToString, Config, Event};
+use crate::{Config, Event};
+use alloc::{
+	format,
+	string::{String, ToString},
+};
 use codec::{Decode, Encode};
 use ibc::core::ics26_routing::error::{Error as RoutingError, ErrorDetail};
 use sp_std::vec::Vec;

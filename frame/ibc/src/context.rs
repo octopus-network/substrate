@@ -1,7 +1,5 @@
 use crate::Config;
-use alloc::borrow::ToOwned;
-use alloc::string::String;
-use alloc::sync::Arc;
+use alloc::{borrow::ToOwned, string::String, sync::Arc};
 use sp_std::marker::PhantomData;
 
 use ibc::core::ics26_routing::context::{Module, ModuleId, RouterBuilder};
