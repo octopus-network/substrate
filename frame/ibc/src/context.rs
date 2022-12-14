@@ -43,13 +43,21 @@ impl<T: Config> Context<T> {
 			Some(_) => Err("Duplicate module_id".to_owned()),
 		}
 	}
+}
 
+impl<T: Config> Default for Context<T> {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
+#[cfg(test)]
+impl<T: Config> Context<T> {
 	// julian-todo: try to group these testing functions together.
 	/// Associates a client record to this context.
 	/// Given a client id and a height, registers a new client in the context and also associates
 	/// to this client a mock client state and a mock consensus state for height `height`. The type
 	/// of this client is implicitly assumed to be Mock.
-	#[cfg(test)]
 	pub fn with_client(self, client_id: &ClientId, height: Height) -> Self {
 		self.with_client_parametrized(client_id, height, Some(mock_client_type()), Some(height))
 	}
@@ -59,7 +67,6 @@ impl<T: Config> Context<T> {
 	/// then the client will have type Mock, otherwise the specified type. If
 	/// `consensus_state_height` is None, then the client will be initialized with a consensus
 	/// state matching the same height as the client state (`client_state_height`).
-	#[cfg(test)]
 	pub fn with_client_parametrized(
 		mut self,
 		client_id: &ClientId,
@@ -113,7 +120,6 @@ impl<T: Config> Context<T> {
 		self
 	}
 
-	#[cfg(test)]
 	/// Associates a connection to this context.
 	pub fn with_connection(
 		mut self,
@@ -126,7 +132,6 @@ impl<T: Config> Context<T> {
 		self
 	}
 
-	#[cfg(test)]
 	/// Associates a channel (in an arbitrary state) to this context.
 	pub fn with_channel(
 		mut self,
@@ -140,7 +145,6 @@ impl<T: Config> Context<T> {
 		self
 	}
 
-	#[cfg(test)]
 	pub fn with_packet_commitment(
 		mut self,
 		port_id: PortId,
@@ -155,7 +159,6 @@ impl<T: Config> Context<T> {
 		self
 	}
 
-	#[cfg(test)]
 	pub fn with_ack_sequence(
 		mut self,
 		port_id: PortId,
@@ -169,7 +172,6 @@ impl<T: Config> Context<T> {
 		self
 	}
 
-	#[cfg(test)]
 	pub fn with_send_sequence(
 		mut self,
 		port_id: PortId,
@@ -183,7 +185,6 @@ impl<T: Config> Context<T> {
 		self
 	}
 
-	#[cfg(test)]
 	pub fn with_recv_sequence(
 		mut self,
 		port_id: PortId,
@@ -195,11 +196,5 @@ impl<T: Config> Context<T> {
 		let _ = self.store_next_sequence_recv(port_id, chan_id, seq_number);
 
 		self
-	}
-}
-
-impl<T: Config> Default for Context<T> {
-	fn default() -> Self {
-		Self::new()
 	}
 }
