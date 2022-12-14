@@ -68,7 +68,7 @@ fn recv_packet_processing() {
 
     let context = Context::<PalletIbcTest>::new();
 
-    let host_height = context.query_latest_height().increment();
+    let host_height = ibc::Height::new(0, 20).unwrap();
 
     let client_height = host_height.increment();
 
@@ -138,7 +138,6 @@ fn recv_packet_processing() {
                     packet.destination_channel.clone(),
                     1.into(),
                 )
-                // .with_height(host_height)
                 // This `with_recv_sequence` is required for ordered channels
                 .with_recv_sequence(
                     packet.destination_port.clone(),
@@ -155,7 +154,6 @@ fn recv_packet_processing() {
                 .with_connection(ConnectionId::default(), connection_end)
                 .with_channel(PortId::default(), ChannelId::default(), dest_channel_end)
                 .with_send_sequence(PortId::default(), ChannelId::default(), 1.into()),
-                // .with_height(host_height),
             msg: msg_packet_old,
             want_pass: false,
         },

@@ -53,7 +53,6 @@ impl<T: Config> Default for Context<T> {
 
 #[cfg(test)]
 impl<T: Config> Context<T> {
-	// julian-todo: try to group these testing functions together.
 	/// Associates a client record to this context.
 	/// Given a client id and a height, registers a new client in the context and also associates
 	/// to this client a mock client state and a mock consensus state for height `height`. The type
