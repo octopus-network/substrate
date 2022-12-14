@@ -1,6 +1,6 @@
 use crate::{
 	alloc::string::ToString, context::Context, prelude::format, Config, ConnectionClient,
-	ConnectionCounter, Connections, OldHeight, REVISION_NUMBER,
+	ConnectionCounter, Connections, OldHeight
 };
 use sp_std::boxed::Box;
 
@@ -51,12 +51,12 @@ impl<T: Config> ConnectionReader for Context<T> {
 		let block_number = format!("{:?}", <frame_system::Pallet<T>>::block_number());
 		let current_height: u64 = block_number.parse().unwrap_or_default();
 		<OldHeight<T>>::put(current_height);
-		Height::new(REVISION_NUMBER, current_height).unwrap()
+		Height::new(0, current_height).unwrap()
 	}
 
 	fn host_oldest_height(&self) -> Height {
 		let height = <OldHeight<T>>::get();
-		Height::new(REVISION_NUMBER, height).unwrap()
+		Height::new(0, height).unwrap()
 	}
 
 	fn commitment_prefix(&self) -> CommitmentPrefix {

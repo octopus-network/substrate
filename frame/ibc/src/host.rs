@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use crate::{
 	prelude::{String, ToString},
-	Config, Error, REVISION_NUMBER,
+	Config, Error,
 };
 use ibc::{
 	core::{
@@ -125,7 +125,7 @@ impl<T> From<IbcHeight> for Height<T> {
 impl<T: Config> TryFrom<Height<T>> for IbcHeight {
 	type Error = Error<T>;
 	fn try_from(height: Height<T>) -> Result<Self, Self::Error> {
-		IbcHeight::new(REVISION_NUMBER, height.revision_height)
+		IbcHeight::new(0, height.revision_height)
 			.map_err(|_| Error::<T>::InvalidHeight)
 	}
 }
