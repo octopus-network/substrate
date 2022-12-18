@@ -1,9 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{
-	host::{ClientId, ClientType, ConnectionId, Height},
-	Config, Error, Event,
-};
+use crate::{Config, Error, Event};
 use alloc::{format, string::String};
 use codec::{Decode, Encode};
 use ibc::{core::ics26_routing, events::IbcEvent as RawIbcEvent};
@@ -100,9 +97,9 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let client_type = create_client.client_type();
 				let consensus_height = create_client.consensus_height();
 				Ok(Event::<T>::CreateClient {
-					client_id: ClientId::from(client_id.clone()),
-					client_type: ClientType::from(client_type.clone()),
-					consensus_height: Height::from(consensus_height.clone()),
+					client_id: client_id.clone(),
+					client_type: client_type.clone(),
+					consensus_height: consensus_height.clone(),
 				})
 			},
 			RawIbcEvent::UpdateClient(update_client) => {
@@ -112,13 +109,10 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let consensus_heights = update_client.consensus_heights();
 				let header = update_client.header();
 				Ok(Event::<T>::UpdateClient {
-					client_id: ClientId::from(client_id.clone()),
-					client_type: ClientType::from(client_type.clone()),
-					consensus_height: Height::from(consensus_height.clone()),
-					consensus_heights: consensus_heights
-						.into_iter()
-						.map(|value| Height::from(*value))
-						.collect(),
+					client_id: client_id.clone(),
+					client_type: client_type.clone(),
+					consensus_height: consensus_height.clone(),
+					consensus_heights: consensus_heights.to_vec(),
 					header: header.clone().into(),
 				})
 			},
@@ -128,9 +122,9 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let client_type = upgrade_client.client_type();
 				let consensus_height = upgrade_client.consensus_height();
 				Ok(Event::<T>::UpgradeClient {
-					client_id: ClientId::from(client_id.clone()),
-					client_type: ClientType::from(client_type.clone()),
-					consensus_height: Height::from(consensus_height.clone()),
+					client_id: client_id.clone(),
+					client_type: client_type.clone(),
+					consensus_height: consensus_height.clone(),
 				})
 			},
 			RawIbcEvent::ClientMisbehaviour(client_misbehaviour) => {
@@ -138,75 +132,68 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let client_type = client_misbehaviour.client_type();
 
 				Ok(Event::<T>::ClientMisbehaviour {
-					client_id: ClientId::from(client_id.clone()),
-					client_type: ClientType::from(client_type.clone()),
+					client_id: client_id.clone(),
+					client_type: client_type.clone(),
 				})
 			},
 			RawIbcEvent::OpenInitConnection(open_init_connection) => {
-				let connection_id =
-					ConnectionId::from(open_init_connection.connection_id().clone());
+				let connection_id = open_init_connection.connection_id().clone();
 				let client_id = open_init_connection.client_id().clone();
-				let counterparty_connection_id: Option<ConnectionId<T>> = open_init_connection
-					.counterparty_connection_id()
-					.clone()
-					.map(|val| ConnectionId::from(val.clone()));
+				let counterparty_connection_id =
+					open_init_connection.counterparty_connection_id().map(|value| value.clone());
 				let counterparty_client_id = open_init_connection.counterparty_client_id().clone();
 
 				Ok(Event::<T>::OpenInitConnection {
 					connection_id,
-					client_id: client_id.into(),
+					client_id,
 					counterparty_connection_id,
-					counterparty_client_id: counterparty_client_id.into(),
+					counterparty_client_id,
 				})
 			},
 			RawIbcEvent::OpenTryConnection(open_try_connection) => {
-				let connection_id = ConnectionId::from(open_try_connection.connection_id().clone());
+				let connection_id = open_try_connection.connection_id().clone();
 				let client_id = open_try_connection.client_id().clone();
-				let counterparty_connection_id: Option<ConnectionId<T>> = open_try_connection
-					.counterparty_connection_id()
-					.clone()
-					.map(|val| ConnectionId::from(val.clone()));
+				let counterparty_connection_id =
+					open_try_connection.counterparty_connection_id().map(|value| value.clone());
+
 				let counterparty_client_id = open_try_connection.counterparty_client_id().clone();
 
 				Ok(Event::<T>::OpenTryConnection {
 					connection_id,
-					client_id: client_id.into(),
+					client_id,
 					counterparty_connection_id,
-					counterparty_client_id: counterparty_client_id.into(),
+					counterparty_client_id,
 				})
 			},
 			RawIbcEvent::OpenAckConnection(open_ack_connection) => {
-				let connection_id = ConnectionId::from(open_ack_connection.connection_id().clone());
+				let connection_id = open_ack_connection.connection_id().clone();
 				let client_id = open_ack_connection.client_id().clone();
-				let counterparty_connection_id: Option<ConnectionId<T>> = open_ack_connection
-					.counterparty_connection_id()
-					.clone()
-					.map(|val| ConnectionId::from(val.clone()));
+				let counterparty_connection_id =
+					open_ack_connection.counterparty_connection_id().map(|value| value.clone());
+
 				let counterparty_client_id = open_ack_connection.counterparty_client_id().clone();
 
 				Ok(Event::<T>::OpenAckConnection {
 					connection_id,
-					client_id: client_id.into(),
+					client_id,
 					counterparty_connection_id,
-					counterparty_client_id: counterparty_client_id.into(),
+					counterparty_client_id,
 				})
 			},
 			RawIbcEvent::OpenConfirmConnection(open_confirm_connection) => {
-				let connection_id =
-					ConnectionId::from(open_confirm_connection.connection_id().clone());
+				let connection_id = open_confirm_connection.connection_id().clone();
 				let client_id = open_confirm_connection.client_id().clone();
-				let counterparty_connection_id: Option<ConnectionId<T>> = open_confirm_connection
-					.counterparty_connection_id()
-					.clone()
-					.map(|val| ConnectionId::from(val.clone()));
+				let counterparty_connection_id =
+					open_confirm_connection.counterparty_connection_id().map(|value| value.clone());
+
 				let counterparty_client_id =
 					open_confirm_connection.counterparty_client_id().clone();
 
 				Ok(Event::<T>::OpenConfirmConnection {
 					connection_id,
-					client_id: client_id.into(),
+					client_id,
 					counterparty_connection_id,
-					counterparty_client_id: counterparty_client_id.into(),
+					counterparty_client_id,
 				})
 			},
 			RawIbcEvent::OpenInitChannel(open_init_channel) => {
@@ -217,11 +204,11 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let version = open_init_channel.version().clone();
 
 				Ok(Event::<T>::OpenInitChannel {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					connection_id: connection_id.into(),
-					version: version.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					connection_id,
+					version,
 				})
 			},
 			RawIbcEvent::OpenTryChannel(open_try_channel) => {
@@ -233,12 +220,12 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let version = open_try_channel.version().clone();
 
 				Ok(Event::<T>::OpenTryChannel {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					counterparty_channel_id: counterparty_channel_id.into(),
-					connection_id: connection_id.into(),
-					version: version.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					counterparty_channel_id,
+					connection_id,
+					version,
 				})
 			},
 			RawIbcEvent::OpenAckChannel(open_ack_channel) => {
@@ -249,11 +236,11 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let connection_id = open_ack_channel.connection_id().clone();
 
 				Ok(Event::<T>::OpenAckChannel {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					counterparty_channel_id: counterparty_channel_id.into(),
-					connection_id: connection_id.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					counterparty_channel_id,
+					connection_id,
 				})
 			},
 			RawIbcEvent::OpenConfirmChannel(open_confirm_channel) => {
@@ -265,11 +252,11 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let connection_id = open_confirm_channel.connection_id().clone();
 
 				Ok(Event::<T>::OpenConfirmChannel {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					counterparty_channel_id: counterparty_channel_id.into(),
-					connection_id: connection_id.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					counterparty_channel_id,
+					connection_id,
 				})
 			},
 			RawIbcEvent::CloseInitChannel(close_init_channel) => {
@@ -280,11 +267,11 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let connection_id = close_init_channel.connection_id().clone();
 
 				Ok(Event::<T>::CloseInitChannel {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					counterparty_channel_id: counterparty_channel_id.into(),
-					connection_id: connection_id.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					counterparty_channel_id,
+					connection_id,
 				})
 			},
 			RawIbcEvent::CloseConfirmChannel(close_confirm_channel) => {
@@ -296,11 +283,11 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let connection_id = close_confirm_channel.connection_id().clone();
 
 				Ok(Event::<T>::CloseConfirmChannel {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					counterparty_channel_id: counterparty_channel_id.into(),
-					connection_id: connection_id.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					counterparty_channel_id,
+					connection_id,
 				})
 			},
 			RawIbcEvent::SendPacket(send_packet) => {
@@ -317,15 +304,15 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 
 				Ok(Event::<T>::SendPacket {
 					packet_data: packet_data.into(),
-					timeout_height: timeout_height.into(),
-					timeout_timestamp: timeout_timestamp.into(),
-					sequence: sequence.into(),
-					src_port_id: src_port_id.into(),
-					src_channel_id: src_channel_id.into(),
-					dst_port_id: dst_port_id.into(),
-					dst_channel_id: dst_channel_id.into(),
-					channel_ordering: channel_ordering.into(),
-					src_connection_id: src_connection_id.into(),
+					timeout_height,
+					timeout_timestamp,
+					sequence,
+					src_port_id,
+					src_channel_id,
+					dst_port_id,
+					dst_channel_id,
+					channel_ordering,
+					src_connection_id,
 				})
 			},
 			RawIbcEvent::ReceivePacket(receiver_packet) => {
@@ -342,15 +329,15 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 
 				Ok(Event::<T>::ReceivePacket {
 					packet_data: packet_data.into(),
-					timeout_height: timeout_height.into(),
-					timeout_timestamp: timeout_timestamp.into(),
-					sequence: sequence.into(),
-					src_port_id: src_port_id.into(),
-					src_channel_id: src_channel_id.into(),
-					dst_port_id: dst_port_id.into(),
-					dst_channel_id: dst_channel_id.into(),
-					channel_ordering: channel_ordering.into(),
-					dst_connection_id: dst_connection_id.into(),
+					timeout_height,
+					timeout_timestamp,
+					sequence,
+					src_port_id,
+					src_channel_id,
+					dst_port_id,
+					dst_channel_id,
+					channel_ordering,
+					dst_connection_id,
 				})
 			},
 			RawIbcEvent::WriteAcknowledgement(write_acknowledgement) => {
@@ -367,15 +354,15 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 
 				Ok(Event::<T>::WriteAcknowledgement {
 					packet_data: packet_data.into(),
-					timeout_height: timeout_height.into(),
-					timeout_timestamp: timeout_timestamp.into(),
-					sequence: sequence.into(),
-					src_port_id: src_port_id.into(),
-					src_channel_id: src_channel_id.into(),
-					dst_port_id: dst_port_id.into(),
-					dst_channel_id: dst_channel_id.into(),
+					timeout_height,
+					timeout_timestamp,
+					sequence,
+					src_port_id,
+					src_channel_id,
+					dst_port_id,
+					dst_channel_id,
 					acknowledgement: acknowledgement.into(),
-					dst_connection_id: dst_connection_id.into(),
+					dst_connection_id,
 				})
 			},
 			RawIbcEvent::AcknowledgePacket(acknowledge_packet) => {
@@ -390,15 +377,15 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let src_connection_id = acknowledge_packet.src_connection_id().clone();
 
 				Ok(Event::<T>::AcknowledgePacket {
-					timeout_height: timeout_height.into(),
-					timeout_timestamp: timeout_timestamp.into(),
-					sequence: sequence.into(),
-					src_port_id: src_port_id.into(),
-					src_channel_id: src_channel_id.into(),
-					dst_port_id: dst_port_id.into(),
-					dst_channel_id: dst_channel_id.into(),
-					channel_ordering: channel_ordering.into(),
-					src_connection_id: src_connection_id.into(),
+					timeout_height,
+					timeout_timestamp,
+					sequence,
+					src_port_id,
+					src_channel_id,
+					dst_port_id,
+					dst_channel_id,
+					channel_ordering,
+					src_connection_id,
 				})
 			},
 			RawIbcEvent::TimeoutPacket(time_out_packet) => {
@@ -411,13 +398,13 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let dst_channel_id = time_out_packet.dst_channel_id().clone();
 
 				Ok(Event::<T>::TimeoutPacket {
-					timeout_height: timeout_height.into(),
-					timeout_timestamp: timeout_timestamp.into(),
-					sequence: sequence.into(),
-					src_port_id: src_port_id.into(),
-					src_channel_id: src_channel_id.into(),
-					dst_port_id: dst_port_id.into(),
-					dst_channel_id: dst_channel_id.into(),
+					timeout_height,
+					timeout_timestamp,
+					sequence,
+					src_port_id,
+					src_channel_id,
+					dst_port_id,
+					dst_channel_id,
 				})
 			},
 			RawIbcEvent::ChannelClosed(timeout_on_close_packet) => {
@@ -425,18 +412,17 @@ impl<T: Config> TryFrom<RawIbcEvent> for Event<T> {
 				let channel_id = timeout_on_close_packet.channel_id().clone();
 				let counterparty_port_id = timeout_on_close_packet.counterparty_port_id().clone();
 				let maybe_counterparty_channel_id =
-					timeout_on_close_packet.counterparty_channel_id().clone();
+					timeout_on_close_packet.counterparty_channel_id().map(|value| value.clone());
 				let connection_id = timeout_on_close_packet.connection_id().clone();
 				let channel_ordering = timeout_on_close_packet.channel_ordering().clone();
 
 				Ok(Event::<T>::ChannelClosed {
-					port_id: port_id.into(),
-					channel_id: channel_id.into(),
-					counterparty_port_id: counterparty_port_id.into(),
-					maybe_counterparty_channel_id: maybe_counterparty_channel_id
-						.map(|value| value.clone().into()),
-					connection_id: connection_id.into(),
-					channel_ordering: channel_ordering.into(),
+					port_id,
+					channel_id,
+					counterparty_port_id,
+					maybe_counterparty_channel_id,
+					connection_id,
+					channel_ordering,
 				})
 			},
 			RawIbcEvent::AppModule(app_module) => Ok(Event::<T>::AppModule(app_module.into())),
