@@ -1,7 +1,7 @@
 use crate::{
 	context::Context, Acknowledgements, ChannelCounter, Channels, ChannelsConnection,
-	ClientProcessedHeights, ClientProcessedTimes, Config, IbcChannelId, NextSequenceAck,
-	NextSequenceRecv, NextSequenceSend, PacketCommitment, PacketReceipt, Pallet, Store,
+	ClientProcessedHeights, ClientProcessedTimes, Config, NextSequenceAck, NextSequenceRecv,
+	NextSequenceSend, PacketCommitment, PacketReceipt, Pallet, Store,
 };
 use alloc::{
 	format,
@@ -10,7 +10,7 @@ use alloc::{
 use sp_core::Get;
 use sp_std::{boxed::Box, vec, vec::Vec};
 
-use core::{str::FromStr, time::Duration};
+use core::time::Duration;
 use ibc::{
 	core::{
 		ics02_client::{
@@ -29,14 +29,7 @@ use ibc::{
 			error::{ChannelError, PacketError},
 			packet::{Receipt, Sequence},
 		},
-		ics24_host::{
-			identifier::{ChannelId, ClientId, ConnectionId, PortId},
-			path::{
-				AcksPath, ChannelEndsPath, CommitmentsPath, ConnectionsPath, ReceiptsPath,
-				SeqAcksPath, SeqRecvsPath, SeqSendsPath,
-			},
-			Path,
-		},
+		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
 	},
 	timestamp::Timestamp,
 	Height,
@@ -49,15 +42,8 @@ impl<T: Config> ChannelReader for Context<T> {
 		port_id: &PortId,
 		channel_id: &ChannelId,
 	) -> Result<ChannelEnd, ChannelError> {
-		// julian-todo: try to avoid these type conversions.(using the new ibc-rs with
-		// serde/borsh/scale features)
-		let channel_end_path = ChannelEndsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
-
-		if <Channels<T>>::contains_key(&channel_end_path) {
-			let data = <Channels<T>>::get(&channel_end_path);
+		if <Channels<T>>::contains_key(port_id, channel_id) {
+			let data = <Channels<T>>::get(port_id, channel_id);
 
 			let channel_end =
 				ChannelEnd::decode_vec(&data).map_err(|_| ChannelError::ChannelNotFound {
@@ -84,28 +70,8 @@ impl<T: Config> ChannelReader for Context<T> {
 		&self,
 		conn_id: &ConnectionId,
 	) -> Result<Vec<(PortId, ChannelId)>, ChannelError> {
-		let connections_path = ConnectionsPath(conn_id.clone()).to_string().as_bytes().to_vec();
-
-		if <ChannelsConnection<T>>::contains_key(&connections_path) {
-			let channel_ends_paths = <ChannelsConnection<T>>::get(&connections_path);
-
-			let mut result = vec![];
-
-			for item in channel_ends_paths.into_iter() {
-				let raw_path = String::from_utf8(item).map_err(|e| ChannelError::Other {
-					description: format!("Decode ChannelEnds Paths String format failed: {:?}", e),
-				})?;
-				let path = Path::from_str(&raw_path).map_err(|e| ChannelError::Other {
-					description: format!("Decode ChannelEnds Path format Failed: {:?}", e),
-				})?;
-				match path {
-					Path::ChannelEnds(channel_ends_path) => {
-						let ChannelEndsPath(port_id, channel_id) = channel_ends_path;
-						result.push((port_id, channel_id));
-					},
-					_ => unimplemented!(),
-				}
-			}
+		if <ChannelsConnection<T>>::contains_key(&conn_id) {
+			let result = <ChannelsConnection<T>>::get(&conn_id);
 			Ok(result)
 		} else {
 			Err(ChannelError::ConnectionNotOpen { connection_id: conn_id.clone() })
@@ -133,14 +99,9 @@ impl<T: Config> ChannelReader for Context<T> {
 		port_id: &PortId,
 		channel_id: &ChannelId,
 	) -> Result<Sequence, PacketError> {
-		let seq_sends_path = SeqSendsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
-
-		if <NextSequenceSend<T>>::contains_key(&seq_sends_path) {
-			let sequence = <NextSequenceSend<T>>::get(&seq_sends_path);
-			Ok(Sequence::from(sequence))
+		if <NextSequenceSend<T>>::contains_key(port_id, channel_id) {
+			let sequence = <NextSequenceSend<T>>::get(port_id, channel_id);
+			Ok(sequence)
 		} else {
 			Err(PacketError::MissingNextSendSeq {
 				port_id: port_id.clone(),
@@ -154,14 +115,9 @@ impl<T: Config> ChannelReader for Context<T> {
 		port_id: &PortId,
 		channel_id: &ChannelId,
 	) -> Result<Sequence, PacketError> {
-		let seq_recvs_path = SeqRecvsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
-
-		if <NextSequenceRecv<T>>::contains_key(&seq_recvs_path) {
-			let sequence = <NextSequenceRecv<T>>::get(&seq_recvs_path);
-			Ok(Sequence::from(sequence))
+		if <NextSequenceRecv<T>>::contains_key(port_id, channel_id) {
+			let sequence = <NextSequenceRecv<T>>::get(port_id, channel_id);
+			Ok(sequence)
 		} else {
 			Err(PacketError::MissingNextRecvSeq {
 				port_id: port_id.clone(),
@@ -175,13 +131,10 @@ impl<T: Config> ChannelReader for Context<T> {
 		port_id: &PortId,
 		channel_id: &ChannelId,
 	) -> Result<Sequence, PacketError> {
-		let seq_acks_path =
-			SeqAcksPath(port_id.clone(), channel_id.clone()).to_string().as_bytes().to_vec();
+		if <NextSequenceAck<T>>::contains_key(port_id, channel_id) {
+			let sequence = <NextSequenceAck<T>>::get(port_id, channel_id);
 
-		if <NextSequenceAck<T>>::contains_key(&seq_acks_path) {
-			let sequence = <NextSequenceAck<T>>::get(&seq_acks_path);
-
-			Ok(Sequence::from(sequence))
+			Ok(sequence)
 		} else {
 			Err(PacketError::MissingNextAckSeq {
 				port_id: port_id.clone(),
@@ -197,17 +150,8 @@ impl<T: Config> ChannelReader for Context<T> {
 		channel_id: &ChannelId,
 		seq: Sequence,
 	) -> Result<IbcPacketCommitment, PacketError> {
-		let packet_commitments_path = CommitmentsPath {
-			port_id: port_id.clone(),
-			channel_id: channel_id.clone(),
-			sequence: seq,
-		}
-		.to_string()
-		.as_bytes()
-		.to_vec();
-
-		if <PacketCommitment<T>>::contains_key(&packet_commitments_path) {
-			let data = <PacketCommitment<T>>::get(&packet_commitments_path);
+		if <PacketCommitment<T>>::contains_key((port_id, channel_id, seq)) {
+			let data = <PacketCommitment<T>>::get((port_id, channel_id, seq));
 			let packet_commitment = IbcPacketCommitment::from(data);
 			Ok(packet_commitment)
 		} else {
@@ -221,17 +165,8 @@ impl<T: Config> ChannelReader for Context<T> {
 		channel_id: &ChannelId,
 		seq: Sequence,
 	) -> Result<Receipt, PacketError> {
-		let packet_receipt_path = ReceiptsPath {
-			port_id: port_id.clone(),
-			channel_id: channel_id.clone(),
-			sequence: seq,
-		}
-		.to_string()
-		.as_bytes()
-		.to_vec();
-
-		if <PacketReceipt<T>>::contains_key(&packet_receipt_path) {
-			let data = <PacketReceipt<T>>::get(&packet_receipt_path);
+		if <PacketReceipt<T>>::contains_key((port_id, channel_id, seq)) {
+			let data = <PacketReceipt<T>>::get((port_id, channel_id, seq));
 			let data = String::from_utf8(data).map_err(|e| PacketError::AppModule {
 				description: format!("Decode packet receipt failed: {:?}", e),
 			})?;
@@ -255,14 +190,8 @@ impl<T: Config> ChannelReader for Context<T> {
 		channel_id: &ChannelId,
 		seq: Sequence,
 	) -> Result<IbcAcknowledgementCommitment, PacketError> {
-		let acks_path =
-			AcksPath { port_id: port_id.clone(), channel_id: channel_id.clone(), sequence: seq }
-				.to_string()
-				.as_bytes()
-				.to_vec();
-
-		if <Acknowledgements<T>>::contains_key(&acks_path) {
-			let data = <Acknowledgements<T>>::get(&acks_path);
+		if <Acknowledgements<T>>::contains_key((port_id, channel_id, seq)) {
+			let data = <Acknowledgements<T>>::get((port_id, channel_id, seq));
 			let acknowledgement = IbcAcknowledgementCommitment::from(data);
 
 			Ok(acknowledgement)
@@ -304,25 +233,11 @@ impl<T: Config> ChannelReader for Context<T> {
 		client_id: &ClientId,
 		height: Height,
 	) -> Result<Timestamp, ChannelError> {
-		if <ClientProcessedTimes<T>>::contains_key(
-			client_id.as_bytes(),
-			height.encode_vec().map_err(|e| ChannelError::Other {
-				description: format!("Encode height failed: {:?}", e),
-			})?,
-		) {
-			let time = <ClientProcessedTimes<T>>::get(
-				client_id.as_bytes(),
-				height.encode_vec().map_err(|e| ChannelError::Other {
-					description: format!("Encode height failed: {:?}", e),
-				})?,
-			);
-			let timestamp = String::from_utf8(time).map_err(|e| ChannelError::Other {
-				description: format!("Decode timestamp format String failed: {:?}", e),
-			})?;
-			let time: Timestamp = serde_json::from_str(&timestamp).map_err(|e| {
-				ChannelError::Other { description: format!("Decode timestamp  failed: {:?}", e) }
-			})?;
-			Ok(time)
+		if <ClientProcessedTimes<T>>::contains_key(client_id, height) {
+			let time = <ClientProcessedTimes<T>>::get(client_id, height);
+
+			Timestamp::from_nanoseconds(time)
+				.map_err(|e| ChannelError::Other { description: e.to_string() })
 		} else {
 			Err(ChannelError::ProcessedTimeNotFound { client_id: client_id.clone(), height })
 		}
@@ -333,21 +248,9 @@ impl<T: Config> ChannelReader for Context<T> {
 		client_id: &ClientId,
 		height: Height,
 	) -> Result<Height, ChannelError> {
-		if <ClientProcessedHeights<T>>::contains_key(
-			client_id.as_bytes(),
-			height.encode_vec().map_err(|e| ChannelError::Other {
-				description: format!("Encode height failed: {:?}", e),
-			})?,
-		) {
-			let host_height = <ClientProcessedHeights<T>>::get(
-				client_id.as_bytes(),
-				height.encode_vec().map_err(|e| ChannelError::Other {
-					description: format!("Encode height failed: {:?}", e),
-				})?,
-			);
-			let host_height = Height::decode(&mut &host_height[..]).map_err(|e| {
-				ChannelError::Other { description: format!("Decode Host height failed: {:?}", e) }
-			})?;
+		if <ClientProcessedHeights<T>>::contains_key(client_id, height) {
+			let host_height = <ClientProcessedHeights<T>>::get(client_id, height);
+
 			Ok(host_height)
 		} else {
 			Err(ChannelError::ProcessedHeightNotFound { client_id: client_id.clone(), height })
@@ -374,16 +277,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		seq: Sequence,
 		commitment: IbcPacketCommitment,
 	) -> Result<(), PacketError> {
-		let packet_commitments_path = CommitmentsPath {
-			port_id: port_id.clone(),
-			channel_id: channel_id.clone(),
-			sequence: seq,
-		}
-		.to_string()
-		.as_bytes()
-		.to_vec();
-
-		<PacketCommitment<T>>::insert(packet_commitments_path, commitment.into_vec());
+		<PacketCommitment<T>>::insert((port_id, channel_id, seq), commitment.into_vec());
 
 		Ok(())
 	}
@@ -394,16 +288,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: &ChannelId,
 		seq: Sequence,
 	) -> Result<(), PacketError> {
-		let packet_commitments_path = CommitmentsPath {
-			port_id: port_id.clone(),
-			channel_id: channel_id.clone(),
-			sequence: seq,
-		}
-		.to_string()
-		.as_bytes()
-		.to_vec();
-
-		<PacketCommitment<T>>::remove(&packet_commitments_path);
+		<PacketCommitment<T>>::remove((port_id, channel_id, seq));
 
 		Ok(())
 	}
@@ -415,20 +300,11 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		seq: Sequence,
 		receipt: Receipt,
 	) -> Result<(), PacketError> {
-		let packet_receipt_path = ReceiptsPath {
-			port_id: port_id.clone(),
-			channel_id: channel_id.clone(),
-			sequence: seq,
-		}
-		.to_string()
-		.as_bytes()
-		.to_vec();
-
 		let receipt = match receipt {
 			Receipt::Ok => "Ok".as_bytes().to_vec(),
 		};
 
-		<PacketReceipt<T>>::insert(packet_receipt_path, receipt);
+		<PacketReceipt<T>>::insert((port_id, channel_id, seq), receipt);
 
 		Ok(())
 	}
@@ -440,13 +316,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		seq: Sequence,
 		ack_commitment: IbcAcknowledgementCommitment,
 	) -> Result<(), PacketError> {
-		let acks_path =
-			AcksPath { port_id: port_id.clone(), channel_id: channel_id.clone(), sequence: seq }
-				.to_string()
-				.as_bytes()
-				.to_vec();
-
-		<Acknowledgements<T>>::insert(&acks_path, ack_commitment.into_vec());
+		<Acknowledgements<T>>::insert((port_id, channel_id, seq), ack_commitment.into_vec());
 
 		Ok(())
 	}
@@ -457,13 +327,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: &ChannelId,
 		seq: Sequence,
 	) -> Result<(), PacketError> {
-		let acks_path =
-			AcksPath { port_id: port_id.clone(), channel_id: channel_id.clone(), sequence: seq }
-				.to_string()
-				.as_bytes()
-				.to_vec();
-
-		<Acknowledgements<T>>::remove(&acks_path);
+		<Acknowledgements<T>>::remove((port_id, channel_id, seq));
 
 		Ok(())
 	}
@@ -474,25 +338,17 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		port_id: PortId,
 		channel_id: ChannelId,
 	) -> Result<(), ChannelError> {
-		let connections_path = ConnectionsPath(conn_id).to_string().as_bytes().to_vec();
-		let channel_ends_path = ChannelEndsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
-
-		if <ChannelsConnection<T>>::contains_key(&connections_path) {
-			let _ = <ChannelsConnection<T>>::try_mutate(
-				&connections_path,
-				|val| -> Result<(), ChannelError> {
-					val.push(channel_ends_path.clone());
+		if <ChannelsConnection<T>>::contains_key(&conn_id) {
+			let _ =
+				<ChannelsConnection<T>>::try_mutate(&conn_id, |val| -> Result<(), ChannelError> {
+					val.push((port_id, channel_id));
 					Ok(())
-				},
-			)
-			.map_err(|e| ChannelError::Other {
-				description: format!("store connection channels failed: {:?}", e),
-			});
+				})
+				.map_err(|e| ChannelError::Other {
+					description: format!("store connection channels failed: {:?}", e),
+				});
 		} else {
-			<ChannelsConnection<T>>::insert(connections_path, vec![channel_ends_path]);
+			<ChannelsConnection<T>>::insert(conn_id, vec![(port_id, channel_id)]);
 		}
 
 		Ok(())
@@ -505,14 +361,10 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: ChannelId,
 		channel_end: ChannelEnd,
 	) -> Result<(), ChannelError> {
-		let channel_end_path = ChannelEndsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
 		let channel_end = channel_end.encode_vec().map_err(|e| ChannelError::Other {
 			description: format!("encode channel end failed: {:?}", e),
 		})?;
-		<Channels<T>>::insert(channel_end_path, channel_end);
+		<Channels<T>>::insert(port_id, channel_id, channel_end);
 
 		Ok(())
 	}
@@ -523,14 +375,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: ChannelId,
 		seq: Sequence,
 	) -> Result<(), PacketError> {
-		let seq_sends_path = SeqSendsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
-
-		let sequence = u64::from(seq);
-
-		<NextSequenceSend<T>>::insert(seq_sends_path, sequence);
+		<NextSequenceSend<T>>::insert(port_id, channel_id, seq);
 
 		Ok(())
 	}
@@ -541,13 +386,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: ChannelId,
 		seq: Sequence,
 	) -> Result<(), PacketError> {
-		let seq_recvs_path = SeqRecvsPath(port_id.clone(), channel_id.clone())
-			.to_string()
-			.as_bytes()
-			.to_vec();
-		let sequence = u64::from(seq);
-
-		<NextSequenceRecv<T>>::insert(seq_recvs_path, sequence);
+		<NextSequenceRecv<T>>::insert(port_id, channel_id, seq);
 
 		Ok(())
 	}
@@ -558,11 +397,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: ChannelId,
 		seq: Sequence,
 	) -> Result<(), PacketError> {
-		let seq_acks_path =
-			SeqAcksPath(port_id.clone(), channel_id.clone()).to_string().as_bytes().to_vec();
-		let sequence = u64::from(seq);
-
-		<NextSequenceAck<T>>::insert(seq_acks_path, sequence);
+		<NextSequenceAck<T>>::insert(port_id, channel_id, seq);
 
 		Ok(())
 	}
