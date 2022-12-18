@@ -1,8 +1,5 @@
 use crate::{context::Context, Config};
-use alloc::{
-	format,
-	string::{String, ToString},
-};
+use alloc::{format, string::String};
 use ibc::core::ics26_routing::context::{Module, ModuleId, RouterBuilder, RouterContext};
 use sp_std::{
 	borrow::{Borrow, ToOwned},

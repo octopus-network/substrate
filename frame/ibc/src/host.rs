@@ -1,10 +1,7 @@
 use core::marker::PhantomData;
 
 use crate::{Config, Error};
-use alloc::{
-	format,
-	string::{String, ToString},
-};
+use alloc::string::{String, ToString};
 use ibc::{
 	core::{
 		ics02_client::{client_type::ClientType as IbcClientType, height::Height as IbcHeight},

@@ -4,10 +4,7 @@ use crate::{
 	host::{ClientId, ClientType, ConnectionId, Height},
 	Config, Error, Event,
 };
-use alloc::{
-	format,
-	string::{String, ToString},
-};
+use alloc::{format, string::String};
 use codec::{Decode, Encode};
 use ibc::{core::ics26_routing, events::IbcEvent as RawIbcEvent};
 use scale_info::TypeInfo;
