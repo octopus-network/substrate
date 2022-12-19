@@ -26,7 +26,6 @@ use ibc::{
 	Height,
 };
 
-
 pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenConfirm as RawMsgChannelOpenConfirm;
 

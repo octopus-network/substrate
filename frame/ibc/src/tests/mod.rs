@@ -1,7 +1,7 @@
 pub mod channel;
 pub mod client;
-pub mod connection;
 pub mod commitment;
+pub mod connection;
 
 use super::*;
 #[cfg(test)]

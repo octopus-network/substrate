@@ -4,26 +4,29 @@ use ibc::core::ics04_channel::{
 };
 
 use crate::tests::connection::common::test_util::get_dummy_raw_counterparty;
-use ibc::core::{
-	ics03_connection::{
-		connection::{
-			ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-		},
-		version::get_compatible_versions,
-	},
-	ics04_channel::{
-		channel::{ChannelEnd, Counterparty, Order, State as ChannelState},
-		handler::channel_dispatch,
-		Version,
-	},
-	ics24_host::identifier::{ClientId, ConnectionId},
-};
 #[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,
 };
-use ibc::{mock::client_state::client_type as mock_client_type, timestamp::ZERO_DURATION};
+use ibc::{
+	core::{
+		ics03_connection::{
+			connection::{
+				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+			},
+			version::get_compatible_versions,
+		},
+		ics04_channel::{
+			channel::{ChannelEnd, Counterparty, Order, State as ChannelState},
+			handler::channel_dispatch,
+			Version,
+		},
+		ics24_host::identifier::{ClientId, ConnectionId},
+	},
+	mock::client_state::client_type as mock_client_type,
+	timestamp::ZERO_DURATION,
+};
 use test_util::get_dummy_raw_msg_chan_close_confirm;
 
 pub mod test_util {
