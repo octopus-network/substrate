@@ -2,6 +2,7 @@ use core::str::FromStr;
 use ibc::core::ics02_client::msgs::update_client::MsgUpdateClient;
 use ibc::core::ics03_connection::connection::{ConnectionEnd, Counterparty};
 use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
 use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
 use ibc::core::ics23_commitment::commitment::CommitmentPrefix;
 use ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
@@ -15,6 +16,7 @@ use ibc::signer::Signer;
 use ibc_proto::protobuf::Protobuf;
 use crate::Config;
 use crate::tests::connection::conn_open_ack::test_util::get_dummy_raw_msg_conn_open_ack;
+use crate::tests::connection::conn_open_confirm::test_util::get_dummy_raw_msg_conn_open_confirm;
 use crate::tests::connection::conn_open_try::test_util::get_dummy_raw_msg_conn_open_try;
 
 pub fn create_mock_state(height: Height) -> (MockClientState, MockConsensusState) {
@@ -28,7 +30,7 @@ pub fn create_mock_client_update_client(client_id: ClientId, height: Height) -> 
     let msg = MsgUpdateClient::new(
         client_id,
         MockHeader::new(height).into(),
-        Signer::from_str("alice").unwrap(),
+        ibc::test_utils::get_dummy_account_id(),
     );
 
     let mut value = vec![];
@@ -65,6 +67,18 @@ pub fn create_conn_open_ack<T: Config>(block_height: Height, host_chain_height: 
 
     let mut value = vec![];
     msg_ack.encode(&mut value).unwrap();
+
+    (mock_consensus_state, value)
+}
+
+pub fn create_conn_open_confirm(block_height: Height) -> (MockConsensusState, Vec<u8>) {
+    let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+
+    let msg_confirm =
+        MsgConnectionOpenConfirm::try_from(get_dummy_raw_msg_conn_open_confirm()).unwrap();
+
+    let mut value = vec![];
+    msg_confirm.encode(&mut value).unwrap();
 
     (mock_consensus_state, value)
 }
