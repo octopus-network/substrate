@@ -12,7 +12,6 @@ use ibc::core::{
 	ics24_host::identifier::ConnectionId,
 };
 
-#[cfg(test)]
 pub mod test_util {
 	use crate::tests::channel::common::test_util::get_dummy_raw_channel_end;
 	use ibc::{core::ics24_host::identifier::PortId, test_utils::get_dummy_bech32_account};
@@ -27,6 +26,7 @@ pub mod test_util {
 		}
 	}
 }
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	Context,

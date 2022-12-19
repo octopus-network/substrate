@@ -2,6 +2,7 @@
 #![allow(unreachable_patterns)]
 #![allow(deprecated)]
 #![allow(dead_code)]
+#![allow(unused_imports)]
 
 //! # Overview
 //!
@@ -42,8 +43,10 @@ pub const LOG_TARGET: &str = "runtime::pallet-ibc";
 #[cfg(test)]
 mod mock;
 
-#[cfg(test)]
 mod tests;
+
+#[cfg(any(test, feature = "runtime-benchmarks"))]
+pub(crate) mod benchmarks;
 
 /// A struct corresponds to `Any` in crate "prost-types", used in ibc-rs.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]

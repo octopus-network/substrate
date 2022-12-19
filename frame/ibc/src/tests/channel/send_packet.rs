@@ -1,5 +1,6 @@
 use core::{ops::Add, time::Duration};
 
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	tests::channel::packet::test_utils::get_dummy_raw_packet,

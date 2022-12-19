@@ -1,14 +1,10 @@
-#[cfg(test)]
-mod channel;
-#[cfg(test)]
-mod client;
-#[cfg(test)]
-mod connection;
-
-#[cfg(test)]
-mod commitment;
+pub mod channel;
+pub mod client;
+pub mod connection;
+pub mod commitment;
 
 use super::*;
+#[cfg(test)]
 use crate::{mock::*, Context};
 use core::str::FromStr;
 

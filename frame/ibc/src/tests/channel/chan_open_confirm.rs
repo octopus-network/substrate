@@ -1,3 +1,4 @@
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	tests::connection::common::test_util::get_dummy_raw_counterparty,
@@ -25,7 +26,7 @@ use ibc::{
 	Height,
 };
 
-#[cfg(test)]
+
 pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenConfirm as RawMsgChannelOpenConfirm;
 

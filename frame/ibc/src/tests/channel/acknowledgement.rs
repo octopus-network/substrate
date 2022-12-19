@@ -1,3 +1,4 @@
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	Context,
@@ -25,7 +26,7 @@ use ibc::{
 	timestamp::ZERO_DURATION,
 };
 use test_util::get_dummy_raw_msg_acknowledgement;
-#[cfg(test)]
+
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::{MsgAcknowledgement as RawMsgAcknowledgement, Packet as RawPacket},

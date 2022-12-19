@@ -1,3 +1,4 @@
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,
@@ -27,7 +28,6 @@ use ibc::{
 };
 use test_util::get_dummy_raw_msg_recv_packet;
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgRecvPacket as RawMsgRecvPacket, client::v1::Height as RawHeight,

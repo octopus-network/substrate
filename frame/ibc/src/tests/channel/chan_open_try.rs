@@ -19,7 +19,6 @@ use ibc::{
 	Height,
 };
 
-#[cfg(test)]
 pub mod test_util {
 
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenTry as RawMsgChannelOpenTry;
@@ -45,6 +44,7 @@ pub mod test_util {
 		}
 	}
 }
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	tests::connection::common::test_util::get_dummy_raw_counterparty,

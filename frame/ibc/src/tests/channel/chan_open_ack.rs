@@ -1,5 +1,6 @@
 use core::str::FromStr;
 
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	tests::{
@@ -33,7 +34,6 @@ use ibc::{
 };
 use test_util::get_dummy_raw_msg_chan_open_ack;
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenAck as RawMsgChannelOpenAck;
 

@@ -16,7 +16,6 @@ use ibc::{
 	Height,
 };
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		client::v1::Height, connection::v1::MsgConnectionOpenConfirm as RawMsgConnectionOpenConfirm,
@@ -33,6 +32,7 @@ pub mod test_util {
 		}
 	}
 }
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,

@@ -1,3 +1,4 @@
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	Context,
@@ -26,7 +27,6 @@ use ibc::{
 };
 use test_util::get_dummy_raw_msg_timeout;
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgTimeout as RawMsgTimeout, client::v1::Height as RawHeight,

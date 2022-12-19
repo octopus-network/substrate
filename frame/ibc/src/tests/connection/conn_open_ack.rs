@@ -15,7 +15,6 @@ use ibc::{
 	timestamp::ZERO_DURATION,
 };
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc::{
 		core::ics02_client::height::Height,
@@ -54,6 +53,7 @@ pub mod test_util {
 		}
 	}
 }
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,

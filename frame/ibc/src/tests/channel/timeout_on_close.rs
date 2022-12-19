@@ -1,3 +1,4 @@
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, Test as PalletIbcTest},
 	Context,
@@ -25,7 +26,7 @@ use ibc::{
 	timestamp::ZERO_DURATION,
 };
 use test_util::get_dummy_raw_msg_timeout_on_close;
-#[cfg(test)]
+
 pub mod test_util {
 	use crate::tests::channel::packet::test_utils::get_dummy_raw_packet;
 	use ibc::test_utils::{get_dummy_bech32_account, get_dummy_proof};

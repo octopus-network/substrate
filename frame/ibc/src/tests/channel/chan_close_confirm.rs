@@ -18,7 +18,7 @@ use ibc::core::{
 	},
 	ics24_host::identifier::{ClientId, ConnectionId},
 };
-
+#[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,
@@ -26,7 +26,6 @@ use crate::{
 use ibc::{mock::client_state::client_type as mock_client_type, timestamp::ZERO_DURATION};
 use test_util::get_dummy_raw_msg_chan_close_confirm;
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgChannelCloseConfirm as RawMsgChannelCloseConfirm, client::v1::Height,

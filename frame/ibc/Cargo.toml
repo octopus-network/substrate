@@ -17,7 +17,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional = true, path = "../benchmarking" }
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../support" }
-frame-system = { version = "4.0.0-dev", default-features = false, path = "../system" }
+frame-system = { version = "4.0.0-dev", default-features = false, path = "../system", optional = true }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
 sp-core = { version = "6.0.0", default-features = false, path = "../../primitives/core" }
 sp-io = { version = "6.0.0", default-features = false, path = "../../primitives/io" }
@@ -38,6 +38,9 @@ serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false }
 tendermint-proto = { version = "=0.26.0", default-features = false }
 time = { version = ">=0.3.0, <0.3.12", default-features = false, features = ["macros", "parsing"] }
+
+hex-literal = { version = "0.3.4", default-features = false, optional = true }
+pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp",  default-features = false, optional = true }
 
 [dev-dependencies]
 # local crates
@@ -83,5 +86,10 @@ std = [
   "hex/std",
   "time/std",
 ]
-runtime-benchmarks = ["frame-benchmarking"]
+runtime-benchmarks = [
+  "frame-benchmarking",
+  "frame-system",
+  "hex-literal",
+  "pallet-timestamp",
+]
 try-runtime = ["frame-support/try-runtime"]
