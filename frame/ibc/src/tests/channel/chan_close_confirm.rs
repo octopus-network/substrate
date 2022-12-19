@@ -2,13 +2,16 @@ use ibc::core::ics04_channel::{
 	context::ChannelReader,
 	msgs::{chan_close_confirm::MsgChannelCloseConfirm, ChannelMsg},
 };
-
+#[cfg(test)]
 use crate::tests::connection::common::test_util::get_dummy_raw_counterparty;
 #[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,
 };
+#[cfg(test)]
+use ibc::mock::client_state::client_type as mock_client_type;
+#[cfg(test)]
 use ibc::{
 	core::{
 		ics03_connection::{
@@ -24,7 +27,6 @@ use ibc::{
 		},
 		ics24_host::identifier::{ClientId, ConnectionId},
 	},
-	mock::client_state::client_type as mock_client_type,
 	timestamp::ZERO_DURATION,
 };
 use test_util::get_dummy_raw_msg_chan_close_confirm;
@@ -34,10 +36,11 @@ pub mod test_util {
 		channel::v1::MsgChannelCloseConfirm as RawMsgChannelCloseConfirm, client::v1::Height,
 	};
 
+	use alloc::string::ToString;
 	use ibc::{
 		core::ics24_host::identifier::{ChannelId, PortId},
-		test_utils::{get_dummy_bech32_account, get_dummy_proof},
 	};
+	use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
 
 	/// Returns a dummy `RawMsgChannelCloseConfirm`, for testing only!
 	pub fn get_dummy_raw_msg_chan_close_confirm(proof_height: u64) -> RawMsgChannelCloseConfirm {

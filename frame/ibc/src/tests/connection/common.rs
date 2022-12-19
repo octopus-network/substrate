@@ -1,4 +1,6 @@
+#[cfg(test)]
 pub mod test_util {
+	use alloc::string::ToString;
 	use ibc::{
 		core::ics24_host::identifier::{ClientId, ConnectionId},
 		mock::client_state::client_type as mock_client_type,

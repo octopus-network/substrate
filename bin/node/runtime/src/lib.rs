@@ -1655,9 +1655,11 @@ impl pallet_alliance::Config for Runtime {
 	type RetirementPeriod = RetirementPeriod;
 }
 
+
 impl pallet_ibc::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
+	type ExpectedBlockTime = ExpectedBlockTime;
 }
 
 construct_runtime!(
@@ -2204,7 +2206,7 @@ impl_runtime_apis! {
 			use pallet_nomination_pools_benchmarking::Pallet as NominationPoolsBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
-			list_benchmarks!(list, extra);
+			list_benchmarks!(list, extra, pallet_ibc);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -2244,7 +2246,7 @@ impl_runtime_apis! {
 
 			let mut batches = Vec::<BenchmarkBatch>::new();
 			let params = (&config, &whitelist);
-			add_benchmarks!(params, batches);
+			add_benchmarks!(params, batches, pallet_ibc);
 			Ok(batches)
 		}
 	}

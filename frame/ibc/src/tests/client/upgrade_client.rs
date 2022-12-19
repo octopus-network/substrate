@@ -8,6 +8,7 @@ use ibc::{downcast, events::IbcEvent};
 
 use core::str::FromStr;
 
+#[cfg(test)]
 use ibc::{
 	core::{
 		ics02_client::{
@@ -26,6 +27,7 @@ use ibc::{
 	test_utils::get_dummy_account_id,
 	Height,
 };
+
 
 #[test]
 fn test_upgrade_client_ok() {

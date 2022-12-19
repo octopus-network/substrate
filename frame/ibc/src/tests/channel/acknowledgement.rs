@@ -28,13 +28,16 @@ use ibc::{
 use test_util::get_dummy_raw_msg_acknowledgement;
 
 pub mod test_util {
+	use alloc::vec::Vec;
 	use ibc_proto::ibc::core::{
 		channel::v1::{MsgAcknowledgement as RawMsgAcknowledgement, Packet as RawPacket},
 		client::v1::Height as RawHeight,
 	};
 
-	use crate::tests::channel::packet::test_utils::get_dummy_raw_packet;
-	use ibc::test_utils::{get_dummy_bech32_account, get_dummy_proof};
+	use crate::tests::{
+		channel::packet::test_utils::get_dummy_raw_packet,
+		common::{get_dummy_bech32_account, get_dummy_proof},
+	};
 
 	/// Returns a dummy `RawMsgAcknowledgement`, for testing only!
 	/// The `height` parametrizes both the proof height as well as the timeout height.

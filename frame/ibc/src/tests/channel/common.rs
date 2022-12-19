@@ -1,9 +1,11 @@
 pub mod test_util {
 	use ibc::core::ics24_host::identifier::{ChannelId, ConnectionId, PortId};
 
+	use alloc::string::ToString;
 	use ibc_proto::ibc::core::channel::v1::{
 		Channel as RawChannel, Counterparty as RawCounterparty,
 	};
+	use sp_std::vec;
 
 	/// Returns a dummy `RawCounterparty`, for testing only!
 	/// Can be optionally parametrized with a specific channel identifier.

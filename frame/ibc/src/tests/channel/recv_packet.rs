@@ -23,9 +23,10 @@ use ibc::{
 	},
 	events::IbcEvent,
 	relayer::ics18_relayer::context::RelayerContext,
-	test_utils::get_dummy_account_id,
 	timestamp::{Timestamp, ZERO_DURATION},
 };
+#[cfg(test)]
+use ibc::test_utils::get_dummy_account_id;
 use test_util::get_dummy_raw_msg_recv_packet;
 
 pub mod test_util {
@@ -36,14 +37,14 @@ pub mod test_util {
 	use crate::tests::channel::packet::test_utils::get_dummy_raw_packet;
 	use core::{ops::Add, time::Duration};
 	use ibc::{
-		test_utils::{get_dummy_bech32_account, get_dummy_proof},
 		timestamp::Timestamp,
 	};
+    use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
 
-	/// Returns a dummy `RawMsgRecvPacket`, for testing only! The `height` parametrizes both the
+    /// Returns a dummy `RawMsgRecvPacket`, for testing only! The `height` parametrizes both the
 	/// proof height as well as the timeout height.
 	pub fn get_dummy_raw_msg_recv_packet(height: u64) -> RawMsgRecvPacket {
-		let timestamp = Timestamp::now().add(Duration::from_secs(9));
+		let timestamp = Timestamp::from_nanoseconds(10000000).unwrap().add(Duration::from_secs(9));
 		RawMsgRecvPacket {
 			packet: Some(get_dummy_raw_packet(height, timestamp.unwrap().nanoseconds())),
 			proof_commitment: get_dummy_proof(),

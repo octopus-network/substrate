@@ -21,7 +21,8 @@ pub mod test_util {
 		client::v1::Height, connection::v1::MsgConnectionOpenConfirm as RawMsgConnectionOpenConfirm,
 	};
 
-	use ibc::test_utils::{get_dummy_bech32_account, get_dummy_proof};
+	use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
+	use alloc::string::ToString;
 
 	pub fn get_dummy_raw_msg_conn_open_confirm() -> RawMsgConnectionOpenConfirm {
 		RawMsgConnectionOpenConfirm {

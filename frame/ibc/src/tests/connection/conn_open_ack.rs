@@ -15,6 +15,7 @@ use ibc::{
 	timestamp::ZERO_DURATION,
 };
 
+#[cfg(test)]
 pub mod test_util {
 	use ibc::{
 		core::ics02_client::height::Height,
@@ -26,10 +27,9 @@ pub mod test_util {
 		connection::v1::MsgConnectionOpenAck as RawMsgConnectionOpenAck,
 	};
 
-	use ibc::{
-		core::{ics03_connection::version::Version, ics24_host::identifier::ConnectionId},
-		test_utils::{get_dummy_bech32_account, get_dummy_proof},
-	};
+	use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
+	use alloc::string::ToString;
+	use ibc::core::{ics03_connection::version::Version, ics24_host::identifier::ConnectionId};
 
 	pub fn get_dummy_raw_msg_conn_open_ack(
 		proof_height: u64,
@@ -58,6 +58,7 @@ use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,
 };
+#[cfg(test)]
 use test_util::get_dummy_raw_msg_conn_open_ack;
 
 #[test]

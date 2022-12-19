@@ -33,9 +33,9 @@ pub mod test_util {
 	};
 
 	use crate::tests::channel::packet::test_utils::get_dummy_raw_packet;
-	use ibc::test_utils::{get_dummy_bech32_account, get_dummy_proof};
+    use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
 
-	/// Returns a dummy `RawMsgTimeout`, for testing only!
+    /// Returns a dummy `RawMsgTimeout`, for testing only!
 	/// The `height` parametrizes both the proof height as well as the timeout height.
 	pub fn get_dummy_raw_msg_timeout(
 		proof_height: u64,

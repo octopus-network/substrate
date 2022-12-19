@@ -17,7 +17,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional = true, path = "../benchmarking" }
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../support" }
-frame-system = { version = "4.0.0-dev", default-features = false, path = "../system", optional = true }
+frame-system = { version = "4.0.0-dev", default-features = false, path = "../system" }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
 sp-core = { version = "6.0.0", default-features = false, path = "../../primitives/core" }
 sp-io = { version = "6.0.0", default-features = false, path = "../../primitives/io" }
@@ -49,7 +49,7 @@ frame-support = { version = "4.0.0-dev", path = "../support" }
 # thrid party crates
 hex = '0.4.0'
 # ibc protocol crates
-ibc = { version = "0.25.0", git = "https://github.com/cosmos/ibc-rs.git", branch = "main", features = ["mocks"] }
+ibc = { version = "0.25.0", git = "https://github.com/cosmos/ibc-rs.git", branch = "main", features = ["mocks", "clock"] }
 pallet-balances = { version = "4.0.0-dev", path = "../balances" }
 pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp" }
 serde = "1.0"
@@ -88,7 +88,6 @@ std = [
 ]
 runtime-benchmarks = [
   "frame-benchmarking",
-  "frame-system",
   "hex-literal",
   "pallet-timestamp",
 ]

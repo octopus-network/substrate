@@ -3,6 +3,9 @@ use crate::{
 	mock::{new_test_ext, System, Test},
 	Context,
 };
+#[cfg(test)]
+use ibc::test_utils::get_dummy_account_id;
+#[cfg(test)]
 use ibc::{
 	core::{
 		ics02_client::{
@@ -17,7 +20,6 @@ use ibc::{
 		consensus_state::MockConsensusState,
 		header::MockHeader,
 	},
-	test_utils::get_dummy_account_id,
 	Height,
 };
 

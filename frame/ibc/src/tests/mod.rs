@@ -1,6 +1,7 @@
 pub mod channel;
 pub mod client;
 pub mod commitment;
+pub mod common;
 pub mod connection;
 
 use super::*;

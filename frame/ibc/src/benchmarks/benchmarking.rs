@@ -3,6 +3,7 @@
 #[allow(unused)]
 use super::*;
 use crate::{Any, Config, *};
+
 use ibc::mock::{
 	client_state::{self as mock_client_state, MockClientState},
 	consensus_state::MockConsensusState,
@@ -71,9 +72,12 @@ use ibc_proto::protobuf::Protobuf;
 use scale_info::prelude::string::ToString;
 use sp_core::crypto::AccountId32;
 use sp_std::vec;
+use alloc::boxed::Box;
+
 fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
 }
+
 
 const TIMESTAMP: u64 = 1650894363;
 const MILLIS: u128 = 1_000_000;
@@ -111,79 +115,6 @@ benchmarks! {
 		let client_state = ClientStates::<T>::get(&client_id);
 		let client_state: MockClientState = Protobuf::<ibc_proto::google::protobuf::Any>::decode_vec(&client_state).unwrap();
 		assert_eq!(client_state.latest_height(), Height::new(0, 2).unwrap());
-	}
-
-	// // connection open try
-	conn_try_open_mock {
-		let mut ctx = crate::context::Context::<T>::new();
-		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
-		frame_system::Pallet::<T>::set_block_number(number);
-		let height = Height::new(0, 1).unwrap();
-		let (mock_cl_state, mock_cs_state) = super::utils::create_mock_state(height);
-		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
-		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
-		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
-		ctx.store_client_state(client_id.clone(), Box::new(mock_cl_state)).unwrap();
-		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
-
-
-		// We update the light client state so it can have the required client and consensus states required to process
-		// the proofs that will be submitted
-		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
-
-		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
-		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
-
-		let (cs_state, value) = super::utils::create_conn_open_try::<T>(new_height, Height::new(0, 3).unwrap());
-		// Update consensus state with the new root that we'll enable proofs to be correctly verified
-		ctx.store_consensus_state(client_id, Height::new(0, 2).unwrap(), Box::new(cs_state)).unwrap();
-		let caller: T::AccountId = whitelisted_caller();
-		let msg = Any { type_url: CONN_TRY_OPEN_TYPE_URL.as_bytes().to_vec(), value };
-	}: deliver(RawOrigin::Signed(caller), vec![msg])
-	verify {
-		let connection_end = ConnectionReader::connection_end(&ctx, &ConnectionId::new(0)).unwrap();
-		assert_eq!(connection_end.state, State::TryOpen);
-	}
-
-	// // connection open ack
-	conn_open_ack_mock {
-		let mut ctx = crate::context::Context::<T>::new();
-		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
-		frame_system::Pallet::<T>::set_block_number(number);
-		let height = Height::new(0, 1).unwrap();
-		let (mock_client_state, mock_cs_state) = super::utils::create_mock_state(height);
-		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
-		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
-		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
-		ctx.store_client_state(client_id.clone(), Box::new(mock_client_state)).unwrap();
-		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
-
-		// Create a connection end and put in storage
-		// Successful processing of a connection open confirm message requires a compatible connection end with state INIT or TRYOPEN
-		// to exist on the local chain
-		let connection_id = ConnectionId::new(0);
-		let commitment_prefix: CommitmentPrefix = "ibc".as_bytes().to_vec().try_into().unwrap();
-		let delay_period = core::time::Duration::from_nanos(1000);
-		let connection_counterparty = Counterparty::new(counterparty_client_id, Some(ConnectionId::new(1)), commitment_prefix);
-		let connection_end = ConnectionEnd::new(State::Init, client_id.clone(), connection_counterparty, vec![ConnVersion::default()], delay_period);
-
-		ctx.store_connection(connection_id.clone(), &connection_end).unwrap();
-		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
-
-		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
-		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
-		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
-
-		let (cs_state, value) = super::utils::create_conn_open_ack::<T>(new_height, Height::new(0, 3).unwrap());
-		ctx.store_consensus_state(client_id, Height::new(0, 2).unwrap(), Box::new(cs_state)).unwrap();
-		let caller: T::AccountId = whitelisted_caller();
-		let msg = Any { type_url: CONN_OPEN_ACK_TYPE_URL.as_bytes().to_vec(), value };
-	}: deliver(RawOrigin::Signed(caller), vec![msg])
-	verify {
-		let connection_end = ConnectionReader::connection_end(&ctx, &ConnectionId::new(0)).unwrap();
-		assert_eq!(connection_end.state, State::Open);
 	}
 
 	// connection open confirm
@@ -267,7 +198,7 @@ benchmarks! {
 		let value = MsgChannelOpenInit {
 			port_id_on_a: port_id.clone(),
 			chan_end_on_a: channel_end,
-			signer: ibc::test_utils::get_dummy_account_id()
+			signer: crate::tests::common::get_dummy_account_id()
 		}.encode_vec().unwrap();
 
 		let caller: T::AccountId = whitelisted_caller();
@@ -359,7 +290,7 @@ benchmarks! {
 		let value = MsgChannelOpenInit {
 			port_id_on_a: port_id,
 			chan_end_on_a: channel_end,
-			signer: ibc::test_utils::get_dummy_account_id(),
+			signer: crate::tests::common::get_dummy_account_id(),
 		}.encode_vec().unwrap();
 
 		let msg = ibc_proto::google::protobuf::Any  { type_url: CHAN_OPEN_TYPE_URL.to_string(), value };
@@ -734,7 +665,7 @@ benchmarks! {
 			),
 			version: Some(ConnVersion::default()),
 			delay_period: core::time::Duration::from_secs(1000),
-			signer: ibc::test_utils::get_dummy_account_id(),
+			signer: crate::tests::common::get_dummy_account_id(),
 		}.encode_vec().unwrap();
 
 		let msg = Any {
@@ -757,7 +688,7 @@ benchmarks! {
 		let msg = MsgCreateClient::new(
 			mock_client_state.into(),
 			mock_cs_state.into(),
-			ibc::test_utils::get_dummy_account_id(),
+			crate::tests::common::get_dummy_account_id(),
 		).unwrap();
 
 		let mut value = vec![];

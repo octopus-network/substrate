@@ -37,13 +37,14 @@ use test_util::get_dummy_raw_msg_chan_open_ack;
 pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenAck as RawMsgChannelOpenAck;
 
+	use alloc::string::ToString;
 	use ibc::{
 		core::ics24_host::identifier::{ChannelId, PortId},
-		test_utils::{get_dummy_bech32_account, get_dummy_proof},
 	};
 	use ibc_proto::ibc::core::client::v1::Height;
+    use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
 
-	/// Returns a dummy `RawMsgChannelOpenAck`, for testing only!
+    /// Returns a dummy `RawMsgChannelOpenAck`, for testing only!
 	pub fn get_dummy_raw_msg_chan_open_ack(proof_height: u64) -> RawMsgChannelOpenAck {
 		RawMsgChannelOpenAck {
 			port_id: PortId::transfer().to_string(),

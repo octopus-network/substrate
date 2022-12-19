@@ -1,3 +1,4 @@
+#[cfg(test)]
 use ibc::{
 	core::{
 		ics03_connection::{
@@ -24,11 +25,12 @@ pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenTry as RawMsgChannelOpenTry;
 
 	use crate::tests::channel::common::test_util::get_dummy_raw_channel_end;
+	use alloc::string::ToString;
 	use ibc::{
 		core::ics24_host::identifier::{ChannelId, PortId},
-		test_utils::{get_dummy_bech32_account, get_dummy_proof},
 	};
 	use ibc_proto::ibc::core::client::v1::Height;
+	use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
 
 	/// Returns a dummy `RawMsgChannelOpenTry`, for testing only!
 	pub fn get_dummy_raw_msg_chan_open_try(proof_height: u64) -> RawMsgChannelOpenTry {

@@ -2,13 +2,14 @@ use ibc::core::ics04_channel::{
 	context::ChannelReader,
 	msgs::{chan_close_init::MsgChannelCloseInit, ChannelMsg},
 };
-
+#[cfg(test)]
 use crate::tests::connection::common::test_util::get_dummy_raw_counterparty;
 #[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
 	Context,
 };
+#[cfg(test)]
 use ibc::{
 	core::{
 		ics03_connection::{
@@ -32,10 +33,11 @@ use test_util::get_dummy_raw_msg_chan_close_init;
 pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelCloseInit as RawMsgChannelCloseInit;
 
+	use alloc::string::ToString;
 	use ibc::{
 		core::ics24_host::identifier::{ChannelId, PortId},
-		test_utils::get_dummy_bech32_account,
 	};
+	use crate::tests::common::get_dummy_bech32_account;
 
 	/// Returns a dummy `RawMsgChannelCloseInit`, for testing only!
 	pub fn get_dummy_raw_msg_chan_close_init() -> RawMsgChannelCloseInit {

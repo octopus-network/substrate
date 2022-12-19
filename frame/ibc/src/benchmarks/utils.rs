@@ -11,13 +11,13 @@ use crate::{
 			timeout::test_util::get_dummy_raw_msg_timeout,
 		},
 		connection::{
-			conn_open_ack::test_util::get_dummy_raw_msg_conn_open_ack,
 			conn_open_confirm::test_util::get_dummy_raw_msg_conn_open_confirm,
-			conn_open_try::test_util::get_dummy_raw_msg_conn_open_try,
 		},
 	},
 	Config,
 };
+use sp_std::vec;
+use alloc::vec::Vec;
 use core::str::FromStr;
 use ibc::{
 	core::{
@@ -49,7 +49,6 @@ use ibc::{
 	Height,
 };
 use ibc_proto::protobuf::Protobuf;
-use std::os::unix::raw::blkcnt_t;
 
 pub fn create_mock_state(height: Height) -> (MockClientState, MockConsensusState) {
 	let mock_cl_state = MockClientState::new(MockHeader::new(height));
@@ -62,53 +61,12 @@ pub fn create_mock_client_update_client(client_id: ClientId, height: Height) -> 
 	let msg = MsgUpdateClient::new(
 		client_id,
 		MockHeader::new(height).into(),
-		ibc::test_utils::get_dummy_account_id(),
+		crate::tests::common::get_dummy_account_id(),
 	);
 
 	let mut value = vec![];
 	msg.encode(&mut value).unwrap();
 	value
-}
-
-pub fn create_conn_open_try<T: Config>(
-	block_height: Height,
-	host_chain_height: Height,
-) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
-	let height = host_chain_height.revision_height() as u32;
-	let number: <T as frame_system::Config>::BlockNumber = height.into();
-	frame_system::Pallet::<T>::set_block_number(number);
-	let msg_conn_try = MsgConnectionOpenTry::try_from(get_dummy_raw_msg_conn_open_try(
-		block_height.revision_height(),
-		host_chain_height.revision_height(),
-	))
-	.unwrap();
-
-	let mut value = vec![];
-	msg_conn_try.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
-}
-
-pub fn create_conn_open_ack<T: Config>(
-	block_height: Height,
-	host_chain_height: Height,
-) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
-	let height = host_chain_height.revision_height() as u32;
-	let number: <T as frame_system::Config>::BlockNumber = height.into();
-	frame_system::Pallet::<T>::set_block_number(number);
-
-	let msg_ack = MsgConnectionOpenAck::try_from(get_dummy_raw_msg_conn_open_ack(
-		block_height.revision_height(),
-		host_chain_height.revision_height(),
-	))
-	.unwrap();
-
-	let mut value = vec![];
-	msg_ack.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
 }
 
 pub fn create_conn_open_confirm(block_height: Height) -> (MockConsensusState, Vec<u8>) {

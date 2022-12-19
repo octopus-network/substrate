@@ -4,6 +4,7 @@ use crate::{
 	Context,
 };
 use core::str::FromStr;
+#[cfg(test)]
 use ibc::{
 	core::{
 		ics02_client::{
@@ -25,6 +26,7 @@ use ibc::{
 	timestamp::Timestamp,
 	Height,
 };
+
 use ibc_proto::google::protobuf::Any;
 
 #[test]
