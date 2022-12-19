@@ -95,13 +95,12 @@ benchmarks! {
 	update_mock_client {
 		let mut ctx = crate::context::Context::<T>::new();
 		let height = Height::new(0, 1).unwrap();
-		let mock_cl_state = Box::new(MockClientState::new(MockHeader::new(height)));
-		let mock_cs_state = Box::new(MockConsensusState::new(MockHeader::new(height)));
+		let (mock_cl_state, mock_cs_state) = super::utils::create_mock_state(height);
 		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
 		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
 		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
-		ctx.store_client_state(client_id.clone(), mock_cl_state).unwrap();
-		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), mock_cs_state).unwrap();
+		ctx.store_client_state(client_id.clone(), Box::new(mock_cl_state)).unwrap();
+		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
 		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
@@ -121,14 +120,12 @@ benchmarks! {
 		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
 		frame_system::Pallet::<T>::set_block_number(number);
 		let height = Height::new(0, 1).unwrap();
-		let mock_cl_state = Box::new(MockClientState::new(MockHeader::new(height)));
-		let mock_cs_state = Box::new(MockConsensusState::new(MockHeader::new(height)));
+		let (mock_cl_state, mock_cs_state) = super::utils::create_mock_state(height);
 		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
 		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
-
 		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
-		ctx.store_client_state(client_id.clone(), mock_cl_state).unwrap();
-		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), mock_cs_state).unwrap();
+		ctx.store_client_state(client_id.clone(), Box::new(mock_cl_state)).unwrap();
+		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
 
 
 		// We update the light client state so it can have the required client and consensus states required to process
@@ -151,43 +148,44 @@ benchmarks! {
 	}
 
 	// // connection open ack
-	// conn_open_ack_tendermint {
-	// 	let mut ctx = routing::Context::<T>::new();
-	// 	let now: <T as pallet_timestamp::Config>::Moment = TIMESTAMP.saturating_mul(1000);
-	// 	pallet_timestamp::Pallet::<T>::set_timestamp(now);
-	// 	let (mock_client_state, mock_cs_state) = create_mock_state();
-	// 	let mock_client_state = AnyClientState::Tendermint(mock_client_state);
-	// 	let mock_cs_state = AnyConsensusState::Tendermint(mock_cs_state);
-	// 	let client_id = ClientId::new(&mock_client_state.client_type(), 0).unwrap();
-	// 	let counterparty_client_id = ClientId::new("11-beefy", 1).unwrap();
-	// 	ctx.store_client_type(client_id.clone(), mock_client_state.client_type()).unwrap();
-	// 	ctx.store_client_state(client_id.clone(), mock_client_state).unwrap();
-	// 	ctx.store_consensus_state(client_id.clone(), Height::new(0, 1), mock_cs_state).unwrap();
-	// 	// Create a connection end and put in storage
-	// 	// Successful processing of a connection open confirm message requires a compatible connection end with state INIT or TRYOPEN
-	// 	// to exist on the local chain
-	// 	let connection_id = ConnectionId::new(0);
-	// 	let commitment_prefix: CommitmentPrefix = <T as Config>::PALLET_PREFIX.to_vec().try_into().unwrap();
-	// 	let delay_period = core::time::Duration::from_nanos(1000);
-	// 	let connection_counterparty = Counterparty::new(counterparty_client_id, Some(ConnectionId::new(1)), commitment_prefix);
-	// 	let connection_end = ConnectionEnd::new(State::Init, client_id.clone(), connection_counterparty, vec![ConnVersion::default()], delay_period);
+	conn_open_ack_mock {
+		let mut ctx = crate::context::Context::<T>::new();
+		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
+		frame_system::Pallet::<T>::set_block_number(number);
+		let height = Height::new(0, 1).unwrap();
+		let (mock_client_state, mock_cs_state) = super::utils::create_mock_state(height);
+		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
+		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
+		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
+		ctx.store_client_state(client_id.clone(), Box::new(mock_client_state)).unwrap();
+		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
 
-	// 	ctx.store_connection(connection_id.clone(), &connection_end).unwrap();
-	// 	ctx.store_connection_to_client(connection_id, &client_id).unwrap();
+		// Create a connection end and put in storage
+		// Successful processing of a connection open confirm message requires a compatible connection end with state INIT or TRYOPEN
+		// to exist on the local chain
+		let connection_id = ConnectionId::new(0);
+		let commitment_prefix: CommitmentPrefix = "ibc".as_bytes().to_vec().try_into().unwrap();
+		let delay_period = core::time::Duration::from_nanos(1000);
+		let connection_counterparty = Counterparty::new(counterparty_client_id, Some(ConnectionId::new(1)), commitment_prefix);
+		let connection_end = ConnectionEnd::new(State::Init, client_id.clone(), connection_counterparty, vec![ConnVersion::default()], delay_period);
 
-	// 	let value = create_client_update::<T>().encode_vec();
-	// 	let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
-	// 	ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
+		ctx.store_connection(connection_id.clone(), &connection_end).unwrap();
+		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
-	// 	let (cs_state, value) = create_conn_open_ack::<T>();
-	// 	ctx.store_consensus_state(client_id, Height::new(0, 2), AnyConsensusState::Tendermint(cs_state)).unwrap();
-	// 	let caller: T::AccountId = whitelisted_caller();
-	// 	let msg = Any { type_url: CONN_OPEN_ACK_TYPE_URL.as_bytes().to_vec(), value: value.encode_vec() };
-	// }: deliver(RawOrigin::Signed(caller), vec![msg])
-	// verify {
-	// 	let connection_end = ConnectionReader::connection_end(&ctx, &ConnectionId::new(0)).unwrap();
-	// 	assert_eq!(connection_end.state, State::Open);
-	// }
+		let new_height = Height::new(0, 2).unwrap();
+		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
+		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
+
+		let (cs_state, value) = super::utils::create_conn_open_ack::<T>(new_height, Height::new(0, 3).unwrap());
+		ctx.store_consensus_state(client_id, Height::new(0, 2).unwrap(), Box::new(cs_state)).unwrap();
+		let caller: T::AccountId = whitelisted_caller();
+		let msg = Any { type_url: CONN_OPEN_ACK_TYPE_URL.as_bytes().to_vec(), value };
+	}: deliver(RawOrigin::Signed(caller), vec![msg])
+	verify {
+		let connection_end = ConnectionReader::connection_end(&ctx, &ConnectionId::new(0)).unwrap();
+		assert_eq!(connection_end.state, State::Open);
+	}
 
 	// // connection open confirm
 	// conn_open_confirm_tendermint {
