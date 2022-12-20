@@ -29,7 +29,7 @@ sp-tracing = { version = "5.0.0", default-features = false,  path = "../../primi
 flex-error = { version = "0.4.4", default-features = false }
 hex = { version = "0.4.0", default-features = false }
 ## for ibc protocl
-ibc = { version = "0.25.0", default-features = false, git = "https://github.com/cosmos/ibc-rs.git", branch = "main", features = ["parity-scale-codec"]}
+ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec"]}
 ibc-proto = { version = "0.24.0", default-features = false }
 log = { version = "0.4.0", default-features = false }
 prost = { version = "0.11", default-features = false }
@@ -49,7 +49,7 @@ frame-support = { version = "4.0.0-dev", path = "../support" }
 # thrid party crates
 hex = '0.4.0'
 # ibc protocol crates
-ibc = { version = "0.25.0", git = "https://github.com/cosmos/ibc-rs.git", branch = "main", features = ["mocks", "clock"] }
+ibc = { version = "0.25.0", git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["mocks", "clock"] }
 pallet-balances = { version = "4.0.0-dev", path = "../balances" }
 pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp" }
 serde = "1.0"
