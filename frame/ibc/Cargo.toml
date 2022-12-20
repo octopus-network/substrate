@@ -26,7 +26,6 @@ sp-std = { version = "4.0.0", default-features = false,  path = "../../primitive
 sp-tracing = { version = "5.0.0", default-features = false,  path = "../../primitives/tracing" }
 
 # third-party libraries
-flex-error = { version = "0.4.4", default-features = false }
 hex = { version = "0.4.0", default-features = false }
 ## for ibc protocl
 ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec"]}
@@ -49,7 +48,7 @@ frame-support = { version = "4.0.0-dev", path = "../support" }
 # thrid party crates
 hex = '0.4.0'
 # ibc protocol crates
-ibc = { version = "0.25.0", git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["mocks", "clock"] }
+ibc = { version = "0.25.0", git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["mocks"] }
 pallet-balances = { version = "4.0.0-dev", path = "../balances" }
 pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp" }
 serde = "1.0"
@@ -68,7 +67,7 @@ std = [
   "codec/std",
   "log/std",
   "scale-info/std",
-  "frame-benchmarking/std",
+  "frame-benchmarking?/std",
   "frame-support/std",
   "frame-system/std",
   "sp-core/std",
@@ -82,13 +81,13 @@ std = [
   "ibc-proto/std",
   "serde_json/std",
   "serde/std",
-  "flex-error/std",
   "hex/std",
   "time/std",
 ]
 runtime-benchmarks = [
-  "frame-benchmarking",
-  "hex-literal",
-  "pallet-timestamp",
+  "frame-benchmarking/runtime-benchmarks",
+  "frame-system/runtime-benchmarks",
+  "pallet-timestamp/runtime-benchmarks",
+  "ibc/mocks"
 ]
 try-runtime = ["frame-support/try-runtime"]

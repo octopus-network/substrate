@@ -156,9 +156,6 @@ benchmarks! {
 		let msg = Any { type_url: CONN_OPEN_CONFIRM_TYPE_URL.as_bytes().to_vec(), value };
 	}: deliver(RawOrigin::Signed(caller), vec![msg])
 	verify {
-		// todo fix
-		// let connection_end = ConnectionReader::connection_end(&ctx, &ConnectionId::new(0)).unwrap();
-		// assert_eq!(connection_end.state, State::Open);
 	}
 
 
@@ -525,10 +522,9 @@ benchmarks! {
 		let caller: T::AccountId = whitelisted_caller();
 	}: deliver(RawOrigin::Signed(caller), vec![msg])
 	verify {
-
 	}
 
-	// // ack_packet
+	// ack_packet
 	ack_packet_mock {
 		let mut ctx = crate::context::Context::<T>::new();
 		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
