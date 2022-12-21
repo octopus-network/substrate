@@ -552,5 +552,12 @@ pub mod pallet {
 
 			Ok(().into())
 		}
+
+		#[pallet::weight(0)]
+		pub fn hello(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			ensure_signed(origin)?;
+
+			Ok(().into())
+		}
 	}
 }

@@ -28,7 +28,7 @@ sp-tracing = { version = "5.0.0", default-features = false,  path = "../../primi
 # third-party libraries
 hex = { version = "0.4.0", default-features = false }
 ## for ibc protocl
-ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec"]}
+ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec", "mocks-primitives"]}
 ibc-proto = { version = "0.24.0", default-features = false }
 log = { version = "0.4.0", default-features = false }
 prost = { version = "0.11", default-features = false }
@@ -38,7 +38,6 @@ serde_json = { version = "1.0", default-features = false }
 tendermint-proto = { version = "=0.26.0", default-features = false }
 time = { version = ">=0.3.0, <0.3.12", default-features = false, features = ["macros", "parsing"] }
 
-hex-literal = { version = "0.3.4", default-features = false, optional = true }
 pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp",  default-features = false, optional = true }
 
 [dev-dependencies]
@@ -88,6 +87,5 @@ runtime-benchmarks = [
   "frame-benchmarking/runtime-benchmarks",
   "frame-system/runtime-benchmarks",
   "pallet-timestamp/runtime-benchmarks",
-  "ibc/mocks"
 ]
 try-runtime = ["frame-support/try-runtime"]

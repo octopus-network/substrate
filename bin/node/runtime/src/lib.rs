@@ -1846,6 +1846,7 @@ mod benches {
 		[pallet_utility, Utility]
 		[pallet_vesting, Vesting]
 		[pallet_whitelist, Whitelist]
+		[pallet_ibc, Ibc]
 	);
 }
 
@@ -2206,7 +2207,7 @@ impl_runtime_apis! {
 			use pallet_nomination_pools_benchmarking::Pallet as NominationPoolsBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
-			list_benchmarks!(list, extra, pallet_ibc);
+			list_benchmarks!(list, extra);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -2246,7 +2247,7 @@ impl_runtime_apis! {
 
 			let mut batches = Vec::<BenchmarkBatch>::new();
 			let params = (&config, &whitelist);
-			add_benchmarks!(params, batches, pallet_ibc);
+			add_benchmarks!(params, batches);
 			Ok(batches)
 		}
 	}
