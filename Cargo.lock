@@ -529,7 +529,7 @@ dependencies = [
 [[package]]
 name = "beefy-light-client"
 version = "0.1.0"
-source = "git+https://github.com/octopus-network/beefy-light-client.git?branch=feature/v0.9.18#c625ba01e349fac212da67bbdfd7c837472fefc1"
+source = "git+https://github.com/octopus-network/beefy-light-client.git?branch=main#113215ed340d3cc3f61dd9f4e8b8a6138f5ab736"
 dependencies = [
  "beefy-merkle-tree 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.18)",
  "blake2-rfc",
@@ -3073,7 +3073,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.16.0"
-source = "git+https://github.com/octopus-network/hermes.git?branch=feature/m4v2-hermes1.0#c89fa5970d80d4d0fc0dd103d32702ff2bd2cf80"
+source = "git+https://github.com/octopus-network/hermes.git?branch=feature/m4v4-hermes1.0#f8fe445985036d6f816a31e00cbf5c4701177a38"
 dependencies = [
  "beefy-light-client",
  "beefy-merkle-tree 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.18)",
@@ -3113,7 +3113,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.19.0"
-source = "git+https://github.com/octopus-network/hermes.git?branch=feature/m4v2-hermes1.0#c89fa5970d80d4d0fc0dd103d32702ff2bd2cf80"
+source = "git+https://github.com/octopus-network/hermes.git?branch=feature/m4v4-hermes1.0#f8fe445985036d6f816a31e00cbf5c4701177a38"
 dependencies = [
  "base64 0.13.0",
  "bytes 1.2.1",
@@ -6158,7 +6158,7 @@ dependencies = [
 [[package]]
 name = "pallet-ibc"
 version = "3.0.0-pre.0"
-source = "git+https://github.com/octopus-network/substrate-ibc?branch=feature/m4v2-hermes1.0#3a68a255d67b4958602f03bce856b52ea7e96532"
+source = "git+https://github.com/octopus-network/substrate-ibc?branch=feature/m4v4-hermes1.0#4643f1c3285b588ee02a0d823e886b2de0bff6b4"
 dependencies = [
  "beefy-light-client",
  "flex-error",
@@ -6170,8 +6170,8 @@ dependencies = [
  "ibc-proto",
  "log 0.4.17",
  "parity-scale-codec 3.1.5",
- "prost 0.10.4",
- "prost-types 0.10.1",
+ "prost 0.9.0",
+ "prost-types 0.9.0",
  "scale-info 2.1.2",
  "serde",
  "serde_json",
