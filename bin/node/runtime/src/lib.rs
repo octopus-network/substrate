@@ -1660,6 +1660,7 @@ impl pallet_ibc::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 	type ExpectedBlockTime = ExpectedBlockTime;
+	type WeightInfo = ();
 }
 
 construct_runtime!(
