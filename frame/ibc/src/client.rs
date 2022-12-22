@@ -5,12 +5,7 @@ use crate::{
 use alloc::{format, string::ToString};
 use sp_std::{boxed::Box, vec::Vec};
 
-#[cfg(test)]
 use crate::host::MOCK_CLIENT_TYPE;
-#[cfg(test)]
-use ibc::mock::{
-	client_state::MockClientState, consensus_state::MockConsensusState, header::MockHeader,
-};
 use ibc::{
 	clients::ics07_tendermint::{
 		client_state::ClientState as Ics07ClientState,
@@ -26,6 +21,9 @@ use ibc::{
 		},
 		ics24_host::identifier::ClientId,
 	},
+	mock::{
+		client_state::MockClientState, consensus_state::MockConsensusState, header::MockHeader,
+	},
 	timestamp::Timestamp,
 	Height,
 };
@@ -38,7 +36,6 @@ impl<T: Config> ClientReader for Context<T> {
 			let data = <Clients<T>>::get(client_id);
 			match data.as_str() {
 				TENDERMINT_CLIENT_TYPE => Ok(ClientType::new(TENDERMINT_CLIENT_TYPE.into())),
-				#[cfg(test)]
 				MOCK_CLIENT_TYPE => Ok(ClientType::new(MOCK_CLIENT_TYPE.into())),
 				unimplemented =>
 					return Err(ClientError::UnknownClientStateType {
@@ -62,7 +59,6 @@ impl<T: Config> ClientReader for Context<T> {
 
 					Ok(Box::new(result))
 				},
-				#[cfg(test)]
 				MOCK_CLIENT_TYPE => {
 					let result: MockClientState =
 						Protobuf::<Any>::decode_vec(&data).map_err(|e| ClientError::Other {
@@ -80,14 +76,13 @@ impl<T: Config> ClientReader for Context<T> {
 	}
 
 	fn decode_client_state(&self, client_state: Any) -> Result<Box<dyn ClientState>, ClientError> {
-		if let Ok(client_state) = Ics07ClientState::try_from(client_state.clone()) {
-			return Ok(client_state.into_box())
-		}
-		#[cfg(test)]
 		if let Ok(client_state) = MockClientState::try_from(client_state.clone()) {
-			return Ok(client_state.into_box())
+			Ok(client_state.into_box())
+		} else if let Ok(client_state) = Ics07ClientState::try_from(client_state.clone()) {
+			Ok(client_state.into_box())
+		} else {
+			Err(ClientError::UnknownClientStateType { client_state_type: client_state.type_url })
 		}
-		Err(ClientError::UnknownClientStateType { client_state_type: client_state.type_url })
 	}
 
 	fn consensus_state(
@@ -105,7 +100,6 @@ impl<T: Config> ClientReader for Context<T> {
 						})?;
 					Ok(Box::new(result))
 				},
-				#[cfg(test)]
 				MOCK_CLIENT_TYPE => {
 					let result: MockConsensusState =
 						Protobuf::<Any>::decode_vec(&data).map_err(|e| ClientError::Other {
@@ -191,7 +185,6 @@ impl<T: Config> ClientReader for Context<T> {
 						})?;
 						return Ok(Some(Box::new(result)))
 					},
-					#[cfg(test)]
 					MOCK_CLIENT_TYPE => {
 						let result: MockConsensusState = Protobuf::<Any>::decode_vec(&data)
 							.map_err(|e| ClientError::Other {
@@ -217,7 +210,7 @@ impl<T: Config> ClientReader for Context<T> {
 		let time = T::TimeProvider::now();
 
 		Timestamp::from_nanoseconds(time.as_nanos().saturated_into::<u64>())
-			.map_err(|e| ClientError::Other {description: format!("{}", e)})
+			.map_err(|e| ClientError::Other { description: format!("{}", e) })
 	}
 
 	fn host_consensus_state(

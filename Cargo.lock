@@ -2835,6 +2835,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ibc-primitives"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "ibc",
+ "ibc-proto",
+]
+
+[[package]]
 name = "ibc-proto"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5473,6 +5483,7 @@ dependencies = [
  "frame-system",
  "hex",
  "ibc",
+ "ibc-primitives",
  "ibc-proto",
  "log",
  "pallet-balances",

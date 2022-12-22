@@ -24,6 +24,7 @@ sp-io = { version = "7.0.0", default-features = false, path = "../../primitives/
 sp-runtime = { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
 sp-std = { version = "5.0.0", default-features = false,  path = "../../primitives/std" }
 sp-tracing = { version = "6.0.0", default-features = false,  path = "../../primitives/tracing" }
+ibc-primitives = { version = "0.1.0", default-features = false, path = "./ibc-primitives" }
 
 ## for ibc protocl
 ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec", "mocks-primitives"]}
@@ -34,7 +35,6 @@ serde_json = { version = "1.0", default-features = false }
 
 ## optional
 pallet-timestamp = { version = "4.0.0-dev", default-features = false,  path = "../timestamp", optional = true }
-
 [dev-dependencies]
 # local crates
 chrono = "0.4.19"
@@ -72,6 +72,7 @@ std = [
   "ibc-proto/std",
   "serde_json/std",
   "serde/std",
+  "ibc-primitives/std",
 ]
 runtime-benchmarks = [
   "frame-benchmarking/runtime-benchmarks",

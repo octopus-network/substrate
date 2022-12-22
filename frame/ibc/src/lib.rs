@@ -66,7 +66,7 @@ impl From<ibc_proto::google::protobuf::Any> for Any {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::{errors, *};
-	use crate::events::ModuleEvent;
+	use crate::{events::ModuleEvent, host::MOCK_CLIENT_TYPE};
 	use frame_support::{pallet_prelude::*, traits::UnixTime};
 	use frame_system::pallet_prelude::*;
 	use ibc::{
@@ -99,7 +99,7 @@ pub mod pallet {
 		type ExpectedBlockTime: Get<u64>;
 
 		/// benchmarking weight info
-		type WeightInfo: WeightInfo;
+		type WeightInfo: WeightInfo<Self>;
 	}
 
 	#[pallet::pallet]
@@ -240,7 +240,7 @@ pub mod pallet {
 
 	#[pallet::type_value]
 	pub fn DefaultIbcClientType() -> ClientType {
-		ClientType::new("07-tendermint".to_string())
+		ClientType::new(MOCK_CLIENT_TYPE.into())
 	}
 
 	#[pallet::storage]
@@ -500,6 +500,8 @@ pub mod pallet {
 		InvalidVersion,
 		/// Invalid module id
 		InvalidModuleId,
+		/// Other error
+		Other,
 	}
 
 	/// Dispatchable functions allows users to interact with the pallet and invoke state changes.

@@ -10,7 +10,11 @@ use crate::{
 			recv_packet::test_util::get_dummy_raw_msg_recv_packet,
 			timeout::test_util::get_dummy_raw_msg_timeout,
 		},
-		connection::conn_open_confirm::test_util::get_dummy_raw_msg_conn_open_confirm,
+		connection::{
+			conn_open_ack::test_util::get_dummy_raw_msg_conn_open_ack,
+			conn_open_confirm::test_util::get_dummy_raw_msg_conn_open_confirm,
+			conn_open_try::test_util::get_dummy_raw_msg_conn_open_try,
+		},
 	},
 	Config,
 };
@@ -18,7 +22,7 @@ use alloc::vec::Vec;
 use core::str::FromStr;
 use ibc::{
 	core::{
-		ics02_client::msgs::update_client::MsgUpdateClient,
+		ics02_client::msgs::{update_client::MsgUpdateClient, upgrade_client::MsgUpgradeClient},
 		ics03_connection::{
 			connection::{ConnectionEnd, Counterparty},
 			msgs::{
@@ -43,14 +47,11 @@ use ibc::{
 	},
 	proofs::Proofs,
 	signer::Signer,
+	timestamp::Timestamp,
 	Height,
 };
-use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeClient;
-use ibc::timestamp::Timestamp;
 use ibc_proto::protobuf::Protobuf;
 use sp_std::vec;
-use crate::tests::connection::conn_open_ack::test_util::get_dummy_raw_msg_conn_open_ack;
-use crate::tests::connection::conn_open_try::test_util::get_dummy_raw_msg_conn_open_try;
 
 pub const TIMESTAMP: u64 = 1650894363;
 pub const MILLIS: u128 = 1_000_000;
@@ -76,7 +77,9 @@ pub fn create_mock_update_client(client_id: ClientId, height: Height) -> Vec<u8>
 		client_id,
 		mock_header.into(),
 		crate::tests::common::get_dummy_account_id(),
-	).encode_vec().unwrap();
+	)
+	.encode_vec()
+	.unwrap();
 
 	msg
 }
@@ -88,14 +91,15 @@ pub fn create_mock_upgrade_client(client_id: ClientId, height: Height) -> Vec<u8
 	};
 
 	let msg = MsgUpgradeClient {
-		client_id: client_id,
+		client_id,
 		client_state: MockClientState::new(mock_header).into(),
-		consensus_state: MockConsensusState::new(mock_header)
-			.into(),
+		consensus_state: MockConsensusState::new(mock_header).into(),
 		proof_upgrade_client: Default::default(),
 		proof_upgrade_consensus_state: Default::default(),
 		signer: crate::tests::common::get_dummy_account_id(),
-	}.encode_vec().unwrap();
+	}
+	.encode_vec()
+	.unwrap();
 
 	msg
 }
@@ -116,8 +120,9 @@ pub fn create_conn_open_try<T: Config>(
 		block_height.revision_height(),
 		host_chain_height.revision_height(),
 	))
-		.unwrap().encode_vec().unwrap();
-
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg_conn_try)
 }
@@ -139,7 +144,9 @@ pub fn create_conn_open_ack<T: Config>(
 		block_height.revision_height(),
 		host_chain_height.revision_height(),
 	))
-		.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg_ack)
 }
@@ -151,8 +158,10 @@ pub fn create_conn_open_confirm(block_height: Height) -> (MockConsensusState, Ve
 	};
 	let mock_consensus_state = MockConsensusState::new(mock_header);
 
-	let msg_confirm =
-		MsgConnectionOpenConfirm::try_from(get_dummy_raw_msg_conn_open_confirm()).unwrap().encode_vec().unwrap();
+	let msg_confirm = MsgConnectionOpenConfirm::try_from(get_dummy_raw_msg_conn_open_confirm())
+		.unwrap()
+		.encode_vec()
+		.unwrap();
 
 	(mock_consensus_state, msg_confirm)
 }
@@ -168,7 +177,9 @@ pub fn create_chan_open_try(block_height: Height) -> (MockConsensusState, Vec<u8
 	let msg = MsgChannelOpenTry::try_from(get_dummy_raw_msg_chan_open_try(
 		block_height.revision_height() + 1,
 	))
-	.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg)
 }
@@ -183,7 +194,9 @@ pub fn create_chan_open_ack(block_height: Height) -> (MockConsensusState, Vec<u8
 	let msg_chan_ack = MsgChannelOpenAck::try_from(get_dummy_raw_msg_chan_open_ack(
 		block_height.revision_height() + 1,
 	))
-	.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg_chan_ack)
 }
@@ -198,7 +211,9 @@ pub fn create_chan_open_confirm(block_height: Height) -> (MockConsensusState, Ve
 	let msg_chan_confirm = MsgChannelOpenConfirm::try_from(get_dummy_raw_msg_chan_open_confirm(
 		block_height.revision_height() + 1,
 	))
-	.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg_chan_confirm)
 }
@@ -210,8 +225,10 @@ pub fn create_chan_close_init(block_height: Height) -> (MockConsensusState, Vec<
 	};
 	let mock_consensus_state = MockConsensusState::new(mock_header);
 
-	let msg_chan_close_init =
-		MsgChannelCloseInit::try_from(get_dummy_raw_msg_chan_close_init()).unwrap().encode_vec().unwrap();
+	let msg_chan_close_init = MsgChannelCloseInit::try_from(get_dummy_raw_msg_chan_close_init())
+		.unwrap()
+		.encode_vec()
+		.unwrap();
 
 	(mock_consensus_state, msg_chan_close_init)
 }
@@ -226,7 +243,9 @@ pub fn create_chan_close_confirm(block_height: Height) -> (MockConsensusState, V
 	let msg_chan_close_confirm = MsgChannelCloseConfirm::try_from(
 		get_dummy_raw_msg_chan_close_confirm(block_height.revision_height() + 1),
 	)
-	.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg_chan_close_confirm)
 }
@@ -240,7 +259,9 @@ pub fn create_recv_packet(block_height: Height) -> (MockConsensusState, Vec<u8>)
 
 	let msg =
 		MsgRecvPacket::try_from(get_dummy_raw_msg_recv_packet(block_height.revision_height() + 1))
-			.unwrap().encode_vec().unwrap();
+			.unwrap()
+			.encode_vec()
+			.unwrap();
 
 	(mock_consensus_state, msg)
 }
@@ -255,7 +276,9 @@ pub fn create_ack_packet(block_height: Height) -> (MockConsensusState, Vec<u8>) 
 	let msg = MsgAcknowledgement::try_from(get_dummy_raw_msg_acknowledgement(
 		block_height.revision_height() + 1,
 	))
-	.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg)
 }
@@ -275,7 +298,9 @@ pub fn create_timeout_packet(block_height: Height) -> (MockConsensusState, Vec<u
 		msg_timeout_height,
 		timeout_timestamp,
 	))
-	.unwrap().encode_vec().unwrap();
+	.unwrap()
+	.encode_vec()
+	.unwrap();
 
 	(mock_consensus_state, msg)
 }

@@ -40,12 +40,16 @@
 // limitations under the License.
 
 use super::*;
+use crate::host::{MOCK_CLIENT_TYPE, TENDERMINT_CLIENT_TYPE};
 use core::marker::PhantomData;
 use frame_support::pallet_prelude::Weight;
 use ibc::core::{
-	ics02_client::msgs::{
-		create_client::MsgCreateClient, misbehaviour::MsgSubmitMisbehaviour,
-		update_client::MsgUpdateClient, upgrade_client::MsgUpgradeClient, ClientMsg,
+	ics02_client::{
+		context::ClientReader,
+		msgs::{
+			create_client::MsgCreateClient, misbehaviour::MsgSubmitMisbehaviour,
+			update_client::MsgUpdateClient, upgrade_client::MsgUpgradeClient, ClientMsg,
+		},
 	},
 	ics03_connection::{
 		context::ConnectionReader,
@@ -65,9 +69,10 @@ use ibc::core::{
 	ics24_host::identifier::{ChannelId, ClientId, PortId},
 	ics26_routing::msgs::MsgEnvelope,
 };
+use ibc_primitives::CallbackWeight;
 use scale_info::prelude::string::ToString;
 
-pub trait WeightInfo {
+pub trait WeightInfo<T> {
 	fn create_client(msg_create_client: MsgCreateClient) -> Weight;
 	fn misbehaviour(msg_misbehaviour: MsgSubmitMisbehaviour) -> Weight;
 	fn update_client(msg_update_client: MsgUpdateClient) -> Weight;
@@ -89,129 +94,377 @@ pub trait WeightInfo {
 	fn ack_packet(msg_ack_packet: MsgAcknowledgement) -> Weight;
 	fn timeout_packet(msg_timeout_packet: MsgTimeout) -> Weight;
 	fn timeout_on_close_packet(msg_timout_onclose_packet: MsgTimeoutOnClose) -> Weight;
-
-	fn on_chan_open_init(msg: MsgChannelOpenInit) -> Weight;
-	fn on_chan_open_try(msg: MsgChannelOpenTry) -> Weight;
-	fn on_chan_open_ack(msg: MsgChannelOpenAck) -> Weight;
-	fn on_chan_open_confirm(msg: MsgChannelOpenConfirm) -> Weight;
-	fn on_chan_close_init(msg: MsgChannelCloseInit) -> Weight;
-	fn on_chan_close_confirm(msg: MsgChannelCloseConfirm) -> Weight;
-	fn on_recv_packet(msg: MsgRecvPacket) -> Weight;
-	fn on_acknowledgement_packet(msg: MsgAcknowledgement) -> Weight;
-	fn on_timeout_packet(msg: MsgTimeout) -> Weight;
 }
 
-impl WeightInfo for () {
-	fn create_client(_msg_create_client: MsgCreateClient) -> Weight {
-		Weight::default()
+impl<T: Config> WeightInfo<T> for () {
+	fn create_client(msg_create_client: MsgCreateClient) -> Weight {
+		let context = Context::<T>::new();
+		if let Ok(decode_client_state) =
+			ClientReader::decode_client_state(&context, msg_create_client.client_state)
+		{
+			match decode_client_state.client_type().as_str() {
+				MOCK_CLIENT_TYPE => Weight::default(),
+				_ => Weight::default(),
+			}
+		} else {
+			Weight::default()
+		}
 	}
 
 	fn misbehaviour(_msg_misbehaviour: MsgSubmitMisbehaviour) -> Weight {
 		Weight::default()
 	}
 
-	fn update_client(_msg_update_client: MsgUpdateClient) -> Weight {
-		Weight::default()
+	fn update_client(msg_update_client: MsgUpdateClient) -> Weight {
+		let client_type = msg_update_client
+			.client_id
+			.as_str()
+			.rsplit_once('-')
+			.map(|(client_type_str, ..)| client_type_str);
+		match client_type {
+			Some(ty) if ty.contains("mock") => Weight::default(),
+			_ => Weight::default(),
+		}
 	}
 
-	fn upgrade_client(_msg_upgrade_client: MsgUpgradeClient) -> Weight {
-		Weight::default()
+	fn upgrade_client(msg_upgrade_client: MsgUpgradeClient) -> Weight {
+		let context = Context::<T>::new();
+		if let Ok(decode_client_state) =
+			ClientReader::decode_client_state(&context, msg_upgrade_client.client_state)
+		{
+			match decode_client_state.client_type().as_str() {
+				MOCK_CLIENT_TYPE => Weight::default(),
+				_ => Weight::default(),
+			}
+		} else {
+			Weight::default()
+		}
 	}
 
-	fn conn_open_init(_msg_conn_open_init: MsgConnectionOpenInit) -> Weight {
-		Weight::default()
+	fn conn_open_init(msg_conn_open_init: MsgConnectionOpenInit) -> Weight {
+		let client_type = msg_conn_open_init
+			.client_id_on_a
+			.as_str()
+			.rsplit_once('-')
+			.map(|(client_type_str, ..)| client_type_str);
+		match client_type {
+			Some(ty) if ty.contains("mock") => Weight::default(),
+			_ => Weight::default(),
+		}
 	}
 
-	fn conn_try_open(_msg_conn_try_open: MsgConnectionOpenTry) -> Weight {
-		Weight::default()
+	fn conn_try_open(msg_conn_try_open: MsgConnectionOpenTry) -> Weight {
+		let client_type = msg_conn_try_open
+			.client_id_on_b
+			.as_str()
+			.rsplit_once('-')
+			.map(|(client_type_str, ..)| client_type_str);
+		match client_type {
+			Some(ty) if ty.contains("mock") => Weight::default(),
+			_ => Weight::default(),
+		}
 	}
 
 	fn conn_open_ack(_msg_conn_open_ack: MsgConnectionOpenAck) -> Weight {
-		Weight::default()
+		let connection_id = _msg_conn_open_ack.conn_id_on_a;
+		let ctx = Context::<T>::new();
+		let connection_end = ctx.connection_end(&connection_id).unwrap_or_default();
+		let client_id = connection_end.client_id();
+		let client_type =
+			client_id.as_str().rsplit_once('-').map(|(client_type_str, ..)| client_type_str);
+		match client_type {
+			Some(ty) if ty.contains("mock") => Weight::default(),
+			_ => Weight::default(),
+		}
 	}
 
-	fn conn_open_confirm(_msg_conn_open_confirm: MsgConnectionOpenConfirm) -> Weight {
-		Weight::default()
+	fn conn_open_confirm(msg_conn_open_confirm: MsgConnectionOpenConfirm) -> Weight {
+		let connection_id = msg_conn_open_confirm.conn_id_on_b;
+		let ctx = Context::<T>::new();
+		let connection_end = ctx.connection_end(&connection_id).unwrap_or_default();
+		let client_id = connection_end.client_id();
+		let client_type = <Clients<T>>::get(client_id);
+		match client_type.as_str() {
+			MOCK_CLIENT_TYPE => Weight::default(),
+			_ => Weight::default(),
+		}
 	}
 
-	fn channel_open_init(_msg_channel_open_init: MsgChannelOpenInit) -> Weight {
-		Weight::default()
+	fn channel_open_init(msg_channel_open_init: MsgChannelOpenInit) -> Weight {
+		let cb: Box<dyn CallbackWeight> =
+			WeightRouter::<T>::get_weight(&msg_channel_open_init.port_id_on_a)
+				.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_chan_open_init();
+		let lc_verification_weight =
+			match msg_channel_open_init.chan_end_on_a.connection_hops.get(0) {
+				Some(connection_id) => {
+					let ctx = Context::<T>::new();
+					let connection_end = ctx.connection_end(connection_id).unwrap_or_default();
+					let client_id = connection_end.client_id();
+					let client_type = client_id
+						.as_str()
+						.rsplit_once('-')
+						.map(|(client_type_str, ..)| client_type_str);
+					match client_type {
+						Some(ty) if ty.contains("mock") => Weight::default(),
+						_ => Weight::default(),
+					}
+				},
+				None => Weight::default(),
+			};
+
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn channel_open_try(_msg_channel_open_try: MsgChannelOpenTry) -> Weight {
-		Weight::default()
+	fn channel_open_try(msg_channel_open_try: MsgChannelOpenTry) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_channel_open_try.port_id_on_b)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_chan_open_try();
+		let lc_verification_weight = match msg_channel_open_try.chan_end_on_b.connection_hops.get(0)
+		{
+			Some(connection_id) => {
+				let ctx = Context::<T>::new();
+				let connection_end = ctx.connection_end(connection_id).unwrap_or_default();
+				let client_id = connection_end.client_id();
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("mock") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			None => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn channel_open_ack(_msg_channel_open_ack: MsgChannelOpenAck) -> Weight {
-		Weight::default()
+	fn channel_open_ack(msg_channel_open_ack: MsgChannelOpenAck) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_channel_open_ack.port_id_on_a)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_chan_open_ack(
+			&msg_channel_open_ack.port_id_on_a,
+			&msg_channel_open_ack.chan_id_on_a,
+		);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_channel_open_ack.chan_id_on_a,
+			&msg_channel_open_ack.port_id_on_a,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("mock") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn channel_open_confirm(_msg_channel_open_confirm: MsgChannelOpenConfirm) -> Weight {
-		Weight::default()
+	fn channel_open_confirm(msg_channel_open_confirm: MsgChannelOpenConfirm) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_channel_open_confirm.port_id_on_b)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_chan_open_confirm(
+			&msg_channel_open_confirm.port_id_on_b,
+			&msg_channel_open_confirm.chan_id_on_b,
+		);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_channel_open_confirm.chan_id_on_b,
+			&msg_channel_open_confirm.port_id_on_b,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("mock") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn channel_close_init(_msg_channel_close_init: MsgChannelCloseInit) -> Weight {
-		Weight::default()
+	fn channel_close_init(msg_channel_close_init: MsgChannelCloseInit) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_channel_close_init.port_id_on_a)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_chan_close_init(
+			&msg_channel_close_init.port_id_on_a,
+			&msg_channel_close_init.chan_id_on_a,
+		);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_channel_close_init.chan_id_on_a,
+			&msg_channel_close_init.port_id_on_a,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("mock") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn channel_close_confirm(_msg_channel_close_confirm: MsgChannelCloseConfirm) -> Weight {
-		Weight::default()
+	fn channel_close_confirm(msg_channel_close_confirm: MsgChannelCloseConfirm) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_channel_close_confirm.port_id_on_b)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_chan_close_confirm(
+			&msg_channel_close_confirm.port_id_on_b,
+			&msg_channel_close_confirm.chan_id_on_b,
+		);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_channel_close_confirm.chan_id_on_b,
+			&msg_channel_close_confirm.port_id_on_b,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("mock") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn recv_packet(_msg_recv_packet: MsgRecvPacket) -> Weight {
-		Weight::default()
+	fn recv_packet(msg_recv_packet: MsgRecvPacket) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_recv_packet.packet.destination_port)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_recv_packet(&msg_recv_packet.packet);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_recv_packet.packet.destination_channel,
+			&msg_recv_packet.packet.destination_port,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("tendermint") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn ack_packet(_msg_ack_packet: MsgAcknowledgement) -> Weight {
-		Weight::default()
+	fn ack_packet(msg_ack_packet: MsgAcknowledgement) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_ack_packet.packet.destination_port)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight =
+			cb.on_acknowledgement_packet(&msg_ack_packet.packet, &msg_ack_packet.acknowledgement);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_ack_packet.packet.destination_channel,
+			&msg_ack_packet.packet.destination_port,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("tendermint") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn timeout_packet(_msg_timeout_packet: MsgTimeout) -> Weight {
-		Weight::default()
+	fn timeout_packet(msg_timeout_packet: MsgTimeout) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_timeout_packet.packet.destination_port)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_timeout_packet(&msg_timeout_packet.packet);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_timeout_packet.packet.destination_channel,
+			&msg_timeout_packet.packet.destination_port,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("tendermint") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 
-	fn timeout_on_close_packet(_msg_timout_onclose_packet: MsgTimeoutOnClose) -> Weight {
-		Weight::default()
-	}
-
-	fn on_chan_open_init(_msg: MsgChannelOpenInit) -> Weight {
-		Weight::default()
-	}
-
-	fn on_chan_open_try(_msg: MsgChannelOpenTry) -> Weight {
-		Weight::default()
-	}
-
-	fn on_chan_open_ack(_msg: MsgChannelOpenAck) -> Weight {
-		Weight::default()
-	}
-
-	fn on_chan_open_confirm(_msg: MsgChannelOpenConfirm) -> Weight {
-		Weight::default()
-	}
-
-	fn on_chan_close_init(_msg: MsgChannelCloseInit) -> Weight {
-		Weight::default()
-	}
-
-	fn on_chan_close_confirm(_msg: MsgChannelCloseConfirm) -> Weight {
-		Weight::default()
-	}
-
-	fn on_recv_packet(_msg: MsgRecvPacket) -> Weight {
-		Weight::default()
-	}
-
-	fn on_acknowledgement_packet(_msg: MsgAcknowledgement) -> Weight {
-		Weight::default()
-	}
-
-	fn on_timeout_packet(_msg: MsgTimeout) -> Weight {
-		Weight::default()
+	fn timeout_on_close_packet(msg_timout_onclose_packet: MsgTimeoutOnClose) -> Weight {
+		let cb = WeightRouter::<T>::get_weight(&msg_timout_onclose_packet.packet.destination_port)
+			.unwrap_or_else(|| Box::new(()));
+		let cb_weight = cb.on_timeout_packet(&msg_timout_onclose_packet.packet);
+		let lc_verification_weight = match channel_client::<T>(
+			&msg_timout_onclose_packet.packet.destination_channel,
+			&msg_timout_onclose_packet.packet.destination_port,
+		) {
+			Ok(client_id) => {
+				let client_type = client_id
+					.as_str()
+					.rsplit_once('-')
+					.map(|(client_type_str, ..)| client_type_str);
+				match client_type {
+					Some(ty) if ty.contains("tendermint") => Weight::default(),
+					_ => Weight::default(),
+				}
+			},
+			Err(_) => Weight::default(),
+		};
+		cb_weight.saturating_add(lc_verification_weight)
 	}
 }
 
 pub struct WeightRouter<T: Config>(PhantomData<T>);
+
+impl<T: Config> WeightRouter<T> {
+	pub fn get_weight(port_id: &PortId) -> Option<Box<dyn CallbackWeight>> {
+		match port_id.as_str() {
+			ibc::applications::transfer::PORT_ID_STR => Some(Box::new(())),
+			_ => None,
+		}
+	}
+}
+
+/// Get client id for a port and channel combination
+pub fn channel_client<T: Config>(
+	channel_id: &ChannelId,
+	port_id: &PortId,
+) -> Result<ClientId, Error<T>> {
+	for (connection_id, channels) in ChannelsConnection::<T>::iter() {
+		if channels.contains(&(port_id.clone(), channel_id.clone())) {
+			if let Some((client_id, ..)) = ConnectionClient::<T>::iter()
+				.find(|(.., connection_ids)| connection_ids == &connection_id)
+			{
+				return Ok(client_id)
+			}
+		}
+	}
+	Err(Error::<T>::Other)
+}
 
 pub(crate) fn deliver<T: Config + Send + Sync>(msgs: &[Any]) -> Weight {
 	msgs.iter()

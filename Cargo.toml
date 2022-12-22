@@ -167,6 +167,7 @@ members = [
 	"frame/vesting",
 	"frame/whitelist",
 	"frame/ibc",
+	"frame/ibc/ibc-primitives",
 	"primitives/api",
 	"primitives/api/proc-macro",
 	"primitives/api/test",
