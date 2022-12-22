@@ -15,7 +15,6 @@ use ibc::{
 	timestamp::ZERO_DURATION,
 };
 
-#[cfg(test)]
 pub mod test_util {
 	use ibc::{
 		core::ics02_client::height::Height,

@@ -1,4 +1,3 @@
-#[cfg(test)]
 pub mod test_util {
 	use alloc::string::ToString;
 	use ibc::{

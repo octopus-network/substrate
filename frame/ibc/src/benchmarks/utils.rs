@@ -45,150 +45,217 @@ use ibc::{
 	signer::Signer,
 	Height,
 };
+use ibc::timestamp::Timestamp;
 use ibc_proto::protobuf::Protobuf;
 use sp_std::vec;
+use crate::tests::connection::conn_open_ack::test_util::get_dummy_raw_msg_conn_open_ack;
+use crate::tests::connection::conn_open_try::test_util::get_dummy_raw_msg_conn_open_try;
+
+pub const TIMESTAMP: u64 = 1650894363;
+pub const MILLIS: u128 = 1_000_000;
 
 pub fn create_mock_state(height: Height) -> (MockClientState, MockConsensusState) {
-	let mock_cl_state = MockClientState::new(MockHeader::new(height));
-	let mock_cs_state = MockConsensusState::new(MockHeader::new(height));
+	let mock_header = MockHeader {
+		height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_cl_state = MockClientState::new(mock_header);
+	let mock_cs_state = MockConsensusState::new(mock_header);
 
 	(mock_cl_state, mock_cs_state)
 }
 
 pub fn create_mock_client_update_client(client_id: ClientId, height: Height) -> Vec<u8> {
+	let mock_header = MockHeader {
+		height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+
 	let msg = MsgUpdateClient::new(
 		client_id,
-		MockHeader::new(height).into(),
+		mock_header.into(),
 		crate::tests::common::get_dummy_account_id(),
-	);
+	).encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg.encode(&mut value).unwrap();
-	value
+	msg
+}
+
+pub fn create_conn_open_try<T: Config>(
+	block_height: Height,
+	host_chain_height: Height,
+) -> (MockConsensusState, Vec<u8>) {
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
+	let height = host_chain_height.revision_height() as u32;
+	let number: <T as frame_system::Config>::BlockNumber = height.into();
+	frame_system::Pallet::<T>::set_block_number(number);
+	let msg_conn_try = MsgConnectionOpenTry::try_from(get_dummy_raw_msg_conn_open_try(
+		block_height.revision_height(),
+		host_chain_height.revision_height(),
+	))
+		.unwrap().encode_vec().unwrap();
+
+
+	(mock_consensus_state, msg_conn_try)
+}
+
+pub fn create_conn_open_ack<T: Config>(
+	block_height: Height,
+	host_chain_height: Height,
+) -> (MockConsensusState, Vec<u8>) {
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
+	let height = host_chain_height.revision_height() as u32;
+	let number: <T as frame_system::Config>::BlockNumber = height.into();
+	frame_system::Pallet::<T>::set_block_number(number);
+
+	let msg_ack = MsgConnectionOpenAck::try_from(get_dummy_raw_msg_conn_open_ack(
+		block_height.revision_height(),
+		host_chain_height.revision_height(),
+	))
+		.unwrap().encode_vec().unwrap();
+
+	(mock_consensus_state, msg_ack)
 }
 
 pub fn create_conn_open_confirm(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg_confirm =
-		MsgConnectionOpenConfirm::try_from(get_dummy_raw_msg_conn_open_confirm()).unwrap();
+		MsgConnectionOpenConfirm::try_from(get_dummy_raw_msg_conn_open_confirm()).unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg_confirm.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg_confirm)
 }
 
 pub fn create_chan_open_try(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg = MsgChannelOpenTry::try_from(get_dummy_raw_msg_chan_open_try(
 		block_height.revision_height() + 1,
 	))
-	.unwrap();
+	.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg)
 }
 
 pub fn create_chan_open_ack(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg_chan_ack = MsgChannelOpenAck::try_from(get_dummy_raw_msg_chan_open_ack(
 		block_height.revision_height() + 1,
 	))
-	.unwrap();
+	.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg_chan_ack.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg_chan_ack)
 }
 
 pub fn create_chan_open_confirm(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg_chan_confirm = MsgChannelOpenConfirm::try_from(get_dummy_raw_msg_chan_open_confirm(
 		block_height.revision_height() + 1,
 	))
-	.unwrap();
+	.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg_chan_confirm.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg_chan_confirm)
 }
 
 pub fn create_chan_close_init(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg_chan_close_init =
-		MsgChannelCloseInit::try_from(get_dummy_raw_msg_chan_close_init()).unwrap();
+		MsgChannelCloseInit::try_from(get_dummy_raw_msg_chan_close_init()).unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg_chan_close_init.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg_chan_close_init)
 }
 
 pub fn create_chan_close_confirm(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg_chan_close_confirm = MsgChannelCloseConfirm::try_from(
 		get_dummy_raw_msg_chan_close_confirm(block_height.revision_height() + 1),
 	)
-	.unwrap();
+	.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg_chan_close_confirm.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg_chan_close_confirm)
 }
 
 pub fn create_recv_packet(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg =
 		MsgRecvPacket::try_from(get_dummy_raw_msg_recv_packet(block_height.revision_height() + 1))
-			.unwrap();
+			.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg)
 }
 
 pub fn create_ack_packet(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg = MsgAcknowledgement::try_from(get_dummy_raw_msg_acknowledgement(
 		block_height.revision_height() + 1,
 	))
-	.unwrap();
+	.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg)
 }
 
 pub fn create_timeout_packet(block_height: Height) -> (MockConsensusState, Vec<u8>) {
-	let mock_consensus_state = MockConsensusState::new(MockHeader::new(block_height));
+	let mock_header = MockHeader {
+		height: block_height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+	let mock_consensus_state = MockConsensusState::new(mock_header);
 
 	let msg_timeout_height = 5;
-	let timeout_timestamp = 5;
+	let timeout_timestamp = TIMESTAMP.saturating_mul(1000) + 100;
 
 	let msg = MsgTimeout::try_from(get_dummy_raw_msg_timeout(
 		block_height.revision_height() + 1,
 		msg_timeout_height,
 		timeout_timestamp,
 	))
-	.unwrap();
+	.unwrap().encode_vec().unwrap();
 
-	let mut value = vec![];
-	msg.encode(&mut value).unwrap();
-
-	(mock_consensus_state, value)
+	(mock_consensus_state, msg)
 }

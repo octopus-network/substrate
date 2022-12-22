@@ -7,7 +7,6 @@ use sp_std::{boxed::Box, vec::Vec};
 
 #[cfg(test)]
 use crate::host::MOCK_CLIENT_TYPE;
-use frame_support::traits::UnixTime;
 #[cfg(test)]
 use ibc::mock::{
 	client_state::MockClientState, consensus_state::MockConsensusState, header::MockHeader,
@@ -31,6 +30,7 @@ use ibc::{
 	Height,
 };
 use ibc_proto::{google::protobuf::Any, protobuf::Protobuf};
+use sp_runtime::SaturatedConversion;
 
 impl<T: Config> ClientReader for Context<T> {
 	fn client_type(&self, client_id: &ClientId) -> Result<ClientType, ClientError> {
@@ -213,15 +213,11 @@ impl<T: Config> ClientReader for Context<T> {
 	}
 
 	fn host_timestamp(&self) -> Result<Timestamp, ClientError> {
-		#[cfg(not(test))]
-		{
-			let nanoseconds = <T as Config>::TimeProvider::now().as_nanos();
-			return Ok(Timestamp::from_nanoseconds(nanoseconds as u64).unwrap())
-		}
-		#[cfg(test)]
-		{
-			Ok(Timestamp::now())
-		}
+		use frame_support::traits::UnixTime;
+		let time = T::TimeProvider::now();
+
+		Timestamp::from_nanoseconds(time.as_nanos().saturated_into::<u64>())
+			.map_err(|e| ClientError::Other {description: format!("{}", e)})
 	}
 
 	fn host_consensus_state(

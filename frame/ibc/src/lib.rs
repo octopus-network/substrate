@@ -9,6 +9,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(unused_imports)]
 #![allow(dead_code)]
+#![allow(deprecated)]
 
 extern crate alloc;
 extern crate core;

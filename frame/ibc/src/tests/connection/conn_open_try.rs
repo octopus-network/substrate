@@ -1,4 +1,3 @@
-#[cfg(test)]
 pub mod test_util {
 	use super::super::common::test_util::get_dummy_raw_counterparty;
 	use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};

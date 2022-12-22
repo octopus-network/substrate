@@ -32,6 +32,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
+		Timestamp: pallet_timestamp,
 		Ibc: pallet_ibc,
 	}
 );
@@ -138,6 +139,7 @@ impl pallet::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type TimeProvider = pallet_timestamp::Pallet<Test>;
 	type ExpectedBlockTime = ExpectedBlockTime;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
