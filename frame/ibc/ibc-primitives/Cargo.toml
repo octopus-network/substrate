@@ -15,6 +15,7 @@ ibc-proto = { version = "0.24.0", default-features = false }
 default = ['std']
 std = [
     "frame-support/std",
+    "frame-benchmarking?/std",
     "ibc/std",
     "ibc-proto/std",
 ]

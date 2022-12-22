@@ -1,3 +1,5 @@
+mod mock_client_weight;
+
 use super::*;
 use crate::host::{MOCK_CLIENT_TYPE, TENDERMINT_CLIENT_TYPE};
 use core::marker::PhantomData;
@@ -30,6 +32,8 @@ use ibc::core::{
 };
 use ibc_primitives::CallbackWeight;
 use scale_info::prelude::string::ToString;
+use alloc::boxed::Box;
+use crate::weights::mock_client_weight::MockClientWeightInfo;
 
 pub trait WeightInfo<T> {
     fn create_client(msg_create_client: MsgCreateClient) -> Weight;
@@ -62,7 +66,10 @@ impl<T: Config> WeightInfo<T> for () {
             ClientReader::decode_client_state(&context, msg_create_client.client_state)
         {
             match decode_client_state.client_type().as_str() {
-                MOCK_CLIENT_TYPE => Weight::default(),
+                MOCK_CLIENT_TYPE => {
+                    let mock_client = MockClientWeightInfo::<T>::new();
+                    mock_client.create_client_mock()
+                },
                 _ => Weight::default(),
             }
         } else {
@@ -81,7 +88,10 @@ impl<T: Config> WeightInfo<T> for () {
             .rsplit_once('-')
             .map(|(client_type_str, ..)| client_type_str);
         match client_type {
-            Some(ty) if ty.contains("mock") => Weight::default(),
+            Some(ty) if ty.contains("mock") => {
+                let mock_client = MockClientWeightInfo::<T>::new();
+                mock_client.update_mock_client()
+            },
             _ => Weight::default(),
         }
     }
@@ -92,7 +102,10 @@ impl<T: Config> WeightInfo<T> for () {
             ClientReader::decode_client_state(&context, msg_upgrade_client.client_state)
         {
             match decode_client_state.client_type().as_str() {
-                MOCK_CLIENT_TYPE => Weight::default(),
+                MOCK_CLIENT_TYPE => {
+                    let mock_client = MockClientWeightInfo::<T>::new();
+                    mock_client.upgrade_mock_client()
+                },
                 _ => Weight::default(),
             }
         } else {
@@ -107,7 +120,10 @@ impl<T: Config> WeightInfo<T> for () {
             .rsplit_once('-')
             .map(|(client_type_str, ..)| client_type_str);
         match client_type {
-            Some(ty) if ty.contains("mock") => Weight::default(),
+            Some(ty) if ty.contains("mock") => {
+                let mock_client = MockClientWeightInfo::<T>::new();
+                mock_client.conn_open_init_mock()
+            },
             _ => Weight::default(),
         }
     }
@@ -119,7 +135,10 @@ impl<T: Config> WeightInfo<T> for () {
             .rsplit_once('-')
             .map(|(client_type_str, ..)| client_type_str);
         match client_type {
-            Some(ty) if ty.contains("mock") => Weight::default(),
+            Some(ty) if ty.contains("mock") => {
+                let mock_client = MockClientWeightInfo::<T>::new();
+                mock_client.conn_try_open_mock()
+            },
             _ => Weight::default(),
         }
     }
@@ -132,7 +151,10 @@ impl<T: Config> WeightInfo<T> for () {
         let client_type =
             client_id.as_str().rsplit_once('-').map(|(client_type_str, ..)| client_type_str);
         match client_type {
-            Some(ty) if ty.contains("mock") => Weight::default(),
+            Some(ty) if ty.contains("mock") => {
+                let mock_client = MockClientWeightInfo::<T>::new();
+                mock_client.conn_open_ack_mock()
+            },
             _ => Weight::default(),
         }
     }
@@ -144,7 +166,10 @@ impl<T: Config> WeightInfo<T> for () {
         let client_id = connection_end.client_id();
         let client_type = <Clients<T>>::get(client_id);
         match client_type.as_str() {
-            MOCK_CLIENT_TYPE => Weight::default(),
+            MOCK_CLIENT_TYPE => {
+                let mock_client = MockClientWeightInfo::<T>::new();
+                mock_client.conn_open_confirm_mock()
+            },
             _ => Weight::default(),
         }
     }
@@ -165,7 +190,10 @@ impl<T: Config> WeightInfo<T> for () {
                         .rsplit_once('-')
                         .map(|(client_type_str, ..)| client_type_str);
                     match client_type {
-                        Some(ty) if ty.contains("mock") => Weight::default(),
+                        Some(ty) if ty.contains("mock") => {
+                            let mock_client = MockClientWeightInfo::<T>::new();
+                            mock_client.channel_open_init_mock()
+                        },
                         _ => Weight::default(),
                     }
                 },
@@ -190,7 +218,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("mock") => Weight::default(),
+                    Some(ty) if ty.contains("mock") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.channel_open_try_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -216,7 +247,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("mock") => Weight::default(),
+                    Some(ty) if ty.contains("mock") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.channel_open_ack_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -242,7 +276,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("mock") => Weight::default(),
+                    Some(ty) if ty.contains("mock") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.channel_open_confirm_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -268,7 +305,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("mock") => Weight::default(),
+                    Some(ty) if ty.contains("mock") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.channel_close_init_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -294,7 +334,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("mock") => Weight::default(),
+                    Some(ty) if ty.contains("mock") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.channel_close_confirm_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -317,7 +360,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("tendermint") => Weight::default(),
+                    Some(ty) if ty.contains("tendermint") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.recv_packet_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -341,7 +387,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("tendermint") => Weight::default(),
+                    Some(ty) if ty.contains("tendermint") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.ack_packet_mock()
+                    },
                     _ => Weight::default(),
                 }
             },
@@ -364,7 +413,10 @@ impl<T: Config> WeightInfo<T> for () {
                     .rsplit_once('-')
                     .map(|(client_type_str, ..)| client_type_str);
                 match client_type {
-                    Some(ty) if ty.contains("tendermint") => Weight::default(),
+                    Some(ty) if ty.contains("tendermint") => {
+                        let mock_client = MockClientWeightInfo::<T>::new();
+                        mock_client.timeout_packet_mock()
+                    },
                     _ => Weight::default(),
                 }
             },

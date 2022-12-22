@@ -168,8 +168,7 @@ benchmarks! {
 	}
 
 	// misbehaviours client
-
-		conn_open_init_mock {
+	conn_open_init_mock {
 		let mut ctx = crate::context::Context::<T>::new();
 		// Set timestamp to the same timestamp used in generating tendermint header, because there
 		// will be a comparison between the local timestamp and the timestamp existing in the header

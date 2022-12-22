@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use ibc::core::ics04_channel::msgs::acknowledgement::Acknowledgement;
 use ibc::core::ics04_channel::packet::Packet;
 use ibc::core::ics24_host::identifier::{ChannelId, PortId};
