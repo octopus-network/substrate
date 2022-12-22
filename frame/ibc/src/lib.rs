@@ -1,9 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-#![allow(unreachable_patterns)]
-#![allow(deprecated)]
-#![allow(dead_code)]
-#![allow(unused_imports)]
-
 //! # Overview
 //!
 //! The goal of this pallet is to allow the blockchains built on Substrate to gain the ability to
@@ -12,6 +6,8 @@
 //! The pallet implements the chain specific logic of [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f),  
 //! and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs),
 //! which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f).
+#![cfg_attr(not(feature = "std"), no_std)]
+
 extern crate alloc;
 extern crate core;
 
@@ -515,6 +511,7 @@ pub mod pallet {
 		///
 		/// The relevant events are emitted when successful.
 		// julian-todo: add weight for this function.
+		#[pallet::call_index(0)]
 		#[pallet::weight(0)]
 		pub fn deliver(origin: OriginFor<T>, messages: Vec<Any>) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
@@ -553,7 +550,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(1)]
 		pub fn hello(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 
