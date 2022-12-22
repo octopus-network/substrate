@@ -15,7 +15,7 @@ use ibc::{
 		},
 		ics24_host::identifier::{ChannelId, ClientId, ConnectionId},
 	},
-	mock::{client_state::client_type as mock_client_type, context::MockContext},
+	mock::{client_state::client_type as mock_client_type},
 	timestamp::ZERO_DURATION,
 	Height,
 };
@@ -249,7 +249,7 @@ fn chan_open_try_invalid_counterparty_channel_id() {
 			msg.chan_end_on_b.connection_hops().clone(),
 			msg.chan_end_on_b.version().clone(),
 		);
-		let context = MockContext::default()
+		let context = Context::<PalletIbcTest>::new()
 			.with_client(&client_id, Height::new(0, proof_height).unwrap())
 			.with_connection(conn_id, conn_end)
 			.with_channel(msg.port_id_on_b.clone(), chan_id, chan_end);

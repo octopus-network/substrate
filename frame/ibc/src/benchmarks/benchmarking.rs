@@ -1,6 +1,7 @@
 //! Benchmarking setup for pallet-template
 
-#[allow(unused)]
+#![cfg(feature = "runtime-benchmarks")]
+
 use super::*;
 use crate::{Any, Config, *};
 
@@ -83,10 +84,10 @@ const TIMESTAMP: u64 = 1650894363;
 const MILLIS: u128 = 1_000_000;
 
 benchmarks! {
-	where_clause {
-		where u32: From<<T as frame_system::Config>::BlockNumber>,
-				<T as frame_system::Config>::BlockNumber: From<u32>,
-	}
+	// where_clause {
+	// 	where u32: From<<T as frame_system::Config>::BlockNumber>,
+	// 			<T as frame_system::Config>::BlockNumber: From<u32>,
+	// }
 
 	// Run these benchmarks via
 	// ```bash

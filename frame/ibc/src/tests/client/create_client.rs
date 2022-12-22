@@ -4,8 +4,6 @@ use crate::{
 	Context,
 };
 #[cfg(test)]
-use ibc::test_utils::get_dummy_account_id;
-#[cfg(test)]
 use ibc::{
 	core::{
 		ics02_client::{
@@ -22,6 +20,7 @@ use ibc::{
 	},
 	Height,
 };
+use crate::tests::common::get_dummy_account_id;
 
 #[test]
 fn test_create_client_ok() {

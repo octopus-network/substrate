@@ -26,9 +26,8 @@ use ibc::{
 	timestamp::{Timestamp, ZERO_DURATION},
 };
 #[cfg(test)]
-use ibc::test_utils::get_dummy_account_id;
 use test_util::get_dummy_raw_msg_recv_packet;
-
+use crate::tests::common::get_dummy_account_id;
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgRecvPacket as RawMsgRecvPacket, client::v1::Height as RawHeight,

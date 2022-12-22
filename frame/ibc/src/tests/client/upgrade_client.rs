@@ -24,10 +24,9 @@ use ibc::{
 		consensus_state::MockConsensusState,
 		header::MockHeader,
 	},
-	test_utils::get_dummy_account_id,
 	Height,
 };
-
+use crate::tests::common::get_dummy_account_id;
 
 #[test]
 fn test_upgrade_client_ok() {

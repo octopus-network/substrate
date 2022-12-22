@@ -19,11 +19,11 @@ frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../support" }
 frame-system = { version = "4.0.0-dev", default-features = false, path = "../system" }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
-sp-core = { version = "6.0.0", default-features = false, path = "../../primitives/core" }
-sp-io = { version = "6.0.0", default-features = false, path = "../../primitives/io" }
-sp-runtime = { version = "6.0.0", default-features = false, path = "../../primitives/runtime" }
-sp-std = { version = "4.0.0", default-features = false,  path = "../../primitives/std" }
-sp-tracing = { version = "5.0.0", default-features = false,  path = "../../primitives/tracing" }
+sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
+sp-io = { version = "7.0.0", default-features = false, path = "../../primitives/io" }
+sp-runtime = { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
+sp-std = { version = "5.0.0", default-features = false,  path = "../../primitives/std" }
+sp-tracing = { version = "6.0.0", default-features = false,  path = "../../primitives/tracing" }
 
 # third-party libraries
 hex = { version = "0.4.0", default-features = false }
@@ -47,17 +47,16 @@ frame-support = { version = "4.0.0-dev", path = "../support" }
 # thrid party crates
 hex = '0.4.0'
 # ibc protocol crates
-ibc = { version = "0.25.0", git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["mocks"] }
 pallet-balances = { version = "4.0.0-dev", path = "../balances" }
 pallet-timestamp = { version = "4.0.0-dev", path = "../timestamp" }
 serde = "1.0"
 sha2 = '0.10.2'
-sp-core = { version = "6.0.0", path = "../../primitives/core" }
+sp-core = { version = "7.0.0", path = "../../primitives/core" }
 # substrate crates
-sp-io = { version = "6.0.0", path = "../../primitives/io" }
-sp-keyring = { version = "6.0.0", path = "../../primitives/keyring"  }
-sp-runtime = { version = "6.0.0", path = "../../primitives/runtime"  }
-sp-std = { version = "4.0.0",  path = "../../primitives/std" }
+sp-io = { version = "7.0.0", path = "../../primitives/io" }
+sp-keyring = { version = "7.0.0", path = "../../primitives/keyring"  }
+sp-runtime = { version = "7.0.0", path = "../../primitives/runtime"  }
+sp-std = { version = "5.0.0",  path = "../../primitives/std" }
 sp-version = { version = "5.0.0", path = "../../primitives/version" }
 
 [features]
@@ -86,6 +85,5 @@ std = [
 runtime-benchmarks = [
   "frame-benchmarking/runtime-benchmarks",
   "frame-system/runtime-benchmarks",
-  "pallet-timestamp/runtime-benchmarks",
 ]
 try-runtime = ["frame-support/try-runtime"]

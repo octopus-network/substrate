@@ -45,7 +45,7 @@ mod mock;
 
 mod tests;
 
-#[cfg(any(test, feature = "runtime-benchmarks"))]
+#[cfg(feature = "runtime-benchmarks")]
 pub(crate) mod benchmarks;
 
 /// A struct corresponds to `Any` in crate "prost-types", used in ibc-rs.
