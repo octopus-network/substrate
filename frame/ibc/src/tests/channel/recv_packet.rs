@@ -1,3 +1,4 @@
+use crate::tests::common::get_dummy_account_id;
 #[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test as PalletIbcTest},
@@ -27,20 +28,19 @@ use ibc::{
 };
 #[cfg(test)]
 use test_util::get_dummy_raw_msg_recv_packet;
-use crate::tests::common::get_dummy_account_id;
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgRecvPacket as RawMsgRecvPacket, client::v1::Height as RawHeight,
 	};
 
-	use crate::tests::channel::packet::test_utils::get_dummy_raw_packet;
-	use core::{ops::Add, time::Duration};
-	use ibc::{
-		timestamp::Timestamp,
+	use crate::tests::{
+		channel::packet::test_utils::get_dummy_raw_packet,
+		common::{get_dummy_bech32_account, get_dummy_proof},
 	};
-    use crate::tests::common::{get_dummy_bech32_account, get_dummy_proof};
+	use core::{ops::Add, time::Duration};
+	use ibc::timestamp::Timestamp;
 
-    /// Returns a dummy `RawMsgRecvPacket`, for testing only! The `height` parametrizes both the
+	/// Returns a dummy `RawMsgRecvPacket`, for testing only! The `height` parametrizes both the
 	/// proof height as well as the timeout height.
 	pub fn get_dummy_raw_msg_recv_packet(height: u64) -> RawMsgRecvPacket {
 		let timestamp = Timestamp::from_nanoseconds(10000000).unwrap().add(Duration::from_secs(9));

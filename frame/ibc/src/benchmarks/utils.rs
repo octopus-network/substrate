@@ -10,13 +10,10 @@ use crate::{
 			recv_packet::test_util::get_dummy_raw_msg_recv_packet,
 			timeout::test_util::get_dummy_raw_msg_timeout,
 		},
-		connection::{
-			conn_open_confirm::test_util::get_dummy_raw_msg_conn_open_confirm,
-		},
+		connection::conn_open_confirm::test_util::get_dummy_raw_msg_conn_open_confirm,
 	},
 	Config,
 };
-use sp_std::vec;
 use alloc::vec::Vec;
 use core::str::FromStr;
 use ibc::{
@@ -49,6 +46,7 @@ use ibc::{
 	Height,
 };
 use ibc_proto::protobuf::Protobuf;
+use sp_std::vec;
 
 pub fn create_mock_state(height: Height) -> (MockClientState, MockConsensusState) {
 	let mock_cl_state = MockClientState::new(MockHeader::new(height));

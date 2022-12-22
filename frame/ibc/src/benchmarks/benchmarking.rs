@@ -17,6 +17,7 @@ use frame_system::RawOrigin;
 use sp_runtime::traits::IdentifyAccount;
 
 use crate::context::Context;
+use alloc::boxed::Box;
 use ibc::{
 	applications::transfer::{
 		acknowledgement::ACK_ERR_STR, packet::PacketData, Amount, Coin, PrefixedDenom, VERSION,
@@ -72,12 +73,10 @@ use ibc_proto::protobuf::Protobuf;
 use scale_info::prelude::string::ToString;
 use sp_core::crypto::AccountId32;
 use sp_std::vec;
-use alloc::boxed::Box;
 
 fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
 }
-
 
 const TIMESTAMP: u64 = 1650894363;
 const MILLIS: u128 = 1_000_000;

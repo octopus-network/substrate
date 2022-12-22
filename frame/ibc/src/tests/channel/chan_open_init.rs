@@ -13,13 +13,14 @@ use ibc::core::{
 };
 
 pub mod test_util {
-	use crate::tests::channel::common::test_util::get_dummy_raw_channel_end;
+	use crate::tests::{
+		channel::common::test_util::get_dummy_raw_channel_end, common::get_dummy_bech32_account,
+	};
 	use alloc::string::ToString;
-	use ibc::{core::ics24_host::identifier::PortId};
+	use ibc::core::ics24_host::identifier::PortId;
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenInit as RawMsgChannelOpenInit;
-    use crate::tests::common::get_dummy_bech32_account;
 
-    /// Returns a dummy `RawMsgChannelOpenInit`, for testing only!
+	/// Returns a dummy `RawMsgChannelOpenInit`, for testing only!
 	pub fn get_dummy_raw_msg_chan_open_init() -> RawMsgChannelOpenInit {
 		RawMsgChannelOpenInit {
 			port_id: PortId::transfer().to_string(),
@@ -29,14 +30,14 @@ pub mod test_util {
 	}
 }
 #[cfg(test)]
-use crate::{
-	mock::{new_test_ext, Test as PalletIbcTest},
-	Context,
-};
-#[cfg(test)]
 use crate::tests::{
 	channel::chan_open_init::test_util::get_dummy_raw_msg_chan_open_init,
 	connection::conn_open_init::test_util::get_dummy_raw_msg_conn_open_init,
+};
+#[cfg(test)]
+use crate::{
+	mock::{new_test_ext, Test as PalletIbcTest},
+	Context,
 };
 
 #[test]

@@ -1,3 +1,4 @@
+use crate::tests::common::get_dummy_account_id;
 #[cfg(test)]
 use crate::{
 	mock::{new_test_ext, System, Test},
@@ -20,7 +21,6 @@ use ibc::{
 	},
 	Height,
 };
-use crate::tests::common::get_dummy_account_id;
 
 #[test]
 fn test_create_client_ok() {
