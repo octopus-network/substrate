@@ -45,6 +45,7 @@ use ibc::{
 	signer::Signer,
 	Height,
 };
+use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeClient;
 use ibc::timestamp::Timestamp;
 use ibc_proto::protobuf::Protobuf;
 use sp_std::vec;
@@ -65,7 +66,7 @@ pub fn create_mock_state(height: Height) -> (MockClientState, MockConsensusState
 	(mock_cl_state, mock_cs_state)
 }
 
-pub fn create_mock_client_update_client(client_id: ClientId, height: Height) -> Vec<u8> {
+pub fn create_mock_update_client(client_id: ClientId, height: Height) -> Vec<u8> {
 	let mock_header = MockHeader {
 		height,
 		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
@@ -76,6 +77,25 @@ pub fn create_mock_client_update_client(client_id: ClientId, height: Height) -> 
 		mock_header.into(),
 		crate::tests::common::get_dummy_account_id(),
 	).encode_vec().unwrap();
+
+	msg
+}
+
+pub fn create_mock_upgrade_client(client_id: ClientId, height: Height) -> Vec<u8> {
+	let mock_header = MockHeader {
+		height,
+		timestamp: Timestamp::from_nanoseconds(TIMESTAMP.saturating_mul(1000)).unwrap(),
+	};
+
+	let msg = MsgUpgradeClient {
+		client_id: client_id,
+		client_state: MockClientState::new(mock_header).into(),
+		consensus_state: MockConsensusState::new(mock_header)
+			.into(),
+		proof_upgrade_client: Default::default(),
+		proof_upgrade_consensus_state: Default::default(),
+		signer: crate::tests::common::get_dummy_account_id(),
+	}.encode_vec().unwrap();
 
 	msg
 }

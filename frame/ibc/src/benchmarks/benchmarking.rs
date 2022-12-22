@@ -93,6 +93,29 @@ benchmarks! {
 	// ```
 	impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
 
+	create_client_mock {
+		// Set timestamp to the same timestamp used in generating tendermint header, because there
+		// will be a comparison between the local timestamp and the timestamp existing in the header
+		// after factoring in the trusting period for the light client.
+		let now: <T as pallet_timestamp::Config>::Moment = TIMESTAMP.saturating_mul(1000);
+		pallet_timestamp::Pallet::<T>::set_timestamp(now);
+		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
+		frame_system::Pallet::<T>::set_block_number(number);
+		let height = Height::new(0, 1).unwrap();
+		let (mock_client_state, mock_cs_state) = super::utils::create_mock_state(height);
+		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
+		let msg = MsgCreateClient::new(
+			mock_client_state.into(),
+			mock_cs_state.into(),
+			crate::tests::common::get_dummy_account_id(),
+		).unwrap().encode_vec().unwrap();
+
+		let msg = Any { type_url: TYPE_URL.to_string().as_bytes().to_vec(), value: msg };
+		let caller: T::AccountId = whitelisted_caller();
+	}: deliver(RawOrigin::Signed(caller), vec![msg])
+	verify {
+	}
+
 	// update_client
 	update_mock_client {
 		let mut ctx = crate::context::Context::<T>::new();
@@ -110,9 +133,76 @@ benchmarks! {
 		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 
 		let msg = Any { type_url: UPDATE_CLIENT_TYPE_URL.to_string().as_bytes().to_vec(), value };
+		let caller: T::AccountId = whitelisted_caller();
+	}: deliver(RawOrigin::Signed(caller), vec![msg])
+	verify {
+
+	}
+
+	upgrade_mock_client {
+		let mut ctx = crate::context::Context::<T>::new();
+		// Set timestamp to the same timestamp used in generating tendermint header, because there
+		// will be a comparison between the local timestamp and the timestamp existing in the header
+		// after factoring in the trusting period for the light client.
+		let now: <T as pallet_timestamp::Config>::Moment = TIMESTAMP.saturating_mul(1000);
+		pallet_timestamp::Pallet::<T>::set_timestamp(now);
+		let height = Height::new(0, 1).unwrap();
+		let (mock_cl_state, mock_cs_state) = super::utils::create_mock_state(height);
+		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
+		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
+		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
+		ctx.store_client_state(client_id.clone(), Box::new(mock_cl_state)).unwrap();
+		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
+
+		let new_height = Height::new(0, 2).unwrap();
+		let value = super::utils::create_mock_upgrade_client(client_id.clone(), new_height);
+
+		let msg = Any { type_url: UPDATE_CLIENT_TYPE_URL.to_string().as_bytes().to_vec(), value };
+		let caller: T::AccountId = whitelisted_caller();
+	}: deliver(RawOrigin::Signed(caller), vec![msg])
+	verify {
+
+	}
+
+	// misbehaviours client
+
+		conn_open_init_mock {
+		let mut ctx = crate::context::Context::<T>::new();
+		// Set timestamp to the same timestamp used in generating tendermint header, because there
+		// will be a comparison between the local timestamp and the timestamp existing in the header
+		// after factoring in the trusting period for the light client.
+		let now: <T as pallet_timestamp::Config>::Moment = TIMESTAMP.saturating_mul(1000);
+		pallet_timestamp::Pallet::<T>::set_timestamp(now);
+		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
+		frame_system::Pallet::<T>::set_block_number(number);
+		let height = Height::new(0, 1).unwrap();
+		let (mock_client_state, mock_cs_state) = super::utils::create_mock_state(height);
+		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
+		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
+		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
+		ctx.store_client_state(client_id.clone(), Box::new(mock_client_state)).unwrap();
+		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
+		let commitment_prefix: CommitmentPrefix = "ibc".as_bytes().to_vec().try_into().unwrap();
+
+		let value = conn_open_init_mod::MsgConnectionOpenInit {
+			client_id_on_a: client_id.clone(),
+			counterparty: Counterparty::new(
+				counterparty_client_id.clone(),
+				Some(ConnectionId::new(1)),
+				commitment_prefix.clone(),
+			),
+			version: Some(ConnVersion::default()),
+			delay_period: core::time::Duration::from_secs(1000),
+			signer: crate::tests::common::get_dummy_account_id(),
+		}.encode_vec().unwrap();
+
+		let msg = Any {
+			type_url: conn_open_init_mod::TYPE_URL.as_bytes().to_vec(),
+			value
+		};
 		let caller: T::AccountId = whitelisted_caller();
 	}: deliver(RawOrigin::Signed(caller), vec![msg])
 	verify {
@@ -141,7 +231,7 @@ benchmarks! {
 		// We update the light client state so it can have the required client and consensus states required to process
 		// the proofs that will be submitted
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
@@ -187,7 +277,7 @@ benchmarks! {
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
 
@@ -233,7 +323,7 @@ benchmarks! {
 		// We update the light client state so it can have the required client and consensus states required to process
 		// the proofs that will be submitted
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
 
@@ -327,7 +417,7 @@ benchmarks! {
 		// We update the light client state so it can have the required client and consensus states required to process
 		// the proofs that will be submitted
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
 
@@ -372,7 +462,7 @@ benchmarks! {
 		ctx.store_connection(connection_id.clone(), &connection_end).unwrap();
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
 
@@ -438,7 +528,7 @@ benchmarks! {
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
@@ -497,7 +587,7 @@ benchmarks! {
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 
@@ -557,7 +647,7 @@ benchmarks! {
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
@@ -616,7 +706,7 @@ benchmarks! {
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 
@@ -674,7 +764,7 @@ benchmarks! {
 		ctx.store_connection_to_client(connection_id, &client_id).unwrap();
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 
@@ -733,7 +823,7 @@ benchmarks! {
 
 
 		let new_height = Height::new(0, 2).unwrap();
-		let value = super::utils::create_mock_client_update_client(client_id.clone(), new_height);
+		let value = super::utils::create_mock_update_client(client_id.clone(), new_height);
 
 		let msg = ibc_proto::google::protobuf::Any  { type_url: UPDATE_CLIENT_TYPE_URL.to_string(), value };
 		ibc::core::ics26_routing::handler::deliver(&mut ctx, msg).unwrap();
@@ -764,69 +854,5 @@ benchmarks! {
 	}: deliver(RawOrigin::Signed(caller), vec![msg])
 	verify {
 
-	}
-
-
-	conn_open_init_mock {
-		let mut ctx = crate::context::Context::<T>::new();
-		// Set timestamp to the same timestamp used in generating tendermint header, because there
-		// will be a comparison between the local timestamp and the timestamp existing in the header
-		// after factoring in the trusting period for the light client.
-		let now: <T as pallet_timestamp::Config>::Moment = TIMESTAMP.saturating_mul(1000);
-		pallet_timestamp::Pallet::<T>::set_timestamp(now);
-		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
-		frame_system::Pallet::<T>::set_block_number(number);
-		let height = Height::new(0, 1).unwrap();
-		let (mock_client_state, mock_cs_state) = super::utils::create_mock_state(height);
-		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
-		let counterparty_client_id = ClientId::new(mock_client_state::client_type(), 1).unwrap();
-		ctx.store_client_type(client_id.clone(), mock_client_state::client_type()).unwrap();
-		ctx.store_client_state(client_id.clone(), Box::new(mock_client_state)).unwrap();
-		ctx.store_consensus_state(client_id.clone(), Height::new(0, 1).unwrap(), Box::new(mock_cs_state)).unwrap();
-		let commitment_prefix: CommitmentPrefix = "ibc".as_bytes().to_vec().try_into().unwrap();
-
-		let value = conn_open_init_mod::MsgConnectionOpenInit {
-			client_id_on_a: client_id.clone(),
-			counterparty: Counterparty::new(
-				counterparty_client_id.clone(),
-				Some(ConnectionId::new(1)),
-				commitment_prefix.clone(),
-			),
-			version: Some(ConnVersion::default()),
-			delay_period: core::time::Duration::from_secs(1000),
-			signer: crate::tests::common::get_dummy_account_id(),
-		}.encode_vec().unwrap();
-
-		let msg = Any {
-			type_url: conn_open_init_mod::TYPE_URL.as_bytes().to_vec(),
-			value
-		};
-		let caller: T::AccountId = whitelisted_caller();
-	}: deliver(RawOrigin::Signed(caller), vec![msg])
-	verify {
-
-	}
-
-	create_client_mock {
-		// Set timestamp to the same timestamp used in generating tendermint header, because there
-		// will be a comparison between the local timestamp and the timestamp existing in the header
-		// after factoring in the trusting period for the light client.
-		let now: <T as pallet_timestamp::Config>::Moment = TIMESTAMP.saturating_mul(1000);
-		pallet_timestamp::Pallet::<T>::set_timestamp(now);
-		let number : <T as frame_system::Config>::BlockNumber = 1u32.into();
-		frame_system::Pallet::<T>::set_block_number(number);
-		let height = Height::new(0, 1).unwrap();
-		let (mock_client_state, mock_cs_state) = super::utils::create_mock_state(height);
-		let client_id = ClientId::new(mock_client_state::client_type(), 0).unwrap();
-		let msg = MsgCreateClient::new(
-			mock_client_state.into(),
-			mock_cs_state.into(),
-			crate::tests::common::get_dummy_account_id(),
-		).unwrap().encode_vec().unwrap();
-
-		let msg = Any { type_url: TYPE_URL.to_string().as_bytes().to_vec(), value: msg };
-		let caller: T::AccountId = whitelisted_caller();
-	}: deliver(RawOrigin::Signed(caller), vec![msg])
-	verify {
 	}
 }
