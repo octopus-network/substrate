@@ -26,7 +26,7 @@ sp-std = { version = "5.0.0", default-features = false,  path = "../../primitive
 sp-tracing = { version = "6.0.0", default-features = false,  path = "../../primitives/tracing" }
 
 ## for ibc protocl
-ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec", "mocks-primitives"]}
+ibc = { version = "0.25.0", default-features = false, git = "https://github.com/octopus-network/ibc-rs.git", branch = "fix-mock", features = ["parity-scale-codec"]}
 ibc-proto = { version = "0.24.0", default-features = false }
 log = { version = "0.4.0", default-features = false }
 serde = { version = "1.0", default-features = false }

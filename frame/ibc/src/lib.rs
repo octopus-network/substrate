@@ -7,6 +7,8 @@
 //! and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs),
 //! which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f).
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
 
 extern crate alloc;
 extern crate core;
@@ -43,6 +45,9 @@ mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 pub(crate) mod benchmarks;
+mod weights;
+
+pub use weights::WeightInfo;
 
 /// A struct corresponds to `Any` in crate "prost-types", used in ibc-rs.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
@@ -91,6 +96,9 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type ExpectedBlockTime: Get<u64>;
+
+		/// benchmarking weight info
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -510,9 +518,8 @@ pub mod pallet {
 		/// the serialized protocol buffer message.
 		///
 		/// The relevant events are emitted when successful.
-		// julian-todo: add weight for this function.
 		#[pallet::call_index(0)]
-		#[pallet::weight(0)]
+		#[pallet::weight(crate::weights::deliver::<T>(messages))]
 		pub fn deliver(origin: OriginFor<T>, messages: Vec<Any>) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 			let mut ctx = Context::<T>::new();
@@ -546,13 +553,6 @@ pub mod pallet {
 				Self::deposit_event(event.try_into()?);
 			}
 			Self::deposit_event(errors.into());
-
-			Ok(().into())
-		}
-
-		#[pallet::weight(1)]
-		pub fn hello(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-			ensure_signed(origin)?;
 
 			Ok(().into())
 		}
