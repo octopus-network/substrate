@@ -32,7 +32,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-		Timestamp: pallet_timestamp,
+		PalletTimestamp: pallet_timestamp,
 		Ibc: pallet_ibc,
 	}
 );
