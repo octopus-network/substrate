@@ -2828,7 +2828,7 @@ dependencies = [
  "subtle-encoding",
  "tendermint",
  "tendermint-light-client-verifier",
- "tendermint-proto 0.28.0",
+ "tendermint-proto",
  "time 0.3.11",
  "tracing",
  "uint",
@@ -2846,7 +2846,7 @@ dependencies = [
  "prost",
  "serde",
  "subtle-encoding",
- "tendermint-proto 0.28.0",
+ "tendermint-proto",
 ]
 
 [[package]]
@@ -5478,8 +5478,6 @@ dependencies = [
  "pallet-balances",
  "pallet-timestamp",
  "parity-scale-codec",
- "prost",
- "prost-types",
  "scale-info",
  "serde",
  "serde_json",
@@ -5491,8 +5489,6 @@ dependencies = [
  "sp-std",
  "sp-tracing",
  "sp-version",
- "tendermint-proto 0.26.0",
- "time 0.3.11",
 ]
 
 [[package]]
@@ -10504,7 +10500,7 @@ dependencies = [
  "signature",
  "subtle",
  "subtle-encoding",
- "tendermint-proto 0.28.0",
+ "tendermint-proto",
  "time 0.3.11",
  "zeroize",
 ]
@@ -10519,24 +10515,6 @@ dependencies = [
  "flex-error",
  "serde",
  "tendermint",
- "time 0.3.11",
-]
-
-[[package]]
-name = "tendermint-proto"
-version = "0.26.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "974d6330a19dfa6720e9f663fc59101d207a817db3f9c730d3f31caaa565b574"
-dependencies = [
- "bytes",
- "flex-error",
- "num-derive",
- "num-traits",
- "prost",
- "prost-types",
- "serde",
- "serde_bytes",
- "subtle-encoding",
  "time 0.3.11",
 ]
 
