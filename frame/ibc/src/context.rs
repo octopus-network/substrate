@@ -8,14 +8,12 @@ use ibc::core::ics26_routing::context::{Module, ModuleId, RouterBuilder};
 /// which the ICS26 module requires to be able to dispatch and process IBC messages.
 use crate::routing::{Router, SubstrateRouterBuilder};
 use ibc::{
-	core::ics04_channel::commitment::PacketCommitment,
-	core::ics04_channel::packet::Sequence,
 	core::{
 		ics02_client::{client_type::ClientType, context::ClientKeeper},
-		ics04_channel::channel::ChannelEnd,
-		ics24_host::identifier::{ChannelId, ClientId, PortId},
+		ics03_connection::connection::ConnectionEnd,
+		ics04_channel::{channel::ChannelEnd, commitment::PacketCommitment, packet::Sequence},
+		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
 	},
-	core::{ics03_connection::connection::ConnectionEnd, ics24_host::identifier::ConnectionId},
 	mock::client_state::{client_type as mock_client_type, MockClientState},
 	Height,
 };

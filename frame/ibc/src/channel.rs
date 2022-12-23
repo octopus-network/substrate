@@ -21,10 +21,7 @@ use ibc::{
 		},
 		ics04_channel::{
 			channel::ChannelEnd,
-			commitment::{
-				AcknowledgementCommitment,
-				PacketCommitment as IbcPacketCommitment,
-			},
+			commitment::{AcknowledgementCommitment, PacketCommitment as IbcPacketCommitment},
 			context::{ChannelKeeper, ChannelReader},
 			error::{ChannelError, PacketError},
 			packet::{Receipt, Sequence},

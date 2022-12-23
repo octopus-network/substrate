@@ -72,8 +72,11 @@ pub mod pallet {
 	use ibc::{
 		core::{
 			ics02_client::{client_type::ClientType, height::Height},
+			ics03_connection::connection::ConnectionEnd,
 			ics04_channel::{
-				channel::Order, packet::Sequence, timeout::TimeoutHeight,
+				channel::{ChannelEnd, Order},
+				packet::Sequence,
+				timeout::TimeoutHeight,
 				Version as IbcChannelVersion,
 			},
 			ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
@@ -81,8 +84,6 @@ pub mod pallet {
 		},
 		timestamp::Timestamp,
 	};
-	use ibc::core::ics03_connection::connection::ConnectionEnd;
-	use ibc::core::ics04_channel::channel::ChannelEnd;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
