@@ -22,7 +22,7 @@ use ibc::{
 		ics04_channel::{
 			channel::ChannelEnd,
 			commitment::{
-				AcknowledgementCommitment as IbcAcknowledgementCommitment,
+				AcknowledgementCommitment,
 				PacketCommitment as IbcPacketCommitment,
 			},
 			context::{ChannelKeeper, ChannelReader},
@@ -43,15 +43,7 @@ impl<T: Config> ChannelReader for Context<T> {
 		channel_id: &ChannelId,
 	) -> Result<ChannelEnd, ChannelError> {
 		if <Channels<T>>::contains_key(port_id, channel_id) {
-			let data = <Channels<T>>::get(port_id, channel_id);
-
-			let channel_end =
-				ChannelEnd::decode_vec(&data).map_err(|_| ChannelError::ChannelNotFound {
-					port_id: port_id.clone(),
-					channel_id: channel_id.clone(),
-				})?;
-
-			Ok(channel_end)
+			Ok(<Channels<T>>::get(port_id, channel_id))
 		} else {
 			Err(ChannelError::ChannelNotFound {
 				port_id: port_id.clone(),
@@ -189,10 +181,10 @@ impl<T: Config> ChannelReader for Context<T> {
 		port_id: &PortId,
 		channel_id: &ChannelId,
 		seq: Sequence,
-	) -> Result<IbcAcknowledgementCommitment, PacketError> {
+	) -> Result<AcknowledgementCommitment, PacketError> {
 		if <Acknowledgements<T>>::contains_key((port_id, channel_id, seq)) {
 			let data = <Acknowledgements<T>>::get((port_id, channel_id, seq));
-			let acknowledgement = IbcAcknowledgementCommitment::from(data);
+			let acknowledgement = AcknowledgementCommitment::from(data);
 
 			Ok(acknowledgement)
 		} else {
@@ -314,7 +306,7 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		port_id: PortId,
 		channel_id: ChannelId,
 		seq: Sequence,
-		ack_commitment: IbcAcknowledgementCommitment,
+		ack_commitment: AcknowledgementCommitment,
 	) -> Result<(), PacketError> {
 		<Acknowledgements<T>>::insert((port_id, channel_id, seq), ack_commitment.into_vec());
 
@@ -361,9 +353,6 @@ impl<T: Config> ChannelKeeper for Context<T> {
 		channel_id: ChannelId,
 		channel_end: ChannelEnd,
 	) -> Result<(), ChannelError> {
-		let channel_end = channel_end.encode_vec().map_err(|e| ChannelError::Other {
-			description: format!("encode channel end failed: {:?}", e),
-		})?;
 		<Channels<T>>::insert(port_id, channel_id, channel_end);
 
 		Ok(())

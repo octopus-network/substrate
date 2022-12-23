@@ -81,6 +81,8 @@ pub mod pallet {
 		},
 		timestamp::Timestamp,
 	};
+	use ibc::core::ics03_connection::connection::ConnectionEnd;
+	use ibc::core::ics04_channel::channel::ChannelEnd;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -155,22 +157,17 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	/// key: connection_id
-	/// value: ConnectionEnd
 	pub type Connections<T: Config> =
-		StorageMap<_, Blake2_128Concat, ConnectionId, Vec<u8>, ValueQuery>;
+		StorageMap<_, Blake2_128Concat, ConnectionId, ConnectionEnd, ValueQuery>;
 
 	#[pallet::storage]
-	/// key1: port_id
-	/// key2: channel_id
-	/// value: ChannelEnd
 	pub type Channels<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		PortId,
 		Blake2_128Concat,
 		ChannelId,
-		Vec<u8>,
+		ChannelEnd,
 		ValueQuery,
 	>;
 
@@ -195,9 +192,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	/// key1: port_id
-	/// key2: channel_id
-	/// value: sequence
 	pub type NextSequenceRecv<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -209,9 +203,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	/// key1: port_id
-	/// key2: channel_id
-	/// value: sequence
 	pub type NextSequenceAck<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
