@@ -142,7 +142,6 @@ impl<T: Config> ClientReader for Context<T> {
 							})?;
 						return Ok(Some(Box::new(result)))
 					},
-					#[cfg(test)]
 					MOCK_CLIENT_TYPE => {
 						let result: MockConsensusState = Protobuf::<Any>::decode_vec(&data)
 							.map_err(|e| ClientError::Other {

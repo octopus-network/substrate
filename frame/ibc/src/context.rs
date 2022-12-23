@@ -7,7 +7,6 @@ use ibc::core::ics26_routing::context::{Module, ModuleId, RouterBuilder};
 /// A struct capturing all the functional dependencies (i.e., context)
 /// which the ICS26 module requires to be able to dispatch and process IBC messages.
 use crate::routing::{Router, SubstrateRouterBuilder};
-#[cfg(test)]
 use ibc::{
 	core::ics04_channel::commitment::PacketCommitment,
 	core::ics04_channel::packet::Sequence,
