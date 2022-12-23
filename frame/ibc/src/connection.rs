@@ -19,7 +19,7 @@ use ibc::{
 	},
 	Height,
 };
-use ibc_proto::{google::protobuf::Any, protobuf::Protobuf};
+use ibc_proto::google::protobuf::Any;
 
 impl<T: Config> ConnectionReader for Context<T> {
 	fn connection_end(&self, conn_id: &ConnectionId) -> Result<ConnectionEnd, ConnectionError> {
@@ -45,12 +45,12 @@ impl<T: Config> ConnectionReader for Context<T> {
 		let block_number = format!("{:?}", <frame_system::Pallet<T>>::block_number());
 		let current_height: u64 = block_number.parse().unwrap_or_default();
 		<OldHeight<T>>::put(current_height);
-		Ok(Height::new(0, current_height).unwrap())
+		Height::new(0, current_height).map_err(ConnectionError::Client)
 	}
 
 	fn host_oldest_height(&self) -> Result<Height, ConnectionError> {
 		let height = <OldHeight<T>>::get();
-		Ok(Height::new(0, height).unwrap())
+		Height::new(0, height).map_err(ConnectionError::Client)
 	}
 
 	fn commitment_prefix(&self) -> CommitmentPrefix {

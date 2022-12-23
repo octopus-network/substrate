@@ -21,9 +21,7 @@ use ibc::{
 		},
 		ics24_host::identifier::ClientId,
 	},
-	mock::{
-		client_state::MockClientState, consensus_state::MockConsensusState, header::MockHeader,
-	},
+	mock::{client_state::MockClientState, consensus_state::MockConsensusState},
 	timestamp::Timestamp,
 	Height,
 };
@@ -201,7 +199,7 @@ impl<T: Config> ClientReader for Context<T> {
 	fn host_height(&self) -> Result<Height, ClientError> {
 		let block_number = format!("{:?}", <frame_system::Pallet<T>>::block_number());
 		let current_height: u64 = block_number.parse().unwrap_or_default();
-		Ok(Height::new(0, current_height).unwrap())
+		Height::new(0, current_height)
 	}
 
 	fn host_timestamp(&self) -> Result<Timestamp, ClientError> {
@@ -222,8 +220,10 @@ impl<T: Config> ClientReader for Context<T> {
 		}
 		#[cfg(test)]
 		{
-			let mock_header =
-				MockHeader { height: self.host_height()?, timestamp: Default::default() };
+			let mock_header = ibc::mock::header::MockHeader {
+				height: self.host_height()?,
+				timestamp: Default::default(),
+			};
 			Ok(Box::new(MockConsensusState::new(mock_header)))
 		}
 	}
@@ -235,8 +235,10 @@ impl<T: Config> ClientReader for Context<T> {
 		}
 		#[cfg(test)]
 		{
-			let mock_header =
-				MockHeader { height: self.host_height()?, timestamp: Default::default() };
+			let mock_header = ibc::mock::header::MockHeader {
+				height: self.host_height()?,
+				timestamp: Default::default(),
+			};
 			Ok(Box::new(MockConsensusState::new(mock_header)))
 		}
 	}

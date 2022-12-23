@@ -1,32 +1,3 @@
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, Test as PalletIbcTest},
-	Context,
-};
-use ibc::{
-	core::{
-		ics02_client::height::Height,
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-			},
-			version::get_compatible_versions,
-		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State},
-			context::ChannelReader,
-			handler::acknowledgement::process,
-			msgs::acknowledgement::MsgAcknowledgement,
-			Version,
-		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::identifier::{ClientId, ConnectionId},
-	},
-	events::IbcEvent,
-	timestamp::ZERO_DURATION,
-};
-use test_util::get_dummy_raw_msg_acknowledgement;
-
 pub mod test_util {
 	use alloc::vec::Vec;
 	use ibc_proto::ibc::core::{
@@ -63,10 +34,39 @@ pub mod test_util {
 		}
 	}
 }
+#[cfg(test)]
+mod tests {
+	use super::test_util::get_dummy_raw_msg_acknowledgement;
+	use crate::{
+		mock::{new_test_ext, Test as PalletIbcTest},
+		Context,
+	};
+	use ibc::{
+		core::{
+			ics02_client::height::Height,
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				version::get_compatible_versions,
+			},
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State},
+				context::ChannelReader,
+				handler::acknowledgement::process,
+				msgs::acknowledgement::MsgAcknowledgement,
+				Version,
+			},
+			ics23_commitment::commitment::CommitmentPrefix,
+			ics24_host::identifier::{ClientId, ConnectionId},
+		},
+		events::IbcEvent,
+		timestamp::ZERO_DURATION,
+	};
 
-#[test]
-fn ack_packet_processing() {
-	new_test_ext().execute_with(|| {
+	#[test]
+	fn ack_packet_processing() {
+		new_test_ext().execute_with(|| {
     struct Test {
         name: String,
         ctx: Context<PalletIbcTest>,
@@ -180,4 +180,5 @@ fn ack_packet_processing() {
         }
     }
 })
+	}
 }

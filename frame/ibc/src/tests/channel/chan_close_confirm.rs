@@ -1,36 +1,3 @@
-#[cfg(test)]
-use crate::tests::connection::common::test_util::get_dummy_raw_counterparty;
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, System, Test as PalletIbcTest},
-	Context,
-};
-use ibc::core::ics04_channel::{
-	context::ChannelReader,
-	msgs::{chan_close_confirm::MsgChannelCloseConfirm, ChannelMsg},
-};
-#[cfg(test)]
-use ibc::mock::client_state::client_type as mock_client_type;
-#[cfg(test)]
-use ibc::{
-	core::{
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-			},
-			version::get_compatible_versions,
-		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State as ChannelState},
-			handler::channel_dispatch,
-			Version,
-		},
-		ics24_host::identifier::{ClientId, ConnectionId},
-	},
-	timestamp::ZERO_DURATION,
-};
-use test_util::get_dummy_raw_msg_chan_close_confirm;
-
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgChannelCloseConfirm as RawMsgChannelCloseConfirm, client::v1::Height,
@@ -52,49 +19,81 @@ pub mod test_util {
 	}
 }
 
-#[test]
-fn chan_close_confirm_event_height() {
-	new_test_ext().execute_with(|| {
-		let client_id = ClientId::new(mock_client_type(), 24).unwrap();
-		let conn_id = ConnectionId::new(2);
-		let default_context = Context::<PalletIbcTest>::new();
-		System::set_block_number(20);
-		let client_consensus_state_height = default_context.host_height().unwrap();
+#[cfg(test)]
+mod tests {
 
-		let conn_end = ConnectionEnd::new(
-			ConnectionState::Open,
-			client_id.clone(),
-			ConnectionCounterparty::try_from(get_dummy_raw_counterparty()).unwrap(),
-			get_compatible_versions(),
-			ZERO_DURATION,
-		);
+	use super::test_util::get_dummy_raw_msg_chan_close_confirm;
+	use crate::{
+		mock::{new_test_ext, System, Test as PalletIbcTest},
+		tests::connection::common::test_util::get_dummy_raw_counterparty,
+		Context,
+	};
+	use ibc::{
+		core::{
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				version::get_compatible_versions,
+			},
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State as ChannelState},
+				context::ChannelReader,
+				handler::channel_dispatch,
+				msgs::{chan_close_confirm::MsgChannelCloseConfirm, ChannelMsg},
+				Version,
+			},
+			ics24_host::identifier::{ClientId, ConnectionId},
+		},
+		mock::client_state::client_type as mock_client_type,
+		timestamp::ZERO_DURATION,
+	};
 
-		let msg_chan_close_confirm = MsgChannelCloseConfirm::try_from(
-			get_dummy_raw_msg_chan_close_confirm(client_consensus_state_height.revision_height()),
-		)
-		.unwrap();
+	#[test]
+	fn chan_close_confirm_event_height() {
+		new_test_ext().execute_with(|| {
+			let client_id = ClientId::new(mock_client_type(), 24).unwrap();
+			let conn_id = ConnectionId::new(2);
+			let default_context = Context::<PalletIbcTest>::new();
+			System::set_block_number(20);
+			let client_consensus_state_height = default_context.host_height().unwrap();
 
-		let chan_end = ChannelEnd::new(
-			ChannelState::Open,
-			Order::default(),
-			Counterparty::new(
-				msg_chan_close_confirm.port_id_on_b.clone(),
-				Some(msg_chan_close_confirm.chan_id_on_b.clone()),
-			),
-			vec![conn_id.clone()],
-			Version::default(),
-		);
-
-		let context = default_context
-			.with_client(&client_id, client_consensus_state_height)
-			.with_connection(conn_id, conn_end)
-			.with_channel(
-				msg_chan_close_confirm.port_id_on_b.clone(),
-				msg_chan_close_confirm.chan_id_on_b.clone(),
-				chan_end,
+			let conn_end = ConnectionEnd::new(
+				ConnectionState::Open,
+				client_id.clone(),
+				ConnectionCounterparty::try_from(get_dummy_raw_counterparty()).unwrap(),
+				get_compatible_versions(),
+				ZERO_DURATION,
 			);
 
-		channel_dispatch(&context, &ChannelMsg::ChannelCloseConfirm(msg_chan_close_confirm))
-			.unwrap();
-	})
+			let msg_chan_close_confirm =
+				MsgChannelCloseConfirm::try_from(get_dummy_raw_msg_chan_close_confirm(
+					client_consensus_state_height.revision_height(),
+				))
+				.unwrap();
+
+			let chan_end = ChannelEnd::new(
+				ChannelState::Open,
+				Order::default(),
+				Counterparty::new(
+					msg_chan_close_confirm.port_id_on_b.clone(),
+					Some(msg_chan_close_confirm.chan_id_on_b.clone()),
+				),
+				vec![conn_id.clone()],
+				Version::default(),
+			);
+
+			let context = default_context
+				.with_client(&client_id, client_consensus_state_height)
+				.with_connection(conn_id, conn_end)
+				.with_channel(
+					msg_chan_close_confirm.port_id_on_b.clone(),
+					msg_chan_close_confirm.chan_id_on_b.clone(),
+					chan_end,
+				);
+
+			channel_dispatch(&context, &ChannelMsg::ChannelCloseConfirm(msg_chan_close_confirm))
+				.unwrap();
+		})
+	}
 }

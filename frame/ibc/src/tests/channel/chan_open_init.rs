@@ -1,17 +1,3 @@
-use ibc::core::{
-	ics03_connection::{
-		connection::{ConnectionEnd, State as ConnectionState},
-		msgs::conn_open_init::MsgConnectionOpenInit,
-		version::get_compatible_versions,
-	},
-	ics04_channel::{
-		channel::State,
-		handler::channel_dispatch,
-		msgs::{chan_open_init::MsgChannelOpenInit, ChannelMsg},
-	},
-	ics24_host::identifier::ConnectionId,
-};
-
 pub mod test_util {
 	use crate::tests::{
 		channel::common::test_util::get_dummy_raw_channel_end, common::get_dummy_bech32_account,
@@ -20,6 +6,7 @@ pub mod test_util {
 	use ibc::core::ics24_host::identifier::PortId;
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenInit as RawMsgChannelOpenInit;
 
+    #[allow(dead_code)]
 	/// Returns a dummy `RawMsgChannelOpenInit`, for testing only!
 	pub fn get_dummy_raw_msg_chan_open_init() -> RawMsgChannelOpenInit {
 		RawMsgChannelOpenInit {
@@ -29,20 +16,34 @@ pub mod test_util {
 		}
 	}
 }
-#[cfg(test)]
-use crate::tests::{
-	channel::chan_open_init::test_util::get_dummy_raw_msg_chan_open_init,
-	connection::conn_open_init::test_util::get_dummy_raw_msg_conn_open_init,
-};
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, Test as PalletIbcTest},
-	Context,
-};
 
-#[test]
-fn chan_open_init_msg_processing() {
-	new_test_ext().execute_with(|| {
+#[cfg(test)]
+mod tests {
+	use crate::{
+		mock::{new_test_ext, Test as PalletIbcTest},
+		tests::{
+			channel::chan_open_init::test_util::get_dummy_raw_msg_chan_open_init,
+			connection::conn_open_init::test_util::get_dummy_raw_msg_conn_open_init,
+		},
+		Context,
+	};
+	use ibc::core::{
+		ics03_connection::{
+			connection::{ConnectionEnd, State as ConnectionState},
+			msgs::conn_open_init::MsgConnectionOpenInit,
+			version::get_compatible_versions,
+		},
+		ics04_channel::{
+			channel::State,
+			handler::channel_dispatch,
+			msgs::{chan_open_init::MsgChannelOpenInit, ChannelMsg},
+		},
+		ics24_host::identifier::ConnectionId,
+	};
+
+	#[test]
+	fn chan_open_init_msg_processing() {
+		new_test_ext().execute_with(|| {
      struct Test {
          name: String,
          ctx: Context<PalletIbcTest>,
@@ -120,4 +121,5 @@ fn chan_open_init_msg_processing() {
          }
      }
  })
+	}
 }

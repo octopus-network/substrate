@@ -1,32 +1,33 @@
 #[cfg(test)]
-use crate::{
-	mock::{new_test_ext, Test as PalletIbcTest},
-	tests::channel::packet::test_utils::get_dummy_raw_packet,
-	Context,
-};
-use ibc::{
-	core::{
-		ics02_client::height::Height,
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+mod tests {
+	use crate::{
+		mock::{new_test_ext, Test as PalletIbcTest},
+		tests::channel::packet::test_utils::get_dummy_raw_packet,
+		Context,
+	};
+	use ibc::{
+		core::{
+			ics02_client::height::Height,
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				version::get_compatible_versions,
 			},
-			version::get_compatible_versions,
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State},
+				handler::write_acknowledgement::process,
+				packet::Packet,
+				Version,
+			},
+			ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
 		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State},
-			handler::write_acknowledgement::process,
-			packet::Packet,
-			Version,
-		},
-		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
-	},
-	events::IbcEvent,
-	timestamp::ZERO_DURATION,
-};
-#[test]
-fn write_ack_packet_processing() {
-	new_test_ext().execute_with(|| {
+		events::IbcEvent,
+		timestamp::ZERO_DURATION,
+	};
+	#[test]
+	fn write_ack_packet_processing() {
+		new_test_ext().execute_with(|| {
     struct Test {
         name: String,
         ctx: Context<PalletIbcTest>,
@@ -139,4 +140,5 @@ fn write_ack_packet_processing() {
         }
     }
 })
+	}
 }

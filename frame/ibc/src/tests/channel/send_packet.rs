@@ -1,37 +1,38 @@
-use core::{ops::Add, time::Duration};
-
 #[cfg(test)]
-use crate::{
-	mock::{new_test_ext, Test as PalletIbcTest},
-	tests::channel::packet::test_utils::get_dummy_raw_packet,
-	Context,
-};
-use ibc::{
-	core::{
-		ics02_client::height::Height,
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-			},
-			version::get_compatible_versions,
-		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State},
-			handler::send_packet::send_packet,
-			packet::Packet,
-			Version,
-		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
-	},
-	events::IbcEvent,
-	timestamp::{Timestamp, ZERO_DURATION},
-};
+mod tests {
 
-#[test]
-#[ignore]
-fn send_packet_processing() {
-	new_test_ext().execute_with(|| {
+	use crate::{
+		mock::{new_test_ext, Test as PalletIbcTest},
+		tests::channel::packet::test_utils::get_dummy_raw_packet,
+		Context,
+	};
+	use core::{ops::Add, time::Duration};
+	use ibc::{
+		core::{
+			ics02_client::height::Height,
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				version::get_compatible_versions,
+			},
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State},
+				handler::send_packet::send_packet,
+				packet::Packet,
+				Version,
+			},
+			ics23_commitment::commitment::CommitmentPrefix,
+			ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
+		},
+		events::IbcEvent,
+		timestamp::{Timestamp, ZERO_DURATION},
+	};
+
+	#[test]
+	#[ignore]
+	fn send_packet_processing() {
+		new_test_ext().execute_with(|| {
         struct Test {
             name: String,
             ctx: Context<PalletIbcTest>,
@@ -180,4 +181,5 @@ fn send_packet_processing() {
             }
         }
     })
+	}
 }

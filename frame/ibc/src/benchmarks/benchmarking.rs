@@ -4,81 +4,56 @@
 
 use crate::*;
 
-use ibc::mock::{
-	client_state::{self as mock_client_state, MockClientState},
-	consensus_state::MockConsensusState,
-	header::MockHeader,
-};
+use ibc::mock::client_state as mock_client_state;
 
-use core::str::FromStr;
 use frame_benchmarking::{benchmarks, whitelisted_caller};
-use frame_support::traits::fungibles::{Inspect, Mutate};
 use frame_system::RawOrigin;
-use sp_runtime::traits::IdentifyAccount;
 
-use crate::context::Context;
 use alloc::boxed::Box;
-use ibc::{
-	applications::transfer::{
-		acknowledgement::ACK_ERR_STR, packet::PacketData, Amount, Coin, PrefixedDenom, VERSION,
+use ibc::core::{
+	ics02_client::{
+		client_state::ClientState,
+		context::ClientKeeper,
+		height::Height,
+		msgs::{
+			create_client::{MsgCreateClient, TYPE_URL},
+			update_client::TYPE_URL as UPDATE_CLIENT_TYPE_URL,
+		},
 	},
-	core::{
-		ics02_client::{
-			client_state::ClientState,
-			context::ClientKeeper,
-			height::Height,
-			msgs::{
-				create_client::{MsgCreateClient, TYPE_URL},
-				update_client::{MsgUpdateClient, TYPE_URL as UPDATE_CLIENT_TYPE_URL},
-			},
+	ics03_connection::{
+		connection::{ConnectionEnd, Counterparty, State},
+		context::ConnectionKeeper,
+		msgs::{
+			conn_open_ack::TYPE_URL as CONN_OPEN_ACK_TYPE_URL,
+			conn_open_confirm::TYPE_URL as CONN_OPEN_CONFIRM_TYPE_URL,
+			conn_open_init as conn_open_init_mod,
+			conn_open_try::TYPE_URL as CONN_TRY_OPEN_TYPE_URL,
 		},
-		ics03_connection::{
-			connection::{ConnectionEnd, Counterparty, State},
-			context::{ConnectionKeeper, ConnectionReader},
-			msgs::{
-				conn_open_ack::TYPE_URL as CONN_OPEN_ACK_TYPE_URL,
-				conn_open_confirm::TYPE_URL as CONN_OPEN_CONFIRM_TYPE_URL,
-				conn_open_init as conn_open_init_mod,
-				conn_open_try::TYPE_URL as CONN_TRY_OPEN_TYPE_URL,
-			},
-			version::Version as ConnVersion,
-		},
-		ics04_channel::{
-			channel::{self, ChannelEnd, Order, State as ChannelState},
-			context::{ChannelKeeper, ChannelReader},
-			error::{ChannelError, PacketError},
-			msgs::{
-				acknowledgement::{Acknowledgement, TYPE_URL as ACK_PACKET_TYPE_URL},
-				chan_close_confirm::TYPE_URL as CHAN_CLOSE_CONFIRM_TYPE_URL,
-				chan_close_init::TYPE_URL as CHAN_CLOSE_INIT_TYPE_URL,
-				chan_open_ack::TYPE_URL as CHAN_OPEN_ACK_TYPE_URL,
-				chan_open_confirm::TYPE_URL as CHAN_OPEN_CONFIRM_TYPE_URL,
-				chan_open_init::{MsgChannelOpenInit, TYPE_URL as CHAN_OPEN_TYPE_URL},
-				chan_open_try::TYPE_URL as CHAN_OPEN_TRY_TYPE_URL,
-				recv_packet::TYPE_URL as RECV_PACKET_TYPE_URL,
-				timeout::TYPE_URL as TIMEOUT_TYPE_URL,
-			},
-			packet::{Packet, Receipt},
-			Version,
-		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
-		ics26_routing::context::Module,
+		version::Version as ConnVersion,
 	},
-	handler::HandlerOutputBuilder,
-	signer::Signer,
-	timestamp::Timestamp,
+	ics04_channel::{
+		channel::ChannelEnd,
+		context::ChannelKeeper,
+		msgs::{
+			acknowledgement::TYPE_URL as ACK_PACKET_TYPE_URL,
+			chan_close_confirm::TYPE_URL as CHAN_CLOSE_CONFIRM_TYPE_URL,
+			chan_close_init::TYPE_URL as CHAN_CLOSE_INIT_TYPE_URL,
+			chan_open_ack::TYPE_URL as CHAN_OPEN_ACK_TYPE_URL,
+			chan_open_confirm::TYPE_URL as CHAN_OPEN_CONFIRM_TYPE_URL,
+			chan_open_init::{MsgChannelOpenInit, TYPE_URL as CHAN_OPEN_TYPE_URL},
+			chan_open_try::TYPE_URL as CHAN_OPEN_TRY_TYPE_URL,
+			recv_packet::TYPE_URL as RECV_PACKET_TYPE_URL,
+			timeout::TYPE_URL as TIMEOUT_TYPE_URL,
+		},
+	},
+	ics23_commitment::commitment::CommitmentPrefix,
+	ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
 };
 use ibc_proto::protobuf::Protobuf;
 use scale_info::prelude::string::ToString;
-use sp_core::crypto::AccountId32;
 use sp_std::vec;
 
-fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
-	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
-}
-
-use super::utils::{MILLIS, TIMESTAMP};
+use super::utils::TIMESTAMP;
 
 benchmarks! {
 	where_clause {

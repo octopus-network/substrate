@@ -1,33 +1,3 @@
-use crate::tests::common::get_dummy_account_id;
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, System, Test as PalletIbcTest},
-	Context,
-};
-use ibc::{
-	core::{
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-			},
-			version::get_compatible_versions,
-		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State},
-			handler::recv_packet::process,
-			msgs::recv_packet::MsgRecvPacket,
-			packet::Packet,
-			Version,
-		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
-	},
-	events::IbcEvent,
-	relayer::ics18_relayer::context::RelayerContext,
-	timestamp::{Timestamp, ZERO_DURATION},
-};
-#[cfg(test)]
-use test_util::get_dummy_raw_msg_recv_packet;
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgRecvPacket as RawMsgRecvPacket, client::v1::Height as RawHeight,
@@ -53,9 +23,39 @@ pub mod test_util {
 	}
 }
 
-#[test]
-fn recv_packet_processing() {
-	new_test_ext().execute_with(|| {
+#[cfg(test)]
+mod tests {
+	use super::test_util::get_dummy_raw_msg_recv_packet;
+	use crate::{
+		mock::{new_test_ext, System, Test as PalletIbcTest},
+		tests::common::get_dummy_account_id,
+		Context,
+	};
+	use ibc::{
+		core::{
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				version::get_compatible_versions,
+			},
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State},
+				handler::recv_packet::process,
+				msgs::recv_packet::MsgRecvPacket,
+				packet::Packet,
+				Version,
+			},
+			ics23_commitment::commitment::CommitmentPrefix,
+			ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
+		},
+		events::IbcEvent,
+		timestamp::{Timestamp, ZERO_DURATION},
+	};
+
+	#[test]
+	fn recv_packet_processing() {
+		new_test_ext().execute_with(|| {
     struct Test {
         name: String,
         ctx: Context<PalletIbcTest>,
@@ -193,4 +193,5 @@ fn recv_packet_processing() {
         }
     }
 })
+	}
 }

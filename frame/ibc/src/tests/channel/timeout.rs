@@ -1,32 +1,3 @@
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, Test as PalletIbcTest},
-	Context,
-};
-use ibc::{
-	core::{
-		ics02_client::height::Height,
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-			},
-			version::get_compatible_versions,
-		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State},
-			context::ChannelReader,
-			handler::timeout::process,
-			msgs::timeout::MsgTimeout,
-			Version,
-		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
-	},
-	events::IbcEvent,
-	timestamp::ZERO_DURATION,
-};
-use test_util::get_dummy_raw_msg_timeout;
-
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		channel::v1::MsgTimeout as RawMsgTimeout, client::v1::Height as RawHeight,
@@ -54,9 +25,39 @@ pub mod test_util {
 	}
 }
 
-#[test]
-fn timeout_packet_processing() {
-	new_test_ext().execute_with(|| {
+#[cfg(test)]
+mod tests {
+
+	use super::test_util::get_dummy_raw_msg_timeout;
+	use crate::{
+		mock::{new_test_ext, Test as PalletIbcTest},
+		Context,
+	};
+	use ibc::{
+		core::{
+			ics02_client::height::Height,
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				version::get_compatible_versions,
+			},
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State},
+				context::ChannelReader,
+				handler::timeout::process,
+				msgs::timeout::MsgTimeout,
+				Version,
+			},
+			ics23_commitment::commitment::CommitmentPrefix,
+			ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId},
+		},
+		events::IbcEvent,
+		timestamp::ZERO_DURATION,
+	};
+	#[test]
+	fn timeout_packet_processing() {
+		new_test_ext().execute_with(|| {
     struct Test {
         name: String,
         ctx: Context<PalletIbcTest>,
@@ -238,4 +239,5 @@ fn timeout_packet_processing() {
             }
         }
     }})
+	}
 }

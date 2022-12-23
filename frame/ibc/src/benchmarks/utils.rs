@@ -19,16 +19,12 @@ use crate::{
 	Config,
 };
 use alloc::vec::Vec;
-use core::str::FromStr;
 use ibc::{
 	core::{
 		ics02_client::msgs::{update_client::MsgUpdateClient, upgrade_client::MsgUpgradeClient},
-		ics03_connection::{
-			connection::{ConnectionEnd, Counterparty},
-			msgs::{
-				conn_open_ack::MsgConnectionOpenAck, conn_open_confirm::MsgConnectionOpenConfirm,
-				conn_open_try::MsgConnectionOpenTry,
-			},
+		ics03_connection::msgs::{
+			conn_open_ack::MsgConnectionOpenAck, conn_open_confirm::MsgConnectionOpenConfirm,
+			conn_open_try::MsgConnectionOpenTry,
 		},
 		ics04_channel::msgs::{
 			acknowledgement::MsgAcknowledgement, chan_close_confirm::MsgChannelCloseConfirm,
@@ -36,25 +32,17 @@ use ibc::{
 			chan_open_confirm::MsgChannelOpenConfirm, chan_open_try::MsgChannelOpenTry,
 			recv_packet::MsgRecvPacket, timeout::MsgTimeout,
 		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::{
-			identifier::{ClientId, ConnectionId},
-			path::{ClientConsensusStatePath, ClientStatePath, ConnectionsPath},
-		},
+		ics24_host::identifier::ClientId,
 	},
 	mock::{
 		client_state::MockClientState, consensus_state::MockConsensusState, header::MockHeader,
 	},
-	proofs::Proofs,
-	signer::Signer,
 	timestamp::Timestamp,
 	Height,
 };
 use ibc_proto::protobuf::Protobuf;
-use sp_std::vec;
 
 pub const TIMESTAMP: u64 = 1650894363;
-pub const MILLIS: u128 = 1_000_000;
 
 pub fn create_mock_state(height: Height) -> (MockClientState, MockConsensusState) {
 	let mock_header = MockHeader {

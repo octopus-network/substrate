@@ -1,10 +1,7 @@
 mod mock_client_weight;
 
 use super::*;
-use crate::{
-	host::{MOCK_CLIENT_TYPE, TENDERMINT_CLIENT_TYPE},
-	weights::mock_client_weight::MockClientWeightInfo,
-};
+use crate::{host::MOCK_CLIENT_TYPE, weights::mock_client_weight::MockClientWeightInfo};
 use alloc::boxed::Box;
 use core::marker::PhantomData;
 use frame_support::pallet_prelude::Weight;
@@ -35,7 +32,6 @@ use ibc::core::{
 	ics26_routing::msgs::MsgEnvelope,
 };
 use ibc_primitives::CallbackWeight;
-use scale_info::prelude::string::ToString;
 
 pub trait WeightInfo<T> {
 	fn create_client(msg_create_client: MsgCreateClient) -> Weight;

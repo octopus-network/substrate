@@ -1,32 +1,3 @@
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, System, Test as PalletIbcTest},
-	tests::connection::common::test_util::get_dummy_raw_counterparty,
-	Context,
-};
-#[cfg(test)]
-use ibc::{
-	core::{
-		ics03_connection::{
-			connection::{
-				ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
-			},
-			context::ConnectionReader,
-			version::get_compatible_versions,
-		},
-		ics04_channel::{
-			channel::{ChannelEnd, Counterparty, Order, State},
-			handler::channel_dispatch,
-			msgs::{chan_open_confirm::MsgChannelOpenConfirm, ChannelMsg},
-			Version,
-		},
-		ics24_host::identifier::{ClientId, ConnectionId},
-	},
-	mock::client_state::client_type as mock_client_type,
-	timestamp::ZERO_DURATION,
-	Height,
-};
-
 pub mod test_util {
 	use ibc_proto::ibc::core::channel::v1::MsgChannelOpenConfirm as RawMsgChannelOpenConfirm;
 
@@ -47,11 +18,41 @@ pub mod test_util {
 	}
 }
 
-use test_util::get_dummy_raw_msg_chan_open_confirm;
+#[cfg(test)]
+mod tests {
 
-#[test]
-fn chan_open_confirm_msg_processing() {
-	new_test_ext().execute_with(|| {
+	use crate::{
+		mock::{new_test_ext, System, Test as PalletIbcTest},
+		tests::connection::common::test_util::get_dummy_raw_counterparty,
+		Context,
+	};
+	use ibc::{
+		core::{
+			ics03_connection::{
+				connection::{
+					ConnectionEnd, Counterparty as ConnectionCounterparty, State as ConnectionState,
+				},
+				context::ConnectionReader,
+				version::get_compatible_versions,
+			},
+			ics04_channel::{
+				channel::{ChannelEnd, Counterparty, Order, State},
+				handler::channel_dispatch,
+				msgs::{chan_open_confirm::MsgChannelOpenConfirm, ChannelMsg},
+				Version,
+			},
+			ics24_host::identifier::{ClientId, ConnectionId},
+		},
+		mock::client_state::client_type as mock_client_type,
+		timestamp::ZERO_DURATION,
+		Height,
+	};
+
+	use super::test_util::get_dummy_raw_msg_chan_open_confirm;
+
+	#[test]
+	fn chan_open_confirm_msg_processing() {
+		new_test_ext().execute_with(|| {
     struct Test {
         name: String,
         ctx: Context<PalletIbcTest>,
@@ -138,4 +139,5 @@ fn chan_open_confirm_msg_processing() {
         }
     }
     })
+	}
 }

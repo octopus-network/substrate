@@ -1,21 +1,3 @@
-use core::str::FromStr;
-
-use ibc::{
-	core::{
-		ics03_connection::{
-			connection::{ConnectionEnd, Counterparty, State},
-			context::ConnectionReader,
-			handler::{dispatch, ConnectionResult},
-			msgs::{conn_open_confirm::MsgConnectionOpenConfirm, ConnectionMsg},
-		},
-		ics23_commitment::commitment::CommitmentPrefix,
-		ics24_host::identifier::ClientId,
-	},
-	events::IbcEvent,
-	timestamp::ZERO_DURATION,
-	Height,
-};
-
 pub mod test_util {
 	use ibc_proto::ibc::core::{
 		client::v1::Height, connection::v1::MsgConnectionOpenConfirm as RawMsgConnectionOpenConfirm,
@@ -33,16 +15,34 @@ pub mod test_util {
 		}
 	}
 }
-#[cfg(test)]
-use crate::{
-	mock::{new_test_ext, System, Test as PalletIbcTest},
-	Context,
-};
-use test_util::get_dummy_raw_msg_conn_open_confirm;
 
-#[test]
-fn conn_open_confirm_msg_processing() {
-	new_test_ext().execute_with(|| {
+#[cfg(test)]
+mod tests {
+	use super::test_util::get_dummy_raw_msg_conn_open_confirm;
+	use crate::{
+		mock::{new_test_ext, System, Test as PalletIbcTest},
+		Context,
+	};
+	use core::str::FromStr;
+	use ibc::{
+		core::{
+			ics03_connection::{
+				connection::{ConnectionEnd, Counterparty, State},
+				context::ConnectionReader,
+				handler::{dispatch, ConnectionResult},
+				msgs::{conn_open_confirm::MsgConnectionOpenConfirm, ConnectionMsg},
+			},
+			ics23_commitment::commitment::CommitmentPrefix,
+			ics24_host::identifier::ClientId,
+		},
+		events::IbcEvent,
+		timestamp::ZERO_DURATION,
+		Height,
+	};
+
+	#[test]
+	fn conn_open_confirm_msg_processing() {
+		new_test_ext().execute_with(|| {
      struct Test {
          name: String,
          ctx: Context<PalletIbcTest>,
@@ -138,4 +138,5 @@ fn conn_open_confirm_msg_processing() {
          }
      }
     })
+	}
 }

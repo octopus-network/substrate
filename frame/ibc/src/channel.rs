@@ -31,7 +31,6 @@ use ibc::{
 	timestamp::Timestamp,
 	Height,
 };
-use ibc_proto::protobuf::Protobuf;
 
 impl<T: Config> ChannelReader for Context<T> {
 	fn channel_end(
@@ -198,7 +197,8 @@ impl<T: Config> ChannelReader for Context<T> {
 	fn host_height(&self) -> Result<Height, ChannelError> {
 		let block_number = format!("{:?}", <frame_system::Pallet<T>>::block_number());
 		let current_height: u64 = block_number.parse().unwrap_or_default();
-		Ok(Height::new(0, current_height).unwrap())
+		Height::new(0, current_height)
+			.map_err(|e| ChannelError::Other { description: e.to_string() })
 	}
 
 	/// Returns the `AnyConsensusState` for the given identifier `height`.

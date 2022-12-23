@@ -142,6 +142,7 @@ impl pallet::Config for Test {
 	type WeightInfo = ();
 }
 
+#[allow(dead_code)]
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()

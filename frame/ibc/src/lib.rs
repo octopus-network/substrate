@@ -7,8 +7,6 @@
 //! and is integrated with [ibc-rs](https://github.com/informalsystems/ibc-rs),
 //! which implements the generic cross-chain logic in [ICS spec](https://github.com/cosmos/ibc/tree/ee71d0640c23ec4e05e924f52f557b5e06c1d82f).
 #![cfg_attr(not(feature = "std"), no_std)]
-#![allow(unused_imports)]
-#![allow(dead_code)]
 #![allow(deprecated)]
 
 extern crate alloc;
@@ -16,7 +14,7 @@ extern crate core;
 
 pub use pallet::*;
 
-use alloc::string::{String, ToString};
+use alloc::string::String;
 use frame_system::ensure_signed;
 use sp_std::{fmt::Debug, vec, vec::Vec};
 
@@ -39,9 +37,9 @@ use sp_runtime::RuntimeDebug;
 
 pub const LOG_TARGET: &str = "runtime::pallet-ibc";
 
-#[cfg(test)]
+#[cfg(any(test, feature = "runtime-benchmarks"))]
 mod mock;
-
+#[cfg(any(test, feature = "runtime-benchmarks"))]
 mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
