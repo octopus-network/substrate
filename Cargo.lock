@@ -5922,7 +5922,7 @@ dependencies = [
  "substrate-state-trie-migration-rpc",
  "thousands",
  "tokio",
- "zstd",
+ "zstd 0.12.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -9281,7 +9281,7 @@ name = "sp-maybe-compressed-blob"
 version = "4.1.0-dev"
 dependencies = [
  "thiserror",
- "zstd",
+ "zstd 0.12.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -9382,7 +9382,7 @@ dependencies = [
  "sp-tracing",
  "sp-weights",
  "substrate-test-runtime-client",
- "zstd",
+ "zstd 0.12.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -10660,7 +10660,7 @@ dependencies = [
  "sp-weights",
  "substrate-rpc-client",
  "tokio",
- "zstd",
+ "zstd 0.12.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -11155,7 +11155,7 @@ dependencies = [
  "sha2 0.9.8",
  "toml",
  "windows-sys 0.36.1",
- "zstd",
+ "zstd 0.11.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -11573,7 +11573,16 @@ version = "0.11.2+zstd.1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20cc960326ece64f010d2d2107537f26dc589a6573a316bd5b1dba685fa5fde4"
 dependencies = [
- "zstd-safe",
+ "zstd-safe 5.0.2+zstd.1.5.2",
+]
+
+[[package]]
+name = "zstd"
+version = "0.12.2+zstd.1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9262a83dc741c0b0ffec209881b45dbc232c21b02a2b9cb1adb93266e41303d"
+dependencies = [
+ "zstd-safe 6.0.2+zstd.1.5.2",
 ]
 
 [[package]]
@@ -11581,6 +11590,16 @@ name = "zstd-safe"
 version = "5.0.2+zstd.1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d2a5585e04f9eea4b2a3d1eca508c4dee9592a89ef6f450c11719da0726f4db"
+dependencies = [
+ "libc",
+ "zstd-sys",
+]
+
+[[package]]
+name = "zstd-safe"
+version = "6.0.2+zstd.1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6cf39f730b440bab43da8fb5faf5f254574462f73f260f85f7987f32154ff17"
 dependencies = [
  "libc",
  "zstd-sys",
