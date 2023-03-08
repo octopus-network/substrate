@@ -1710,6 +1710,14 @@ impl pallet_alliance::Config for Runtime {
 	type RetirementPeriod = RetirementPeriod;
 }
 
+impl pallet_ibc::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
+	type ExpectedBlockTime = ExpectedBlockTime;
+	const IBC_COMMITMENT_PREFIX: &'static [u8] = b"Ibc";
+	type WeightInfo = ();
+}
+
 impl frame_benchmarking_pallet_pov::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 }
@@ -1782,6 +1790,7 @@ construct_runtime!(
 		FastUnstake: pallet_fast_unstake,
 		MessageQueue: pallet_message_queue,
 		Pov: frame_benchmarking_pallet_pov,
+		Ibc: pallet_ibc,
 	}
 );
 
