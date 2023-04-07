@@ -1714,7 +1714,7 @@ impl pallet_ibc::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 	type ExpectedBlockTime = ExpectedBlockTime;
-	const IBC_COMMITMENT_PREFIX: &'static [u8] = b"Ibc";
+	const IBC_COMMITMENT_PREFIX: &'static [u8] = b"ibc";
 	type WeightInfo = ();
 }
 
