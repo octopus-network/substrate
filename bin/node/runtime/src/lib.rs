@@ -1718,6 +1718,17 @@ impl pallet_ibc::Config for Runtime {
 	type WeightInfo = ();
 }
 
+impl pallet_ics20_transfer::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type AssetId = u32;
+	type AssetBalance = Balance;
+	type Fungibles = Assets;
+	type AssetIdByName = Ics20Transfer;
+	type AccountIdConversion = pallet_ics20_transfer::r#impl::IbcAccount;
+	const NATIVE_TOKEN_NAME: &'static [u8] = b"DEMO";
+}
+
 impl frame_benchmarking_pallet_pov::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 }
@@ -1791,6 +1802,7 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		Pov: frame_benchmarking_pallet_pov,
 		Ibc: pallet_ibc,
+		Ics20Transfer: pallet_ics20_transfer,
 	}
 );
 
