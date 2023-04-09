@@ -1718,6 +1718,22 @@ impl pallet_ibc::Config for Runtime {
 	type WeightInfo = ();
 }
 
+use pallet_ibc::routing::Router;
+impl pallet_ibc::context::AddModule for Runtime {
+	fn add_module(mut router: Router) -> Router {
+		if let Ok(ret) = router.clone().add_route(
+			"transfer".parse().expect("never failed"),
+			pallet_ics20_transfer::callback::IbcTransferModule::<Runtime>(
+				sp_std::marker::PhantomData::<Runtime>,
+			),
+		) {
+			ret
+		} else {
+			router
+		}
+	}
+}
+
 impl pallet_ics20_transfer::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
