@@ -1710,26 +1710,33 @@ impl pallet_alliance::Config for Runtime {
 	type RetirementPeriod = RetirementPeriod;
 }
 
+parameter_types! {
+	pub const ChainVersion: u64 = 0;
+}
+
 impl pallet_ibc::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type TimeProvider = pallet_timestamp::Pallet<Runtime>;
 	type ExpectedBlockTime = ExpectedBlockTime;
+	type ChainVersion = ChainVersion;
+	type IbcModule = IbcModule;
 	const IBC_COMMITMENT_PREFIX: &'static [u8] = b"ibc";
 	type WeightInfo = ();
 }
 
-use pallet_ibc::routing::Router;
-impl pallet_ibc::context::AddModule for Runtime {
-	fn add_module(mut router: Router) -> Router {
-		if let Ok(ret) = router.clone().add_route(
+use ibc_support::module::Router;
+pub struct IbcModule;
+
+impl ibc_support::module::AddModule for IbcModule {
+	fn add_module(router: Router) -> Router {
+		match router.clone().add_route(
 			"transfer".parse().expect("never failed"),
 			pallet_ics20_transfer::callback::IbcTransferModule::<Runtime>(
 				sp_std::marker::PhantomData::<Runtime>,
 			),
 		) {
-			ret
-		} else {
-			router
+			Ok(ret) => ret,
+			Err(e) => panic!("add module failed by {}", e),
 		}
 	}
 }
@@ -1742,6 +1749,7 @@ impl pallet_ics20_transfer::Config for Runtime {
 	type Fungibles = Assets;
 	type AssetIdByName = Ics20Transfer;
 	type AccountIdConversion = pallet_ics20_transfer::r#impl::IbcAccount;
+	type IbcContext = pallet_ibc::context::Context<Runtime>;
 	const NATIVE_TOKEN_NAME: &'static [u8] = b"DEMO";
 }
 
