@@ -19,6 +19,7 @@
 
 use super::*;
 use frame_support::{traits::Get, BoundedVec};
+use scale_info::prelude::vec;
 
 #[must_use]
 pub(super) enum DeadConsequence {
